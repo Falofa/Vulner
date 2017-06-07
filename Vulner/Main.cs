@@ -15,6 +15,7 @@ namespace Vulner
         public Dictionary<string, Command> Cmds = new Dictionary<string,Command>();
         public DirectoryInfo VulnerFolder = null;
         public TerminalController t = null;
+        public Form Parent = null;
         public List<Proc> procs = new List<Proc>();
         Thread ProcessCheck;
         public void OnExit()
@@ -34,6 +35,7 @@ namespace Vulner
         }
         public Main(Form f, TerminalController te)
         {
+            Parent = f;
             VulnerFolder = new DirectoryInfo(Path.Combine(Environment.ExpandEnvironmentVariables("%appdata%"), "vulner"));
             if (!VulnerFolder.Exists) { VulnerFolder.Create(); }
             if (Environment.GetCommandLineArgs().Contains("root"))
@@ -88,6 +90,16 @@ namespace Vulner
 
             ProcessCheck = new Thread(() => CheckAlive());
             ProcessCheck.Start();
+            
+            foreach (string s in Environment.GetCommandLineArgs())
+            {
+                if (s.ToLower().EndsWith(".fal"))
+                {
+                    Funcs.RunFile(s, this);
+                    break;
+                }
+            }
+            f.Invoke( (Delegate)(Action)(() => { f.Show(); }) );
         }
         public void CheckAlive()
         {

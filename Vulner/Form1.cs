@@ -19,11 +19,13 @@ namespace Vulner
         public Form1()
         {
             InitializeComponent();
+            this.Hide();
         }
 
         [STAThread]
         private void Form1_Load(object sender, EventArgs e)
         {
+            this.Hide();
             if ( Environment.GetCommandLineArgs().Contains("runas") )
             {
                 Process prc = Process.Start(new ProcessStartInfo
@@ -32,6 +34,7 @@ namespace Vulner
                     Verb = "runas",
                 });
                 Environment.Exit(0);
+                return;
             }
 
             Terminal = new TerminalController(this);

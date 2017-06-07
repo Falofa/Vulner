@@ -9,6 +9,7 @@ using System.IO;
 using System.Diagnostics;
 using Microsoft.Win32;
 using System.Windows.Forms;
+using System.Threading;
 
 namespace Vulner
 {
@@ -375,17 +376,6 @@ namespace Vulner
             }
             return "";
         }
-        public static void RunFile( string file, Main m, bool silent = false )
-        {
-            if (!silent) Console.WriteLine("Running {0}...", new FileInfo(file).Name);
-            string[] cn = File.ReadAllLines(file);
-            foreach (string c in cn)
-            {
-                string command = c.Trim();
-                if (command.StartsWith("#")) continue;
-                m.RunCommand(command);
-            }
-        }
         public static void Help(TerminalController Console, Command c, string s, string[] u, Dictionary<string,string> switches = null, Dictionary<string, string> param = null)
         {
             Console.ColorWrite("$a{1}", c.Name.ToUpper(), s);
@@ -456,6 +446,85 @@ namespace Vulner
                 }
                 kv++;
             }
+        }
+        public static bool RunFile(string f, Main m)
+        {
+            string filename = "";
+            string contents = "";
+            try
+            {
+                filename = GetFile(f);
+                contents = File.ReadAllText(filename);
+            } catch(Exception)
+            {
+                return false;
+            }
+
+            return Run(contents, m);
+        }
+        public static bool Run(string content, Main m)
+        {
+            bool header = true;
+            bool stop = false;
+            bool close = true;
+            bool hidden = false;
+
+            Dictionary<string, Func<string, int>> properties = new Dictionary<string, Func<string, int>>()
+            {
+                { "window", (s) =>
+                {
+                    MessageBox.Show(s);
+                    if(s.ToLower() == "hidden")
+                    {
+                        hidden = true;
+                    } else
+                    {
+                        hidden = false;
+                    }
+                    return 1;
+                } },
+                { "autoclose", (s) =>
+                {
+                    close = bool.Parse(s.ToLower());
+                    return 1;
+                } }
+            };
+
+            try
+            {
+                foreach (string s in content.Split('\n'))
+                {
+                    if (stop) { break; }
+                    string str = s.Trim();
+                    if (Regex.Match(str, @"^[\s]*$").Success) { continue; }
+                    if (str.StartsWith("@") && header)
+                    {
+                        string att = str.Split(' ')[0].Substring(1).ToLower();
+                        string val = str.Substring(att.Length + 1);
+                        if (properties.ContainsKey(att))
+                        {
+                            properties[att].Invoke(val);
+                            if (stop) { break; }
+                        }
+                        continue;
+                    }
+                    else if (header)
+                    {
+                        header = false;
+                        if (!hidden)
+                        {
+                            m.Parent.Show();
+                        }
+                    }
+
+                    m.RunCommand(str);
+                }
+            } catch(Exception)
+            {
+                Console.WriteLine();
+            }
+            if (close) { Process.GetCurrentProcess().Kill(); }
+            return true;
         }
     }
 }

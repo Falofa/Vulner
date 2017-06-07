@@ -655,6 +655,7 @@ namespace Vulner
                     Console.ColorWrite("$e{0}", Path.Combine(Environment.CurrentDirectory, M));
                     string[] Af = Funcs.GetFilesSmarty(M, false);
                     Af = Funcs.GetDirsSmarty(M, false).Concat(Af).ToArray();
+                    Console.StartInputBuffer();
                     foreach (string Fil in Af)
                     {
                         FileInfo f = new FileInfo(Fil);
@@ -666,6 +667,7 @@ namespace Vulner
 
                         Console.ColorWrite("$a{0} $8{1}", attr, f.Name);
                     }
+                    Console.WriteInputBuffer();
                     return null;
                 },
             }.Save(C, new string[] { "ls" });
@@ -1364,7 +1366,7 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "runas" });
             #endregion
-            #region Example Command
+            #region Assoc Command
             new Command
             {
                 Help = new CommandHelp

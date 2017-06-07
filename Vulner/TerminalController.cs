@@ -240,6 +240,18 @@ namespace Vulner
                 //ResumeDrawing(Otp);
             }));
         }
+        private void sWrite( string s )
+        {
+            //SuspendDrawing(Otp);
+            Otp.SelectionStart = Otp.Text.Length;
+            Otp.SelectionLength = 0;
+            Otp.SelectionColor = Fore;
+            Otp.SelectionBackColor = Back;
+            Otp.SelectedText = s;
+            //Otp.SelectionLength = 0;
+            Otp.SelectionStart = Otp.Text.Length;
+            //ResumeDrawing(Otp);
+        }
 
         public void WriteLine(object o = null)
         {
@@ -272,29 +284,33 @@ namespace Vulner
                 InputBuffer += string.Format(s, sa.Replace("$", "$$"), sb.Replace("$", "$$"), sc.Replace("$", "$$"), sd.Replace("$", "$$")) + "\n";
                 return;
             }
-            bool first = true;
-            Color reset = Fore;
-            foreach (string se in s.Split('$') )
+            Frm.Invoke((Delegate)(Action)(() =>
             {
-                string ss = se;
-                if (!first && !skiponce)
+                bool first = true;
+                Color reset = Fore;
+                foreach (string se in s.Split('$'))
                 {
-                    if ( se.Length == 0 ) { skiponce = true; continue; }
-                    char ch = ss.ToLower()[0];
-                    Fore = ltc[ch];
-                    if (Equals(Fore, null)) { Fore = reset; }
-                    ss = ss.Substring(1);
+                    string ss = se;
+                    if (!first && !skiponce)
+                    {
+                        if (se.Length == 0) { skiponce = true; continue; }
+                        char ch = ss.ToLower()[0];
+                        Fore = ltc[ch];
+                        if (Equals(Fore, null)) { Fore = reset; }
+                        ss = ss.Substring(1);
+                    }
+                    if (skiponce)
+                    {
+                        ss = "$" + ss;
+                    }
+                    skiponce = false;
+                    sWrite(string.Format(ss, new object[] { a, b, c, d }));
+                    first = false;
                 }
-                if (skiponce)
-                {
-                    ss = "$" + ss;
-                }
-                skiponce = false;
-                iWrite(string.Format(ss, new object[] { a, b, c, d }));
-                first = false;
-            }
-            iWrite("\n");
-            Fore = reset;
+                sWrite("\n");
+                Otp.ScrollToCaret();
+                Fore = reset;
+            }));
         }
 
         public void WriteLine(object o, object a = null, object b = null, object c = null, object d = null)
