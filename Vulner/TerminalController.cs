@@ -33,6 +33,12 @@ namespace Vulner
             IpBuff = true;
         }
 
+        public void NullInputBuffer()
+        {
+            InputBuffer = "";
+            IpBuff = false;
+        }
+
         public void WriteInputBuffer()
         {
             if (OtpBuffer != null) { return; }
@@ -185,6 +191,10 @@ namespace Vulner
 
         public Writable GetWritable(int Length, int Start = -1)
         {
+            if ( IpBuff )
+            {
+                return new Writable(Frm, this, -1, 0);
+            }
             return new Writable(Frm, this, Length, Start);
         }
 
@@ -456,7 +466,7 @@ namespace Vulner
     class Writable
     {
         int Start = 0;
-        int Length = 0;
+        int Length = -1;
         static Form Frm;
         static RichTextBox Otp;
         static void I(Action a)
@@ -465,42 +475,48 @@ namespace Vulner
         }
         public Writable(Form fr, TerminalController Terminal, int Len, int Pos = -1)
         {
-            Frm = fr;
-            I(() =>
+            if (Len != -1)
             {
-                Otp = Terminal.GetOutput();
-                if (Pos == -1)
+                Frm = fr;
+                I(() =>
                 {
-                    Pos = Otp.Text.Length;
-                }
-                Start = Pos;
-                Length = Len;
-                Otp.SelectionStart = Pos;
-                Otp.SelectionLength = 0;
-                Otp.SelectedText = "".PadRight(Len);
-                Otp.SelectionLength = 0;
-            });
-        }
-        public void Write( object o )
-        {
-            string s = (string)Convert.ChangeType(o, typeof(String));
-            if (s.Length > Length)
-            {
-                throw new ArgumentOutOfRangeException(string.Format("Maximum length is {0}, but input of length {1} was given.", Length, s.Length));
+                    Otp = Terminal.GetOutput();
+                    if (Pos == -1)
+                    {
+                        Pos = Otp.Text.Length;
+                    }
+                    Start = Pos;
+                    Length = Len;
+                    Otp.SelectionStart = Pos;
+                    Otp.SelectionLength = 0;
+                    Otp.SelectedText = "".PadRight(Len);
+                    Otp.SelectionLength = 0;
+                });
             }
-            I(() =>
+        }
+        public void Write(object o)
+        {
+            if (Length != -1)
             {
-                TerminalController.SuspendDrawing(Otp);
-                int a = Otp.SelectionStart;
-                int b = Otp.SelectionLength;
-                Otp.SelectionStart = Start;
-                Otp.SelectionLength = Length;
-                Otp.SelectedText = s.PadRight(Length);
-                Otp.SelectionLength = 0;
-                Otp.SelectionStart = a;
-                Otp.SelectionLength = b;
-                TerminalController.ResumeDrawing(Otp);
-            });
+                string s = (string)Convert.ChangeType(o, typeof(String));
+                if (s.Length > Length)
+                {
+                    throw new ArgumentOutOfRangeException(string.Format("Maximum length is {0}, but input of length {1} was given.", Length, s.Length));
+                }
+                I(() =>
+                {
+                    TerminalController.SuspendDrawing(Otp);
+                    int a = Otp.SelectionStart;
+                    int b = Otp.SelectionLength;
+                    Otp.SelectionStart = Start;
+                    Otp.SelectionLength = Length;
+                    Otp.SelectedText = s.PadRight(Length);
+                    Otp.SelectionLength = 0;
+                    Otp.SelectionStart = a;
+                    Otp.SelectionLength = b;
+                    TerminalController.ResumeDrawing(Otp);
+                });
+            }
         }
     }
 }

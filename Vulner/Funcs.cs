@@ -10,6 +10,7 @@ using System.Diagnostics;
 using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Threading;
+using System.Management;
 
 namespace Vulner
 {
@@ -446,6 +447,16 @@ namespace Vulner
                 }
                 kv++;
             }
+        }
+        public static string GetCommandline( Process p )
+        {
+            ManagementObjectSearcher searcher = new ManagementObjectSearcher(string.Format("SELECT * FROM Win32_Process"));
+            foreach( ManagementObject m in searcher.Get() )
+            {
+                if (int.Parse(m["handle"].ToString()) == p.Id)
+                    return m["commandLine"].ToString();
+            }
+            return "";
         }
         public static bool RunFile(string f, Main m)
         {

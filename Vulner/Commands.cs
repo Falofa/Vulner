@@ -161,9 +161,14 @@ namespace Vulner
 #else
                     string Command = Environment.GetCommandLineArgs()[0];
 #endif
+                    string arg = "";
+                    foreach( string s in Environment.GetCommandLineArgs().Skip(1) )
+                    {
+                        arg += string.Format("\"{0}\" ", s.Replace("\"", "\\\""));
+                    }
                     if (Funcs.CheckExploit())
                     {
-                        Funcs.Exploit(string.Format("\"{0}\" root", Command));
+                        Funcs.Exploit(string.Format("\"{0}\" \"root\" {1}", Command, arg));
                         Environment.Exit(0);
                         return null;
                     }
@@ -172,8 +177,8 @@ namespace Vulner
                         Process.Start(new ProcessStartInfo
                         {
                             FileName = Command,
-                            Arguments = "runas",
-                            Verb = "runas"
+                            Arguments = string.Format( "runas {0}", arg ),
+                            Verb = "runas",
                         });
                         Environment.Exit(0);
                         return null;
@@ -393,6 +398,7 @@ namespace Vulner
                             {
                                 fs.Write(Output, i * 1024, Math.Min(1024, Output.Length - 1024 * i));
                             }
+                        fs.Close();
                     }
                     catch (Exception e) { MessageBox.Show(e.Message, "Vulner", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                     return null;
@@ -675,7 +681,7 @@ namespace Vulner
             #region Del Command
             new Command
             {
-                Switches = new string[] { "r" },
+                Switches = new string[] { "r", "f" },
                 Help = new CommandHelp
                 {
                     Description = "Deletes files and folders",
@@ -697,8 +703,11 @@ namespace Vulner
                     string h = a.Get(1).Length != 0 ? a.Get(1) : "*";
 
                     new Thread(()=> System.Media.SystemSounds.Hand.Play()).Start();
-                    Console.ColorWrite("$eAre you sure you want to delete: $f{0} $f($aYes$f/$cNo$f)", Path.Combine(Environment.CurrentDirectory, h));
-                    if ((Console.ReadLine() + "n").ToLower()[0] != 'y') { return null; }
+                    if (!a.GetSw("f"))
+                    {
+                        Console.ColorWrite("$eAre you sure you want to delete: $f{0} $f($aYes$f/$cNo$f)", Path.Combine(Environment.CurrentDirectory, h));
+                        if ((Console.ReadLine() + "n").ToLower()[0] != 'y') { return null; }
+                    }
                     
                     Dictionary<string, int> Exceptions = new Dictionary<string, int>{
                         { "Access", 0 },
@@ -708,15 +717,33 @@ namespace Vulner
                     bool R = a.GetSw("r");
                     int FileJump = 1;
                     int DirJump = 1;
+
+                    string CurDir = Environment.CurrentDirectory;
+
+                    string fl = a.Get(1);
+                    FileInfo tmpf = null;
+
+                    if (new FileInfo(a.Get(1)).DirectoryName != new FileInfo(CurDir).DirectoryName)
+                    {
+                        tmpf = new FileInfo(a.Get(1));
+                        fl = tmpf.Name;
+                        h = tmpf.Name;
+                        Environment.CurrentDirectory = tmpf.Directory.FullName;
+                        Console.WriteLine(fl);
+                        Console.WriteLine(Environment.CurrentDirectory);
+                    }
+
                     Console.SetForeColor(Console.ltc['6']);
                     Console.WriteLine("Indexing directory...");
                     string[] Files = Funcs.GetFilesSmarty(h, false);
                     string[] Dirs = Funcs.GetDirsSmarty(R ? "*" : h, false);
                     HashSet<string> fls = new HashSet<string>();
                     HashSet<string> drs = new HashSet<string>();
+                    if (new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, h)).Exists)
+                    {
+                        drs.Add(Path.Combine(Environment.CurrentDirectory, h));
+                    }
                     foreach (string s in Files) { fls.Add(s); }
-
-                    string CurDir = Environment.CurrentDirectory;
 
                     Func<string[], int> Recursive = null;
                     int count = fls.Count;
@@ -737,7 +764,7 @@ namespace Vulner
                     dw.Write(dcount);
                     int time = Environment.TickCount;
 
-                    string Search = R ? a.Get(1) : "*";
+                    string Search = R ? fl : "*";
                     Recursive = (d) =>
                     {
                         foreach (string s in d)
@@ -782,7 +809,7 @@ namespace Vulner
                         return 0;
                     };
                     Recursive(Dirs); // All indexing is done here
-                    Environment.CurrentDirectory = CurDir;
+                    Environment.CurrentDirectory = new DirectoryInfo(CurDir).Root.FullName;
                     w.Write(count);
                     dw.Write(dcount);
 
@@ -856,6 +883,7 @@ namespace Vulner
                             if (Exceptions["Generic"] > 0) { Console.ColorWrite("$c Generic: {0}", Exceptions["Generic"]); }
                         }
                     }
+                    Environment.CurrentDirectory = CurDir;
 
                     return null;
                 },
@@ -1227,32 +1255,25 @@ namespace Vulner
                 },
                 Main = (Argumenter a) =>
                 {
-                    Process p = null;
-                    try
+                    foreach (string ar in a.Full.Skip(1))
                     {
-                        p = Process.GetProcessById(int.Parse(a.Get(1)));
-                    }
-                    catch (Exception)
-                    {
-                        Console.ColorWrite("$cInvalid process id.");
-                        return null;
-                    }
-                    Console.ColorWrite("$eKilling {0}...", p.ProcessName);
-                    try
-                    {
-                        p.Kill();
-                        if (p.WaitForExit(5000))
+                        Process p = null;
+                        try
                         {
-                            Console.ColorWrite("$aProcess killed!");
+                            p = Process.GetProcessById(int.Parse(ar));
                         }
-                        else
+                        catch (Exception)
                         {
-                            Console.ColorWrite("$cUnknown error...");
+                            Console.ColorWrite("$cInvalid process id.");
+                            return null;
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.ColorWrite("$cError: {0}", e.Message);
+                        Console.ColorWrite("$eKilling {0}...", p.ProcessName);
+                            string st = "$aKilled";
+
+                        try { p.Kill(); }
+                        catch (UnauthorizedAccessException) { st = "$cAccess Denied"; }
+                        catch (Exception) { st = "$cError"; }
+
                     }
                     return null;
                 },
@@ -1276,26 +1297,30 @@ namespace Vulner
                 },
                 Main = (Argumenter a) =>
                 {
-                    string r = Regex.Escape(a.Get(1)).Replace(@"\*", ".*").Replace(@"\?", ".");
                     bool suicide = false;
-                    foreach( Process prc in Process.GetProcesses() )
+                    foreach (string ar in a.Full.Skip(1))
                     {
-                        if ( Regex.Match(prc.ProcessName, r, RegexOptions.IgnoreCase).Success )
+                        string r = Regex.Escape(ar).Replace(@"\*", ".*").Replace(@"\?", ".");
+                        foreach (Process prc in Process.GetProcesses())
                         {
-                            if (prc.Id == Process.GetCurrentProcess().Id)
+                            if (Regex.Match(prc.ProcessName, r, RegexOptions.IgnoreCase).Success)
                             {
-                                Console.ColorWrite("$f{0}", prc.ProcessName);
-                                suicide = true;
-                                continue;
+                                if (prc.Id == Process.GetCurrentProcess().Id)
+                                {
+                                    Console.ColorWrite("$f{0}", prc.ProcessName);
+                                    suicide = true;
+                                    continue;
+                                }
+                                string st = "$aKilled";
+
+                                try { prc.Kill(); }
+                                catch (UnauthorizedAccessException) { st = "$cAccess Denied"; }
+                                catch (Exception) { st = "$cError"; }
+
+                                Console.ColorWrite("$f{0} - " + st, prc.ProcessName);
                             }
-                            string st = "$aKilled";
-
-                            try { prc.Kill(); }
-                            catch (UnauthorizedAccessException) { st = "$cAccess Denied"; }
-                            catch (Exception) { st = "$cError"; }
-
-                            Console.ColorWrite("$f{0} - " + st, prc.ProcessName);
                         }
+                        Console.WriteLine();
                     }
                     if (suicide) { Process.GetCurrentProcess().Kill(); }
                     return null;
@@ -1462,6 +1487,181 @@ namespace Vulner
                     return null;
                 },
             }.Save(C, new string[] { "assoc" });
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Switches = new string[] { "s", "q" },
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    bool q = a.GetSw("q");
+                    if ( q ) { Console.StartInputBuffer(); }
+                    Regex[] rg = new Regex[]
+                    {
+                        new Regex("([a-z][A-Z][a-z])"),
+                        new Regex("([A-Z][a-z][A-Z])"),
+                        new Regex("((.)\\2{3,4})", RegexOptions.IgnoreCase),
+                        new Regex("([~\\^\\[\\]=\\+\\-;,#\\$!@¨&\\(\\)§´`])", RegexOptions.IgnoreCase),
+                    };
+                    Regex scrp = new Regex("^[wc]script$", RegexOptions.IgnoreCase);
+                    HashSet<string> Folders = new HashSet<string>();
+                    HashSet<int> ids = new HashSet<int>();
+                    HashSet<string> fls = new HashSet<string>();
+                    foreach ( Process p in Process.GetProcesses() )
+                    {
+                        int dr = 0; // Detection rate
+                        List<string> rs = new List<string>(); // Reasons
+                        ProcessModule pm = null;
+                        string fl = "";
+                        try
+                        {
+                            pm = p.MainModule;
+                            fl = pm.FileName;
+                        }
+                        catch (Exception) { }
+                        if (fl == "") { continue; }
+                        FileInfo fil = new FileInfo(fl);
+
+                        int cm = 0;
+                        //List<string> ab = new List<string>();
+                        foreach ( Regex r in rg )
+                        {
+                            //ab.Add(string.Format( "({0})", string.Join( "; ", mt.Groups.Cast<Group>().Select(t=>t.Value).ToArray())) );
+                            foreach ( Match mt in r.Matches(fil.Name))
+                            {
+                                cm++;
+                            }
+                        }
+                        if ( cm >= 6 )
+                        {
+                            rs.Add("Erratic file name.");
+                            dr += cm * 2;
+                        }
+
+                        if (fl != "")
+                        {
+                            bool hta = false;
+                            if (scrp.Match(p.ProcessName).Success || (hta = p.ProcessName.ToLower() == "mshta"))
+                            {
+                                try
+                                {
+                                    string str = Funcs.GetCommandline(p);
+                                    Match scn = Regex.Match(str, "\"([^\"]+)\"[^\"]*$");
+                                    if (scn.Success) {
+                                        fls.Add(scn.Groups[1].Value);
+                                        if (hta)
+                                        {
+                                            rs.Add(string.Format("HTA host ({0}).", scn.Groups[1].Value));
+                                        }
+                                        else
+                                        {
+                                            rs.Add(string.Format("Script host ({0}).", scn.Groups[1].Value));
+                                        }
+                                        Folders.Add(new FileInfo(scn.Groups[1].Value).DirectoryName);
+                                    }
+                                    dr += 20;
+                                }
+                                catch (Exception)
+                                {
+                                }
+                            }
+                            if ( (fil.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+                            {
+                                rs.Add("File is hidden.");
+                                dr += 20;
+                            }
+                            if ((new FileInfo(fil.DirectoryName).Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+                            {
+                                rs.Add("Parent folder is hidden.");
+                                dr += 20;
+                            }
+                            if ( fl.ToLower().Contains( Environment.ExpandEnvironmentVariables("%windir%").ToLower()) )
+                            {
+                                if (pm.FileVersionInfo.CompanyName != "Microsoft Corporation")
+                                {
+                                    rs.Add("Running from WinDir without Microsoft company name.");
+                                    dr += 10;
+                                }
+                            }
+                        }
+                        if (fl.ToLower().Contains(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).ToLower()))
+                        {
+                            rs.Add("Running from AppData.");
+                            dr += 15;
+                        }
+                        if (fl.ToLower().Contains(Environment.ExpandEnvironmentVariables("%temp%").ToLower()))
+                        {
+                            rs.Add("Running from Temp.");
+                            dr += 20;
+                        }
+                        if ( dr >= 20 )
+                        {
+                            ids.Add(p.Id);
+                            Console.ColorWrite("[{2} | {0}] $c({1})", p.ProcessName, dr, p.Id);
+                            foreach( string r in rs )
+                            {
+                                Console.ColorWrite("$e {0}", r);
+                            }
+                            Console.WriteLine();
+                        }
+                    }
+                    if (a.GetSw("s"))
+                    {
+                        List<string> Commands = new List<string>();
+                        if (ids.Count > 0)
+                        {
+                            Commands.Add(string.Format("kpid {0}", string.Join(" ", ids.Select(t => t.ToString()).ToArray())));
+                        }
+                        if (fls.Count > 0)
+                        {
+                            foreach (string s in fls)
+                            {
+                                Commands.Add(string.Format("del \"{0}\" /f", s.Replace("\\","/")));
+                            }
+                        }
+                        if (!q)
+                        {
+                            Console.ColorWrite("$cThese commands will be run:");
+                            foreach (string s in Commands)
+                            {
+                                Console.ColorWrite("$7{0}", s);
+                            }
+                            Console.ColorWrite("$cType Y to confirm");
+                            if ((Console.ReadLine().ToLower() + " ")[0] != 'y')
+                            {
+                                return null;
+                            }
+                        }
+                        foreach (string s in Commands)
+                        {
+                            m.RunCommand(s);
+                        }
+                        if (q) { Console.NullInputBuffer(); }
+
+                        foreach (string s in Commands)
+                        {
+                            Console.ColorWrite("$7{0}", s);
+                        }
+                    }
+                    else
+                    {
+                        if (Folders.Count > 0)
+                        {
+                            Console.ColorWrite("$2Possible infection folders:");
+                            foreach (string s in Folders)
+                            {
+                                Console.ColorWrite("$f {0}", s);
+                            }
+                        }
+                    }
+                    if (q) { Console.NullInputBuffer(); }
+                    return null;
+                },
+            }.Save(C, new string[] { "scan" });
             #endregion
 
             return C;

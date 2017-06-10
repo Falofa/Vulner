@@ -55,17 +55,18 @@ namespace Vulner
             Cmds = new Commands().Get(this,t);
             Cmds[""] = new Command();
 
+            Environment.SetEnvironmentVariable("vulner", Environment.GetCommandLineArgs()[0]);
             Environment.SetEnvironmentVariable("startup", Environment.GetFolderPath(Environment.SpecialFolder.Startup));
             Environment.SetEnvironmentVariable("startmenu", Environment.GetFolderPath(Environment.SpecialFolder.StartMenu));
 
-            string name = "Vulner";
+            //string name = "Vulner";
             string asciiName = @"
-  $f║$c  ____   ____     __                           $f║
+  $f║$c  ____   ____     __       $fDeveloped by Falofa $f║
   $f║$c  \   \ /   __ __|  |   ____   ___________     $f║
   $f║$c   \   Y   |  |  |  |  /    \_/ __ \_  __ \    $f║
   $f║$c    \     /|  |  |  |_|   |  \  ___/|  | \/    $f║
   $f║$c     \___/ |____/|____|___|__/\____/|__|       $f║".Substring(2);     
-            string capt = "  ╔═══════════════════════════Developed=by=Falofa═╗";
+            string capt = "  ╔═══════════════════════════════════════════════╗";
             string capb = "  ╚═══════════════════════════════════════════════╝";
 
 #if (DEBUG)
@@ -76,7 +77,7 @@ namespace Vulner
 
             string fbuild = string.Format("$a[[ {0} ]]", build);
 
-            fbuild = string.Format("  ║{0} $f║", fbuild.PadLeft(asciiName.Split('\n')[0].Length-10));
+            fbuild = string.Format("  ║{0} $f║", fbuild.PadLeft(capt.Length-3));
 
             t.WriteLine();
             t.ColorWrite(capt);
@@ -117,10 +118,7 @@ namespace Vulner
             while(true)
             {
                 string s = t.ReadLine();
-
-                t.SetForeColor('f');
-                t.SetBackColor('0');
-                t.WriteLine("> {0}", s);
+                t.ColorWrite("$f> {0}", s);
 
                 Argumenter arg = new Argumenter(s);
                 string comma = arg.GetRaw(0);
@@ -138,9 +136,13 @@ namespace Vulner
 #if (DEBUG)
                             cmd.Run(t, arg);
 #else
-                            try {
+                            try
+                            {
                                 cmd.Run(t, arg);
-                            } catch (Exception e) { Trace(e); }
+                            } catch(Exception e)
+                            {
+                                Trace(e);
+                            }
 #endif
                         }
                         else
@@ -151,13 +153,7 @@ namespace Vulner
                 }
                 catch (KeyNotFoundException)
                 {
-                    try
-                    {
-                        Process.Start(arg.GetRaw(0), arg.GetRaw(1)).WaitForExit();
-                        continue;
-                    }
-                    catch (Exception) { }
-                    t.WriteLine("'{0}' is not a recognized command or an executable file.", comma);
+                    t.ColorWrite("$cInvalid command '$f{0}$c'", comma);
                 }
             }
         }
@@ -184,10 +180,7 @@ namespace Vulner
         }
         public void Trace(Exception e)
         {
-            t.SetBackColor(Color.Black);
-            t.SetForeColor(Color.Red);
-            t.WriteLine("An error ocourred: {0}",e.Message);
-            t.WriteLine(e.StackTrace);
+            t.ColorWrite("$cAn error ocourred: {0}\n{1}",e.Message, e.StackTrace);
         }
     }
 }
