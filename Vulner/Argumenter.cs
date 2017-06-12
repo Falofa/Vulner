@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace Vulner
 {
-    public class Argumenter
+    class Argumenter
     {
         public String Escapes = "\'\"`´~";
         public String ParamStr = "-";
@@ -19,18 +19,27 @@ namespace Vulner
         public String FullArg;
         public bool CaseSensitive = true;
 
+        public Dictionary<int,string[]> FormatStr = new Dictionary<int, string[]>();
+        public bool RunCommand = false;
+        public string Output = null;
+        Main m = null;
+
         public String[] Switches = new string[0];
         public String[] Params = new string[0];
         public Dictionary<string, bool> Sw = new Dictionary<string, bool>();
         public Dictionary<string, string> Pr = new Dictionary<string, string>();
 
-        public Argumenter( string s )
+        public void SetM(Main M) { m = M; }
+
+        public Argumenter( string s, bool commands = false )
         {
+            RunCommand = commands;
             RawCmd = s;
             Cmd = Environment.ExpandEnvironmentVariables(s);
             FullArg = Cmd.Substring(new Regex("^[a-z]+", RegexOptions.IgnoreCase).Match(Cmd.Trim()).Value.Length).TrimStart();
             int k = 0;
             string Cur = "";
+            string Fcur = "";
             bool Escaping = false;
             char EscChar = (char)0;
             for ( int i = 0; i < s.Length; i++ )
@@ -43,6 +52,7 @@ namespace Vulner
                         Escaping = false;
                         EscChar = (char)0;
                         {
+                            FormatStr[k] = new string[] { "", string.Format(Fcur, Cur) };
                             Full[k++] = Cur;
                             Cur = "";
                         }
@@ -57,6 +67,7 @@ namespace Vulner
                     {
                         Escaping = true;
                         EscChar = Ch;
+                        Fcur = string.Format("{0}{1}{0}", EscChar, "{0}");
                     }
                     else
                     {
@@ -64,6 +75,7 @@ namespace Vulner
                         {
                             if ( Cur.Length > 0 )
                             {
+                                FormatStr[k] = new string[] { "", Cur };
                                 Full[k++] = Cur;
                                 Cur = "";
                             }
@@ -78,6 +90,7 @@ namespace Vulner
                 {
                     if ( Cur.Length != 0 )
                     {
+                        FormatStr[k] = new string[] { "", Cur };
                         Full[k++] = Cur;
                         break;
                     }
@@ -96,38 +109,72 @@ namespace Vulner
                 Pr[str] = string.Empty;
             }
             int j = 0;
-            for ( int i = 0; i < Full.Length; i++ )
+            bool skip = false;
+            for (int i = 0; i < Full.Length; i++)
             {
+                bool skiponce = false;
                 string Cur = Full[i];
-                if (Cur.StartsWith( SwitcStr ) && ParseSW)
+                string[] Fcur = FormatStr[i];
+                if (i == 0) { Fcur[0] = "Command"; } else { Fcur[0] = "Argument"; }
+                if (Fcur[1] == ">")
                 {
-                    try
-                    {
-                        string s = Cur.Substring(SwitcStr.Length).ToLower();
-                        if (Switches.Contains(s))
-                        {
-                            Sw[s] = true;
-                            continue;
-                        }
-                    }
-                    catch (Exception) { return false; }
-                } else if ( Cur.StartsWith(ParamStr) && ParsePR)
-                {
-                    try
-                    {
-                        string s = Cur.Substring(ParamStr.Length).ToLower();
-                        if (Pr[s] == string.Empty)
-                        {
-                            Pr[s] = Full[i + 1];
-                            i = i + 1;
-                            continue;
-                        }
-                    }
-                    catch (Exception) { return false; }
+                    Fcur[0] = "Operator";
+                    Output = FormatStr[i + 1][1];
+                    FormatStr[i + 1][0] = "Output";
+                    skip = true;
+                    continue;
                 }
-                Parsed[j++] = Cur;
+                if ( Fcur[1].StartsWith("`") && Fcur[1].EndsWith("`"))
+                {
+                    string C = Fcur[1];
+                    if (RunCommand && !Equals(m, null)) {
+                        m.t.StartBuffer();
+                        string cm = Fcur[1].Substring(1, Fcur[1].Length-1);
+                        m.RunCommand(cm);
+                        Parsed[j++] = m.t.EndBuffer();
+                    } else
+                    {
+                        Parsed[j++] = Fcur[1].Substring(1, Fcur.Length - 2);
+                    }
+                    skiponce = true;
+                }
+                if (!skiponce && !skip)
+                {
+                    if (Cur.StartsWith(SwitcStr) && ParseSW)
+                    {
+                        try
+                        {
+                            string s = Cur.Substring(SwitcStr.Length).ToLower();
+                            if (Switches.Contains(s))
+                            {
+                                Sw[s] = true;
+                                continue;
+                            }
+                        }
+                        catch (Exception) { return false; }
+                    }
+                    else if (Cur.StartsWith(ParamStr) && ParsePR)
+                    {
+                        try
+                        {
+                            string s = Cur.Substring(ParamStr.Length).ToLower();
+                            if (Pr[s] == string.Empty)
+                            {
+                                if (FormatStr[i + 1][1] == ">")
+                                {
+                                    return false;
+                                }
+                                Pr[s] = Full[i + 1];
+                                i = i + 1;
+                                continue;
+                            }
+                        }
+                        catch (Exception) { return false; }
+                    }
+                    Parsed[j++] = Cur;
+                }
             }
-            Parsed = Parsed.Where(t => t != string.Empty).ToArray();
+            Parsed = Parsed.Where(t => t != string.Empty).Select(t => Environment.ExpandEnvironmentVariables(!Equals(t, null) ? t : "")).ToArray();
             return true;
         }
         public string Get(int i)

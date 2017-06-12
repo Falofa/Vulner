@@ -120,7 +120,8 @@ namespace Vulner
                 string s = t.ReadLine();
                 t.ColorWrite("$f> {0}", s);
 
-                Argumenter arg = new Argumenter(s);
+                Argumenter arg = new Argumenter(s, true);
+                arg.SetM(this);
                 string comma = arg.GetRaw(0);
 
                 try
@@ -133,6 +134,11 @@ namespace Vulner
                         if (arg.Parse(cmd.ParseSW, cmd.ParsePR))
                         {
                             t.SetForeColor('8');
+                            bool ot = !Equals(arg.Output, null) && arg.Output != "";
+                            if (ot)
+                            {
+                                t.StartBuffer();
+                            }
 #if (DEBUG)
                             cmd.Run(t, arg);
 #else
@@ -144,6 +150,31 @@ namespace Vulner
                                 Trace(e);
                             }
 #endif
+                            if (ot)
+                            {
+                                byte[] Output = t.EndBuffer().ToCharArray().Select(t => (byte)t).ToArray();
+
+                                try
+                                {
+                                    string fl = arg.FormatStr.Where(u => u.Value[0] == "Output").Select(u => u.Value[1]).First<string>();
+                                    if (new DirectoryInfo(fl).Exists) { throw new Exception("Output is a folder."); }
+                                    File.SetAttributes(fl,FileAttributes.Normal);
+                                    File.Delete(fl);
+                                    FileStream fs = File.OpenWrite(fl);
+                                    if (Output.Length != 0)
+                                        for (int i = 0; i < (1 + Output.Length / 1024); i++)
+                                        {
+                                            fs.Write(Output, i * 1024, Math.Min(1024, Output.Length - 1024 * i));
+                                        }
+                                    fs.Close();
+                                }
+                                catch (Exception e) { MessageBox.Show(e.Message, "Vulner", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                            }
+                            /* DEBUG
+                            foreach (KeyValuePair<int, string[]> b in arg.FormatStr)
+                            {
+                                t.ColorWrite("$a{0} - $f{1}", b.Value[0], b.Value[1]);
+                            }/* */
                         }
                         else
                         {

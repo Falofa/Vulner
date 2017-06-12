@@ -16,7 +16,7 @@ using System.Net.NetworkInformation;
 using System.Web;
 using System.Management;
 using System.Drawing;
-using Shell32;
+using System.Globalization;
 
 namespace Vulner
 {
@@ -102,7 +102,87 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "todo" });
             #endregion
+            #region Args Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    foreach( KeyValuePair<int,string[]> b in a.FormatStr )
+                    {
+                        Console.ColorWrite("$a{0} - $f{1}", b.Value[0], b.Value[1]);
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "args" });
+            #endregion
+            #region invis Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string outp = "";
+                    UnicodeCategory[] uc = new UnicodeCategory[]
+                    {
+                        UnicodeCategory.NonSpacingMark,
+                    };
+                    Label l = new Label();
+                    l.Hide();
+                    char b = '\0';
+                    for (int i = 1; i < 0xFFFF; i++)
+                    {
+                        b = (char)i;
+                        int w = l.GetPreferredSize(new Size()).Width;
+                        if (w <= 7 && uc.Contains(CharUnicodeInfo.GetUnicodeCategory(b)))
+                        {
+                            outp += string.Format("[{0}]\n", b);
+                        }
+                    }
+                    l.Dispose();
+                    Console.WriteLine(outp);
+                    return null;
+                },
+            }.Save(C, new string[] { "invs" });
+            #endregion
 #endif
+            #region Echo Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Echos back all arguments"
+                },
+                Main = (Argumenter a) =>
+                {
+                    foreach (string s in a.Parsed.Skip(1))
+                    {
+                        Console.Write(s);
+                    }
+                    Console.WriteLine();
+                    return null;
+                },
+            }.Save(C, new string[] { "echo" });
+            #endregion
+            #region Nul Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Does absolutely nothing :v"
+                },
+                Main = (Argumenter a) =>
+                {
+                    return null;
+                },
+            }.Save(C, new string[] { "nul" });
+            #endregion
             #region WhoAmI Command
             new Command
             {
@@ -366,7 +446,7 @@ namespace Vulner
                             }
                         }.Save(C, new string[] { "help" });
             #endregion
-            #region Out Command
+            #region Dump Command
             new Command
             {
                 Help = new CommandHelp
@@ -403,7 +483,7 @@ namespace Vulner
                     catch (Exception e) { MessageBox.Show(e.Message, "Vulner", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                     return null;
                 },
-            }.Save(C, new string[] { "out" });
+            }.Save(C, new string[] { "dump" });
             #endregion
             #region Crypto Command
             new Command
