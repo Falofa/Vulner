@@ -15,27 +15,8 @@ namespace Vulner
         public Dictionary<string, Command> Cmds = new Dictionary<string,Command>();
         public DirectoryInfo VulnerFolder = null;
         public TerminalController t = null;
-        public Form Parent = null;
-        public List<Proc> procs = new List<Proc>();
-        Thread ProcessCheck;
-        public void OnExit()
+        public Main(TerminalController te)
         {
-            if (ProcessCheck.IsAlive) ProcessCheck.Abort();
-            foreach( Proc p in procs )
-            {
-                if (p.alive)
-                {
-                    try
-                    {
-                        p.main.Kill();
-                    }
-                    catch (Exception) { }
-                }
-            }
-        }
-        public Main(Form f, TerminalController te)
-        {
-            Parent = f;
             VulnerFolder = new DirectoryInfo(Path.Combine(Environment.ExpandEnvironmentVariables("%appdata%"), "vulner"));
             if (!VulnerFolder.Exists) { VulnerFolder.Create(); }
             if (Environment.GetCommandLineArgs().Contains("root"))
@@ -48,6 +29,23 @@ namespace Vulner
                     CreateNoWindow = false,
                 });
                 Environment.Exit(0);
+                return;
+            }
+            if (Environment.GetCommandLineArgs().Contains("update"))
+            {
+                int id = Process.GetCurrentProcess().Id;
+                Process.GetProcesses().Where(t => t.ProcessName.ToLower().Contains("vulner") && t.Id != id).Select(t => { t.Kill(); return 0; });
+                string self = Environment.GetCommandLineArgs().Skip(1).Where(t => t != "update").First();
+#if (DEBUG)
+                    string vr = "Debug";
+#else
+                string vr = "Release";
+#endif
+                string dl = "https://github.com/Falofa/Vulner/blob/master/Vulner/bin/{0}/Vulner.exe?raw=true";
+                System.Net.WebClient wb = new System.Net.WebClient();
+                File.WriteAllBytes(self, wb.DownloadData(string.Format(dl, vr)));
+                Process.Start(self, "updated");
+                Process.GetCurrentProcess().Kill();
                 return;
             }
 
@@ -87,124 +85,119 @@ namespace Vulner
             t.WriteLine();
 
             t.ColorWrite("$2Type $eHELP$2 for a list of commands");
-            Environment.CurrentDirectory = Directory.GetDirectoryRoot(Environment.CurrentDirectory);
 
-            ProcessCheck = new Thread(() => CheckAlive());
-            ProcessCheck.Start();
+            if (Environment.GetCommandLineArgs().Contains("updated"))
+            {
+                t.ColorWrite("$aVulner was updated!");
+            }
             
             foreach (string s in Environment.GetCommandLineArgs())
             {
                 if (s.ToLower().EndsWith(".fal"))
                 {
+                    if (!File.Exists(s.ToLower())) { Environment.Exit(1); }
+                    Environment.CurrentDirectory = new FileInfo(s.ToLower()).DirectoryName;
                     Funcs.RunFile(s, this);
                     break;
                 }
             }
-            f.Invoke( (Delegate)(Action)(() => { f.Show(); }) );
-        }
-        public void CheckAlive()
-        {
-            while (true)
-            {
-                foreach (Proc p in procs)
-                {
-                    p.CheckAlive();
-                }
-                Thread.Sleep(100);
-            }
+            Funcs.ShowConsole();
         }
         public void Run()
         {
-            while(true)
+            while (true)
             {
+                t.SetForeColor('f');
+                Console.Write("> ");
                 string s = t.ReadLine();
-                t.ColorWrite("$f> {0}", s);
-
-                Argumenter arg = new Argumenter(s, true);
-                arg.SetM(this);
-                string comma = arg.GetRaw(0);
-
-                try
-                {
-                    Command cmd = Cmds[comma.ToLower()];
-                    arg.Switches = cmd.Switches;
-                    arg.Params = cmd.Parameters;
-                    if (cmd.Valid())
-                    {
-                        if (arg.Parse(cmd.ParseSW, cmd.ParsePR))
-                        {
-                            t.SetForeColor('8');
-                            bool ot = !Equals(arg.Output, null) && arg.Output != "";
-                            if (ot)
-                            {
-                                t.StartBuffer();
-                            }
-#if (DEBUG)
-                            cmd.Run(t, arg);
-#else
-                            try
-                            {
-                                cmd.Run(t, arg);
-                            } catch(Exception e)
-                            {
-                                Trace(e);
-                            }
-#endif
-                            if (ot)
-                            {
-                                byte[] Output = t.EndBuffer().ToCharArray().Select(t => (byte)t).ToArray();
-
-                                try
-                                {
-                                    string fl = arg.FormatStr.Where(u => u.Value[0] == "Output").Select(u => u.Value[1]).First<string>();
-                                    if (new DirectoryInfo(fl).Exists) { throw new Exception("Output is a folder."); }
-                                    File.SetAttributes(fl,FileAttributes.Normal);
-                                    File.Delete(fl);
-                                    FileStream fs = File.OpenWrite(fl);
-                                    if (Output.Length != 0)
-                                        for (int i = 0; i < (1 + Output.Length / 1024); i++)
-                                        {
-                                            fs.Write(Output, i * 1024, Math.Min(1024, Output.Length - 1024 * i));
-                                        }
-                                    fs.Close();
-                                }
-                                catch (Exception e) { MessageBox.Show(e.Message, "Vulner", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-                            }
-                            /* DEBUG
-                            foreach (KeyValuePair<int, string[]> b in arg.FormatStr)
-                            {
-                                t.ColorWrite("$a{0} - $f{1}", b.Value[0], b.Value[1]);
-                            }/* */
-                        }
-                        else
-                        {
-                            t.WriteLine("Malformed arguments.");
-                        }
-                    }
-                }
-                catch (KeyNotFoundException)
-                {
-                    t.ColorWrite("$cInvalid command '$f{0}$c'", comma);
-                }
+                this.RunCommand(s);
             }
         }
+        public string[] IgnoreFileNames = new string[] { "CON", "PRN", "AUX", "NUL",
+                                                         "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+                                                         "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
         public bool RunCommand(string interp)
         {
-            Argumenter a = new Argumenter(interp);
+            Argumenter a = new Argumenter(interp, true);
+            a.SetM(this);
+            if (a.GetRaw(0).Trim().Length == 0)
+            {
+                return true;
+            }
+                a.SetM(this);
             Command c = null;
             try
             {
                 c = Cmds[a.GetRaw(0)];
                 a.Switches = c.Switches;
                 a.Params = c.Parameters;
+                if (!c.Valid())
+                {
+                    t.ColorWrite("$cInvalid command.");
+                    return false;
+                }
             }
             catch (Exception) { }
             if (!Equals(c, null))
             {
-                if (c.Valid() & a.Parse())
+                if (a.Parse(c.ParseSW, c.ParsePR))
                 {
-                    try { c.Main.Invoke(a); } catch(Exception e) { Trace(e); }
-                    return true;
+                    t.SetForeColor('8');
+                    bool ot = !Equals(a.Output, null) && a.Output != "";
+                    if (ot)
+                    {
+                        t.StartBuffer();
+                    }
+#if (DEBUG)
+                    c.Run(t, a);
+#else
+                            try
+                            {
+                                c.Run(t, a);
+                            } catch(Exception e)
+                            {
+                                Trace(e);
+                            }
+#endif
+                    if (ot)
+                    {
+                        byte[] Output = t.EndBuffer().ToCharArray().Select(t => (byte)t).ToArray();
+
+                        try
+                        {
+                            //string fl = Path.Combine(Environment.CurrentDirectory, a.FormatStr.Where(u => u.Value[0] == "Output").Select(u => u.Value[1]).First<string>());
+                            string fl = Path.Combine(Environment.CurrentDirectory, a.Parsed.Last());
+                            //Console.WriteLine(fl);
+                            bool IgnoreWrite = false;
+                            if (IgnoreFileNames.Contains( new FileInfo(fl).Name.ToUpper() )) { IgnoreWrite = true; }
+                            if (!IgnoreWrite)
+                            {
+                                if (new DirectoryInfo(fl).Exists) { throw new Exception("Output is a folder."); }
+                                if (File.Exists(fl))
+                                {
+                                    File.SetAttributes(fl, FileAttributes.Normal);
+                                    File.Delete(fl);
+                                }
+                                FileStream fs = File.OpenWrite(fl);
+                                if (Output.Length != 0)
+                                    for (int i = 0; i < (1 + Output.Length / 1024); i++)
+                                    {
+                                        fs.Write(Output, i * 1024, Math.Min(1024, Output.Length - 1024 * i));
+                                    }
+                                fs.Close();
+                            }
+                        }
+                        catch (Exception e) { MessageBox.Show(e.Message, "Vulner", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                    }
+                    /* DEBUG
+                    foreach (KeyValuePair<int, string[]> b in arg.FormatStr)
+                    {
+                        t.ColorWrite("$a{0} - $f{1}", b.Value[0], b.Value[1]);
+                    }/* */
+                }
+                else
+                {
+                    t.WriteLine("Malformed arguments.");
                 }
             }
             return false;

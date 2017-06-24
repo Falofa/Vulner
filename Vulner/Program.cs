@@ -1,21 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
+using System.Text;
+using System.Threading;
 
 namespace Vulner
 {
-    static class Program
+    class Program
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main()
+        static void Main(string[] args)
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Funcs.HideConsole();
+            Console.BufferHeight = 500;
+            Console.Title = "Vulner";
+            TerminalController t = new TerminalController();
+            Main m = new Main(t);
+            Thread main = new Thread(() => m.Run());
+            main.Start();
         }
     }
 }

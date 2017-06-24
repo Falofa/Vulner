@@ -11,6 +11,7 @@ namespace Vulner
         public string Alias = string.Empty;
         public bool ParseSW = true;
         public bool ParsePR = true;
+        public bool Debug = false;
         public Func<Argumenter, object> Main { get ; set; }
         public CommandHelp Help = null;
         public string[] Parameters = new string[0];
@@ -18,9 +19,7 @@ namespace Vulner
         public Dictionary<string, object> Memory = new Dictionary<string, object>();
         public void Run(TerminalController Console, Argumenter Arg)
         {
-            Console.Lock();
             Main.Invoke(Arg);
-            Console.Unlock();
         }
     }
     class CommandHelp
@@ -78,21 +77,23 @@ namespace Vulner
             return !Equals(e.Main, null);
         }
 
-        public static Command Save(this Command e, Dictionary<string, Command> c, string[] s)
+        public static Command Save(this Command e, Dictionary<string, Command> c, string[] s, bool debug = false)
         {
             if (s.Length == 0) { return e; }
             e.Name = s[0];
             e.Alias = s[0];
+            e.Debug = debug;
             foreach (string st in s)
             {
                 c[st] = e;
             }
             return e;
         }
-        public static Command Save(this Command e, Dictionary<string, Command> c, string s)
+        public static Command Save(this Command e, Dictionary<string, Command> c, string s, bool debug = false)
         {
             e.Name = s;
             e.Alias = s;
+            e.Debug = debug;
             c[s] = e;
             return e;
         }

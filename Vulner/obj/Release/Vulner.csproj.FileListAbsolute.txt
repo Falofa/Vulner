@@ -1,12 +1,5 @@
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Release\Vulner.exe
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Release\Vulner.pdb
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.Form1.resources
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.Properties.Resources.resources
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.csproj.GenerateResource.Cache
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.exe
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.pdb
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.csprojResolveAssemblyReference.cache
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Interop.Shell32.dll
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.csproj.ResolveComReference.cache
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Release\Interop.Shell32.dll
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Release\Vulner.exe.config
+c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Release\Vulner.exe
+c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Release\Vulner.pdb
+c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.exe
+c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.pdb
+c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.csprojResolveAssemblyReference.cache

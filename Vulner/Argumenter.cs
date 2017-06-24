@@ -16,7 +16,6 @@ namespace Vulner
         public String[] Parsed = new string[80];
         public String RawCmd;
         public String Cmd;
-        public String FullArg;
         public bool CaseSensitive = true;
 
         public Dictionary<int,string[]> FormatStr = new Dictionary<int, string[]>();
@@ -36,7 +35,6 @@ namespace Vulner
             RunCommand = commands;
             RawCmd = s;
             Cmd = Environment.ExpandEnvironmentVariables(s);
-            FullArg = Cmd.Substring(new Regex("^[a-z]+", RegexOptions.IgnoreCase).Match(Cmd.Trim()).Value.Length).TrimStart();
             int k = 0;
             string Cur = "";
             string Fcur = "";
@@ -115,12 +113,19 @@ namespace Vulner
                 bool skiponce = false;
                 string Cur = Full[i];
                 string[] Fcur = FormatStr[i];
-                if (i == 0) { Fcur[0] = "Command"; } else { Fcur[0] = "Argument"; }
+                if (i == 0) { Fcur[0] = "Command"; } else if(string.IsNullOrEmpty(Fcur[0])) { Fcur[0] = "Argument"; }
                 if (Fcur[1] == ">")
                 {
                     Fcur[0] = "Operator";
-                    Output = FormatStr[i + 1][1];
-                    FormatStr[i + 1][0] = "Output";
+                    if (FormatStr.Count >= i + 2)
+                    {
+                        Output = FormatStr[i + 1][1];
+                        FormatStr[i + 1][0] = "Output";
+                    } else
+                    {
+                        Output = "";
+                        FormatStr.Add(FormatStr.Count, new string[] { "Output", "" });
+                    }
                     skip = true;
                     continue;
                 }
@@ -128,8 +133,8 @@ namespace Vulner
                 {
                     string C = Fcur[1];
                     if (RunCommand && !Equals(m, null)) {
-                        m.t.StartBuffer();
-                        string cm = Fcur[1].Substring(1, Fcur[1].Length-1);
+                        m.t.StartBuffer(true);
+                        string cm = Fcur[1].Substring(1, Fcur[1].Length-2);
                         m.RunCommand(cm);
                         Parsed[j++] = m.t.EndBuffer();
                     } else
@@ -174,7 +179,7 @@ namespace Vulner
                     Parsed[j++] = Cur;
                 }
             }
-            Parsed = Parsed.Where(t => t != string.Empty).Select(t => Environment.ExpandEnvironmentVariables(!Equals(t, null) ? t : "")).ToArray();
+            Parsed = Parsed.Select(t => Environment.ExpandEnvironmentVariables(!Equals(t, null) ? t : "")).Take(j).ToArray();
             return true;
         }
         public string Get(int i)

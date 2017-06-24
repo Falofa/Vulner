@@ -8,151 +8,58 @@ using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace Vulner
 {
     class TerminalController
     {
         #region Build region
-        static public RichTextBox Otp = null;
-        static public TextBox Inp = null;
-        static public Form Frm = null;
-        static Color[] ResetColor;
-        public Color Back = Color.Black;
-        public Color Fore = Color.White;
-        public Dictionary<char, Color> ltc = new Dictionary<char, Color>(); // Letter To Color
+        static ConsoleColor[] ResetColor;
+        public ConsoleColor Back = ConsoleColor.Black;
+        public ConsoleColor Fore = ConsoleColor.White;
+        public Dictionary<char, ConsoleColor> ltc = new Dictionary<char, ConsoleColor>(); // Letter To Color
 
-        static public RichTextBox OtpBuffer = null;
-        static public string InputBuffer = null;
-        static public bool IpBuff = false;
+        public bool buffer = false;
+        public bool hide = false;
+        string r = "";
 
-        public void StartInputBuffer()
+        public void StartBuffer(bool hide = false)
         {
-            if (OtpBuffer!=null) { return; }
-            InputBuffer = "";
-            IpBuff = true;
-        }
-
-        public void NullInputBuffer()
-        {
-            InputBuffer = "";
-            IpBuff = false;
-        }
-
-        public void WriteInputBuffer()
-        {
-            if (OtpBuffer != null) { return; }
-            IpBuff = false;
-            string[] lines = InputBuffer.Split('\n');
-            
-            int i = 0;
-            while (true)
-            {
-                string[] ln = lines.Skip(50*i++).Take(50).ToArray();
-
-                if (ln.Length == 0) { break; }
-
-                ColorWrite(string.Join("\n", ln));
-            }
-
-
-            /*int BlockSize = 1000;
-            for( int i = 0; i < 1+(InputBuffer.Length / BlockSize); i++ )
-            {
-                ColorWrite( InputBuffer.Substring( i*BlockSize, Math.Min( (i+1)*BlockSize,InputBuffer.Length ) ) );
-            }*/
-        }
-
-        public void StartBuffer()
-        {
-            OtpBuffer = Otp;
-            Otp = new RichTextBox();
-            Frm.Invoke((MethodInvoker)(() => {
-                Otp.Parent = Frm;
-                Otp.Visible = false;
-                IntPtr h = Otp.Handle;
-            }));
-            /*  int i = 0;
-            while( !Otp.IsHandleCreated || i++ > 100 ) { Thread.Sleep(5); } */
+            if (hide) this.hide = hide;
+            buffer = true;
+            r = "";
         }
         public string EndBuffer()
         {
-            string s = null;
-            Frm.Invoke((MethodInvoker)(() =>
-            {
-                s = Otp.Text;
-                Otp.Dispose();
-            }));
-            Otp = OtpBuffer;
-            OtpBuffer = null;
-            return s;
+            hide = false;
+            buffer = false;
+            return r;
         }
 
-        public RichTextBox GetOutput() { return Otp; }
-        public TerminalController( Form Main )
+        public TerminalController()
         {
-            ResetColor = new Color[] { Fore, Back };
+            ResetColor = new ConsoleColor[] { Fore, Back };
 
-            ltc['a'] = Color.GreenYellow;
-            ltc['b'] = Color.Aqua;
-            ltc['c'] = Color.Red;
-            ltc['d'] = Color.Violet;
-            ltc['e'] = Color.Yellow;
-            ltc['f'] = Color.White;
+            ltc['a'] = ConsoleColor.Green;
+            ltc['b'] = ConsoleColor.Cyan;
+            ltc['c'] = ConsoleColor.Red;
+            ltc['d'] = ConsoleColor.Magenta;
+            ltc['e'] = ConsoleColor.Yellow;
+            ltc['f'] = ConsoleColor.White;
 
-            ltc['1'] = Color.Blue;
-            ltc['2'] = Color.Green;
-            ltc['3'] = Color.Aquamarine;
-            ltc['4'] = Color.DarkRed;
-            ltc['5'] = Color.DarkViolet;
-            ltc['6'] = Color.Gold;
-            ltc['7'] = Color.LightGray;
-            ltc['8'] = Color.DimGray;
-            ltc['0'] = Color.Black;
+            ltc['1'] = ConsoleColor.Blue;
+            ltc['2'] = ConsoleColor.Green;
+            ltc['3'] = ConsoleColor.DarkBlue;
+            ltc['4'] = ConsoleColor.DarkRed;
+            ltc['5'] = ConsoleColor.DarkMagenta;
+            ltc['6'] = ConsoleColor.DarkYellow;
+            ltc['7'] = ConsoleColor.Gray;
+            ltc['8'] = ConsoleColor.DarkGray;
+            ltc['0'] = ConsoleColor.Black;
 
-            Frm = Main;
-            Otp = new RichTextBox();
-            Inp = new TextBox();
-
-            Frm.Invoke((MethodInvoker)(() => {
-                Frm.Controls.Add(Otp);
-                Frm.Controls.Add(Inp);
-
-                Otp.Font = new Font("Consolas", 12f, FontStyle.Bold);
-                Otp.BackColor = Color.Black;
-                Otp.ForeColor = Color.White;
-                Otp.SelectionColor = Color.White;
-                Otp.ReadOnly = true;
-                Otp.BorderStyle = BorderStyle.None;
-                Otp.AutoWordSelection = false;
-
-                Inp.Font = new Font("Consolas", 12f, FontStyle.Bold);
-                Inp.BorderStyle = BorderStyle.FixedSingle;
-                Inp.BackColor = Color.Black;
-                Inp.ForeColor = Color.White;
-                Inp.ReadOnly = true;
-
-                this.Resize(this, new EventArgs());
-
-                Frm.Resize += Resize;
-                Frm.Load += (o, e) => { Inp.Focus(); };
-                Otp.KeyPress += ListenForKey;
-            }));
-        }
-
-        public event EventHandler CancelKey;
-
-        private void ListenForKey(object o, KeyPressEventArgs e)
-        {
-            //MessageBox.Show(((byte)e.KeyChar).ToString());
-            if (e.KeyChar == (char)3)
-            {
-                try
-                {
-                    CancelKey(this, new EventArgs());
-                }
-                catch (Exception) { }
-            }
+            Console.BackgroundColor = Back = ConsoleColor.Black;
+            Console.ForegroundColor = Fore = ConsoleColor.White;
         }
         #endregion
 
@@ -180,39 +87,21 @@ namespace Vulner
             Back = ResetColor[1];
         }
 
-        private void Resize(object sender, EventArgs e)
+        public void SetBackColor(ConsoleColor c)
         {
-            Otp.Location = new Point(0, 0);
-            Otp.Size = new Size(Frm.DisplayRectangle.Size.Width, Frm.DisplayRectangle.Size.Height - Inp.ClientRectangle.Height);
-
-            Inp.Location = new Point(0, Frm.DisplayRectangle.Size.Height - Inp.ClientRectangle.Height); 
-            Inp.Size = new Size(Frm.DisplayRectangle.Size.Width, Inp.ClientRectangle.Height);
+            Console.BackgroundColor = Back = c;
         }
 
-        public Writable GetWritable(int Length, int Start = -1)
+        public void SetForeColor(ConsoleColor c)
         {
-            if ( IpBuff )
-            {
-                return new Writable(Frm, this, -1, 0);
-            }
-            return new Writable(Frm, this, Length, Start);
-        }
-
-        public void SetBackColor(Color c)
-        {
-            Back = c;
-        }
-
-        public void SetForeColor(Color c)
-        {
-            Fore = c;
+            Console.ForegroundColor = Fore = c;
         }
 
         public void SetBackColor(char c)
         {
             try
             {
-                Back = ltc[c];
+                Console.BackgroundColor = Back = ltc[c];
             }
             catch (Exception) { }
         }
@@ -221,302 +110,120 @@ namespace Vulner
         {
             try
             {
-                Fore = ltc[c];
+                Console.ForegroundColor = Fore = ltc[c];
             }
             catch (Exception) { }
         }
 
         public void Clear()
         {
-            Frm.Invoke((MethodInvoker)(() =>
-            {
-                Otp.Text = string.Empty;
-            }));
+            for (int i = 0; i < Console.BufferHeight; i++) if (!hide) Console.WriteLine();
         }
 
-        private void iWrite( string s )
-        {
-            Frm.Invoke((MethodInvoker)(() =>
-            {
-                //SuspendDrawing(Otp);
-                Otp.SelectionStart = Otp.Text.Length;
-                Otp.SelectionLength = 0;
-                Otp.SelectionColor = Fore;
-                Otp.SelectionBackColor = Back;
-                Otp.SelectedText = s;
-                //Otp.SelectionLength = 0;
-                Otp.SelectionStart = Otp.Text.Length;
-                Otp.ScrollToCaret();
-                //ResumeDrawing(Otp);
-            }));
-        }
-        private void sWrite( string s )
-        {
-            //SuspendDrawing(Otp);
-            Otp.SelectionStart = Otp.Text.Length;
-            Otp.SelectionLength = 0;
-            Otp.SelectionColor = Fore;
-            Otp.SelectionBackColor = Back;
-            Otp.SelectedText = s;
-            //Otp.SelectionLength = 0;
-            Otp.SelectionStart = Otp.Text.Length;
-            //ResumeDrawing(Otp);
-        }
-
-        public void WriteLine(object o = null)
-        {
-            if (Equals(o,null)) { o = ""; }
-            string s = (string)Convert.ChangeType(o, typeof(String));
-            if (IpBuff)
-            {
-                InputBuffer += s.Replace("$", "$$") + "\n";
-            }
-            else
-            {
-                iWrite(s + "\n");
-            }
-        }
-
-        public void ColorWrite(object o, object a = null, object b = null, object c = null, object d = null)
+        public void ColorWrite(object o, params object[] obj)
         {
             bool skiponce = false;
             string s = (string)Convert.ChangeType(o, typeof(String));
-            if (IpBuff)
+
+            bool first = true;
+            ConsoleColor reset = Fore;
+            foreach (string se in s.Split('$'))
             {
-                string sa = (string)Convert.ChangeType(a, typeof(String));
-                string sb = (string)Convert.ChangeType(b, typeof(String));
-                string sc = (string)Convert.ChangeType(c, typeof(String));
-                string sd = (string)Convert.ChangeType(d, typeof(String));
-                sa = Equals(sa, null) ? "" : sa;
-                sb = Equals(sb, null) ? "" : sb;
-                sc = Equals(sc, null) ? "" : sc;
-                sd = Equals(sd, null) ? "" : sd;
-                InputBuffer += string.Format(s, sa.Replace("$", "$$"), sb.Replace("$", "$$"), sc.Replace("$", "$$"), sd.Replace("$", "$$")) + "\n";
-                return;
-            }
-            Frm.Invoke((Delegate)(Action)(() =>
-            {
-                bool first = true;
-                Color reset = Fore;
-                foreach (string se in s.Split('$'))
+                string ss = se;
+                if (!first && !skiponce)
                 {
-                    string ss = se;
-                    if (!first && !skiponce)
-                    {
-                        if (se.Length == 0) { skiponce = true; continue; }
-                        char ch = ss.ToLower()[0];
-                        Fore = ltc[ch];
-                        if (Equals(Fore, null)) { Fore = reset; }
-                        ss = ss.Substring(1);
-                    }
-                    if (skiponce)
-                    {
-                        ss = "$" + ss;
-                    }
-                    skiponce = false;
-                    sWrite(string.Format(ss, new object[] { a, b, c, d }));
-                    first = false;
+                    if (se.Length < 2) { skiponce = true; continue; }
+                    char ch = ss.ToLower()[0];
+                    SetForeColor(ltc[ch]);
+                    if (Equals(Fore, null)) { SetForeColor(reset); }
+                    ss = ss.Substring(1);
                 }
-                sWrite("\n");
-                Otp.ScrollToCaret();
-                Fore = reset;
-            }));
+                if (skiponce)
+                {
+                    ss = "$" + ss;
+                }
+                skiponce = false;
+                try
+                {
+                    string str = string.Format(ss, obj);
+                    if ( buffer ) r += str;
+                    if (!hide) Console.Write(str);
+                } catch (Exception)
+                {
+                    // It appears that CLSIDS for example: {BB64F8A7-BEE7-4E1A-AB8D-7D8273F7FDB6} make string.Format throw an exception, rest in pieces
+                    if (buffer) r += ss;
+                    if (!hide) Console.Write(ss);
+                }
+                first = false;
+            }
+            if (!hide) Console.WriteLine();
+            if (buffer) r += '\n';
+            SetForeColor(reset);
         }
 
-        public void WriteLine(object o, object a = null, object b = null, object c = null, object d = null)
+        public void WriteLine(object o = null, params object[] obj)
         {
-            string s = string.Format((string)Convert.ChangeType(o, typeof(String)), new object[] { a, b, c, d });
-            if (IpBuff)
-            {
-                InputBuffer += s.Replace("$", "$$") + "\n";
-            }
-            else
-            {
-                iWrite(s + "\n");
-            }
+            if ( Equals(o,null) ) { o = ""; }
+            string s = string.Format((string)Convert.ChangeType(o, typeof(String)), obj);
+            if (buffer) { r += s; }
+            if (!hide) Console.WriteLine(s);
         }
-        public void NL()
+
+        public void Write(object o = null, params object[] obj)
         {
-            iWrite("\n");
+            if (Equals(o, null)) { o = ""; }
+            string s = string.Format((string)Convert.ChangeType(o, typeof(String)), obj);
+            if (buffer) { r += s; }
+            if (!hide) Console.Write(s);
+        }
+
+        public string FancyInput()
+        {
+            SetForeColor('f');
+            Write("> ");
+            string s = ReadLine();
+            if (buffer) { r += s; }
+            return s;
+        }
+
+        public string ReadLine()
+        {
+            return Console.ReadLine();
+        }
+
+        public ConsoleKeyInfo ReadKey()
+        {
+            return Console.ReadKey();
+        }
+
+        public Writable GetWritable( int Length )
+        {
+            return new Writable(Length, this);
+        }
+    }
+    class Writable {
+        int X = 0;
+        int Y = 0;
+        int Len = 0;
+        TerminalController t = null;
+        public Writable(int Length, TerminalController t)
+        {
+            this.t = t;
+            X = Console.CursorLeft;
+            Y = Console.CursorTop;
+            Len = Length;
+            for (int i = 0; i < Length; i++) if (!t.hide) Console.Write(" ");
         }
 
         public void Write(object o)
         {
             string s = (string)Convert.ChangeType(o, typeof(String));
-            if (IpBuff)
-            {
-                InputBuffer += s.Replace("$", "$$");
-            }
-            else
-            {
-                iWrite(s);
-            }
-        }
-
-        public void Write(object o, object a = null, object b = null, object c = null, object d = null)
-        {
-            string s = string.Format((string)Convert.ChangeType(o, typeof(String)), new object[] { a, b, c, d });
-            if (IpBuff)
-            {
-                InputBuffer += s.Replace("$", "$$");
-            }
-            else
-            {
-                iWrite(s);
-            }
-        }
-
-        public void Lock()
-        {
-            Frm.Invoke((MethodInvoker)(() =>
-            {
-                Inp.ReadOnly = false;
-                Inp.Enabled = true;
-            }));
-        }
-
-        public void Unlock()
-        {
-            Frm.Invoke((MethodInvoker)(() =>
-            {
-                Inp.ReadOnly = false;
-                Inp.Enabled = true;
-            }));
-        }
-        
-        public Form GetControl()
-        {
-            return Frm;
-        }
-
-        static void I( Action a )
-        {
-            Frm.Invoke((Delegate)a);
-        }
-
-        string[] Older = new string[50];
-        int i = 0;
-        public string ReadLine()
-        {
-            Frm.Invoke((MethodInvoker)(() =>
-            {
-                Unlock();
-                Inp.Focus();
-            }));
-            string Str = "";
-            bool Pr = true;
-            Action Submit = () =>
-            {
-                Str = Inp.Text;
-                if (i == 49)
-                {
-                    Older = Older.Reverse().Take(49).Reverse().Concat(new string[] { "" }).ToArray();
-                    i--;
-                }
-                else
-                {
-                    Older[i++] = Str;
-                }
-                Inp.Clear();
-                Pr = false;
-                Lock();
-            };
-            EventHandler bc = (o, e) =>
-            {
-                Submit.Invoke();
-            };
-            int a = i;
-            KeyEventHandler kp = (o, e) =>
-            {
-                if ( e.KeyCode == Keys.Up | e.KeyCode == Keys.PageUp )
-                {
-                    a = Math.Max(a - 1, 0);
-                    Inp.Text = Older[a];
-                    Inp.SelectionStart = Inp.Text.Length;
-                    Inp.SelectionLength = 0;
-                    e.Handled = true;
-                }
-                if (e.KeyCode == Keys.Down | e.KeyCode == Keys.Down)
-                {
-                    a = Math.Min(a + 1, i-1);
-                    Inp.Text = Older[a];
-                    Inp.SelectionStart = Inp.Text.Length;
-                    Inp.SelectionLength = 0;
-                    e.Handled = true;
-                }
-                if ( e.KeyCode == Keys.Return )
-                {
-                    Submit.Invoke();
-                    e.Handled = true;
-                }
-            };
-            Inp.KeyDown += kp;
-            
-            while ( Pr )
-            {
-                Thread.Sleep(10);
-            }
-            Inp.KeyDown -= kp;
-            return Str;
-        }
-
-        public int SelectStart() { return Otp.SelectionStart; }
-        public int SelectEnd() { return Otp.SelectionStart + Otp.SelectionLength; }
-    }
-    class Writable
-    {
-        int Start = 0;
-        int Length = -1;
-        static Form Frm;
-        static RichTextBox Otp;
-        static void I(Action a)
-        {
-            Frm.Invoke((Delegate)a);
-        }
-        public Writable(Form fr, TerminalController Terminal, int Len, int Pos = -1)
-        {
-            if (Len != -1)
-            {
-                Frm = fr;
-                I(() =>
-                {
-                    Otp = Terminal.GetOutput();
-                    if (Pos == -1)
-                    {
-                        Pos = Otp.Text.Length;
-                    }
-                    Start = Pos;
-                    Length = Len;
-                    Otp.SelectionStart = Pos;
-                    Otp.SelectionLength = 0;
-                    Otp.SelectedText = "".PadRight(Len);
-                    Otp.SelectionLength = 0;
-                });
-            }
-        }
-        public void Write(object o)
-        {
-            if (Length != -1)
-            {
-                string s = (string)Convert.ChangeType(o, typeof(String));
-                if (s.Length > Length)
-                {
-                    throw new ArgumentOutOfRangeException(string.Format("Maximum length is {0}, but input of length {1} was given.", Length, s.Length));
-                }
-                I(() =>
-                {
-                    TerminalController.SuspendDrawing(Otp);
-                    int a = Otp.SelectionStart;
-                    int b = Otp.SelectionLength;
-                    Otp.SelectionStart = Start;
-                    Otp.SelectionLength = Length;
-                    Otp.SelectedText = s.PadRight(Length);
-                    Otp.SelectionLength = 0;
-                    Otp.SelectionStart = a;
-                    Otp.SelectionLength = b;
-                    TerminalController.ResumeDrawing(Otp);
-                });
-            }
+            int[] temp = new int[] { Console.CursorLeft, Console.CursorTop };
+            Console.CursorLeft = X;
+            Console.CursorTop = Y;
+            if (!t.hide) Console.Write(s.Substring(0, Math.Min(Len, s.Length)));
+            Console.CursorLeft = temp[0];
+            Console.CursorTop = temp[1];
         }
     }
 }

@@ -11,11 +11,25 @@ using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Threading;
 using System.Management;
+using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace Vulner
 {
     class Funcs
     {
+        [DllImport("kernel32.dll")]
+        static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        const int SW_HIDE = 0;
+        const int SW_SHOW = 5;
+
+        public static void HideConsole() { ShowWindow(GetConsoleWindow(), SW_HIDE); }
+        public static void ShowConsole() { ShowWindow(GetConsoleWindow(), SW_SHOW); }
+
         public static bool IsAdmin()
         {
             return new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
@@ -121,6 +135,19 @@ namespace Vulner
             byte[] bts = new byte[len];
             RandomNumberGenerator.Create().GetBytes(bts);
             return new String(bts.Select(t => a[t % a.Length]).ToArray());
+        }
+        public static string RandomString(int min, int max)
+        {
+            string a = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxwyz";
+            byte[] bts = new byte[Rnd(min, max)];
+            RandomNumberGenerator.Create().GetBytes(bts);
+            return new String(bts.Select(t => a[t % a.Length]).ToArray());
+        }
+        public static byte[] RandomBytes(int min, int max)
+        {
+            byte[] bts = new byte[Rnd(min, max)];
+            RandomNumberGenerator.Create().GetBytes(bts);
+            return bts;
         }
         public static int Rnd( int min = 0, int max = 100000 )
         {
@@ -466,6 +493,7 @@ namespace Vulner
             {
                 filename = GetFile(f);
                 contents = File.ReadAllText(filename);
+                Run(contents, m);
             } catch(Exception)
             {
                 return false;
@@ -479,13 +507,13 @@ namespace Vulner
             bool stop = false;
             bool close = true;
             bool hidden = false;
+            string dump = "";
 
             Dictionary<string, Func<string, int>> properties = new Dictionary<string, Func<string, int>>()
             {
                 { "window", (s) =>
                 {
-                    MessageBox.Show(s);
-                    if(s.ToLower() == "hidden")
+                    if(s.ToLower().Trim() == "hidden")
                     {
                         hidden = true;
                     } else
@@ -494,11 +522,16 @@ namespace Vulner
                     }
                     return 1;
                 } },
-                { "autoclose", (s) =>
+                { "dump", (s) =>
                 {
-                    close = bool.Parse(s.ToLower());
+                    dump = s.ToLower();
                     return 1;
-                } }
+                } },
+                { "close", (s) =>
+                {
+                    close = bool.Parse(s);
+                    return 1;
+                } },
             };
 
             try
@@ -522,20 +555,37 @@ namespace Vulner
                     else if (header)
                     {
                         header = false;
-                        if (!hidden)
+                        if (hidden)
                         {
-                            m.Parent.Show();
+                            Funcs.HideConsole();
                         }
                     }
-
                     m.RunCommand(str);
                 }
             } catch(Exception)
             {
-                Console.WriteLine();
             }
-            if (close) { Process.GetCurrentProcess().Kill(); }
+            if (dump != "") try { File.WriteAllText( dump, m.t.EndBuffer() ); } catch(Exception) { }
+            if (close) Process.GetCurrentProcess().Kill();
             return true;
+        }
+        public static char[] InvisibleChars()
+        {
+            List<char> e = new List<char>();
+            UnicodeCategory[] uc = new UnicodeCategory[]
+            {
+                UnicodeCategory.Format,
+            };
+            char b = '\0';
+            for (int i = 1; i < 0xFFFF; i++)
+            {
+                b = (char)i;
+                if (uc.Contains(CharUnicodeInfo.GetUnicodeCategory(b)))
+                {
+                    e.Add(b);
+                }
+            }
+            return e.ToArray();
         }
     }
 }
