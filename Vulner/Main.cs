@@ -118,38 +118,40 @@ namespace Vulner
                                                          "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
         public bool RunCommand(string interp)
         {
-            Argumenter a = new Argumenter(interp, true);
-            a.SetM(this);
-            if (a.GetRaw(0).Trim().Length == 0)
+            Thread ct = new Thread(() =>
             {
-                return true;
-            }
+                Argumenter a = new Argumenter(interp, true);
                 a.SetM(this);
-            Command c = null;
-            try
-            {
-                c = Cmds[a.GetRaw(0)];
-                a.Switches = c.Switches;
-                a.Params = c.Parameters;
-                if (!c.Valid())
+                if (a.GetRaw(0).Trim().Length == 0)
                 {
-                    t.ColorWrite("$cInvalid command.");
-                    return false;
+                    return;
                 }
-            }
-            catch (Exception) { }
-            if (!Equals(c, null))
-            {
-                if (a.Parse(c.ParseSW, c.ParsePR))
+                a.SetM(this);
+                Command c = null;
+                try
                 {
-                    t.SetForeColor('8');
-                    bool ot = !Equals(a.Output, null) && a.Output != "";
-                    if (ot)
+                    c = Cmds[a.GetRaw(0)];
+                    a.Switches = c.Switches;
+                    a.Params = c.Parameters;
+                    if (!c.Valid())
                     {
-                        t.StartBuffer();
+                        t.ColorWrite("$cInvalid command.");
+                        return;
                     }
+                }
+                catch (Exception) { }
+                if (!Equals(c, null))
+                {
+                    if (a.Parse(c.ParseSW, c.ParsePR))
+                    {
+                        t.SetForeColor('8');
+                        bool ot = !Equals(a.Output, null) && a.Output != "";
+                        if (ot)
+                        {
+                            t.StartBuffer();
+                        }
 #if (DEBUG)
-                    c.Run(t, a);
+                        c.Run(t, a);
 #else
                             try
                             {
@@ -159,47 +161,68 @@ namespace Vulner
                                 Trace(e);
                             }
 #endif
-                    if (ot)
-                    {
-                        byte[] Output = t.EndBuffer().ToCharArray().Select(t => (byte)t).ToArray();
-
-                        try
+                        if (ot)
                         {
-                            //string fl = Path.Combine(Environment.CurrentDirectory, a.FormatStr.Where(u => u.Value[0] == "Output").Select(u => u.Value[1]).First<string>());
-                            string fl = Path.Combine(Environment.CurrentDirectory, a.Parsed.Last());
-                            //Console.WriteLine(fl);
-                            bool IgnoreWrite = false;
-                            if (IgnoreFileNames.Contains( new FileInfo(fl).Name.ToUpper() )) { IgnoreWrite = true; }
-                            if (!IgnoreWrite)
-                            {
-                                if (new DirectoryInfo(fl).Exists) { throw new Exception("Output is a folder."); }
-                                if (File.Exists(fl))
+                            byte[] Output = t.EndBuffer().ToCharArray().Select(t => (byte)t).ToArray();
+
+                            //try
+                            //{
+                                string fl = Path.Combine(Environment.CurrentDirectory, a.FormatStr.Where(u => u.Value[0] == "Output").Select(u => u.Value[1]).First<string>());
+                                //string fl = Path.Combine(Environment.CurrentDirectory, a.Parsed.Last());
+                                //Console.WriteLine(fl);
+                                bool IgnoreWrite = false;
+                                if (IgnoreFileNames.Contains(new FileInfo(fl).Name.ToUpper())) { IgnoreWrite = true; }
+                                if (!IgnoreWrite)
                                 {
-                                    File.SetAttributes(fl, FileAttributes.Normal);
-                                    File.Delete(fl);
-                                }
-                                FileStream fs = File.OpenWrite(fl);
-                                if (Output.Length != 0)
-                                    for (int i = 0; i < (1 + Output.Length / 1024); i++)
+                                    if (new DirectoryInfo(fl).Exists) { throw new Exception("Output is a folder."); }
+                                    if (File.Exists(fl))
                                     {
-                                        fs.Write(Output, i * 1024, Math.Min(1024, Output.Length - 1024 * i));
+                                        File.SetAttributes(fl, FileAttributes.Normal);
+                                        File.Delete(fl);
                                     }
-                                fs.Close();
-                            }
+                                    FileStream fs = File.OpenWrite(fl);
+                                    if (Output.Length != 0)
+                                        for (int i = 0; i < (1 + Output.Length / 1024); i++)
+                                        {
+                                            fs.Write(Output, i * 1024, Math.Min(1024, Output.Length - 1024 * i));
+                                        }
+                                    fs.Close();
+                                }
+                            //}
+                            //catch (Exception e) { MessageBox.Show(e.Message, "Vulner", MessageBoxButtons.OK, MessageBoxIcon.Error); }
                         }
-                        catch (Exception e) { MessageBox.Show(e.Message, "Vulner", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                        /* DEBUG
+                        foreach (KeyValuePair<int, string[]> b in arg.FormatStr)
+                        {
+                            t.ColorWrite("$a{0} - $f{1}", b.Value[0], b.Value[1]);
+                        }/* */
                     }
-                    /* DEBUG
-                    foreach (KeyValuePair<int, string[]> b in arg.FormatStr)
+                    else
                     {
-                        t.ColorWrite("$a{0} - $f{1}", b.Value[0], b.Value[1]);
-                    }/* */
+                        t.WriteLine("Malformed arguments.");
+                    }
                 }
-                else
+            });
+            ConsoleCancelEventHandler ce = (o, e) =>
+            {
+                if ((e.SpecialKey & ConsoleSpecialKey.ControlC) == ConsoleSpecialKey.ControlC)
                 {
-                    t.WriteLine("Malformed arguments.");
+                    t.ColorWrite("$e-> Terminating thread...");
+                    int i = 0;
+                    while (ct.IsAlive && i < 50)
+                    {
+                        i++;
+                        ct.Abort();
+                        Thread.Sleep(50);
+                    }
                 }
-            }
+                e.Cancel = true;
+
+            };
+            Console.CancelKeyPress += ce;
+            ct.Start();
+            ct.Join();
+            Console.CancelKeyPress -= ce;
             return false;
         }
         public void Trace(Exception e)

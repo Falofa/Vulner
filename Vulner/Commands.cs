@@ -2214,6 +2214,70 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "msgbox" }, __debug__);
             #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    Process p = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = a.Get(1),
+                        Arguments = a.Get(2),
+                        UseShellExecute = false,
+                        RedirectStandardError = true,
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        CreateNoWindow = true
+                    });
+                    Thread th = new Thread(()=>
+                    {
+                        while (true)
+                        {
+                            foreach (ProcessThread thread in p.Threads)
+                            {
+                                if (thread.ThreadState == System.Diagnostics.ThreadState.Wait)
+                                {
+                                    p.StandardInput.Write(t.ReadKey());
+                                    p.StandardInput.Flush();
+                                }
+                            }
+                        }
+                    });
+                    th.Start();
+                    while (!p.HasExited)
+                    {
+                        t.Write("{0}", p.StandardOutput.ReadToEnd());
+                        Thread.Sleep(50);
+                    }
+                    th.Abort();
+                    t.Write("{0}", p.StandardOutput.ReadToEnd());
+                    t.SetForeColor('c');
+                    t.Write("{0}", p.StandardError.ReadToEnd());
+                    return null;
+                },
+            }.Save(C, new string[] { "call" }, __debug__);
+            #endregion
+            #region Wait Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    int time = 0;
+                    int.TryParse(a.Get(1), out time);
+                    Thread.Sleep(time);
+                    return null;
+                },
+            }.Save(C, new string[] { "wait" }, __debug__);
+            #endregion
 
             return C;
         }

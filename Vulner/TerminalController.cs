@@ -22,19 +22,24 @@ namespace Vulner
 
         public bool buffer = false;
         public bool hide = false;
-        string r = "";
+        public MemoryStream stream = null;
+        public StreamWriter r = null;
 
         public void StartBuffer(bool hide = false)
         {
             if (hide) this.hide = hide;
             buffer = true;
-            r = "";
+            stream = new MemoryStream();
+            r = new StreamWriter(stream);
+            r.AutoFlush = true;
         }
         public string EndBuffer()
         {
             hide = false;
             buffer = false;
-            return r;
+            StreamReader sr = new StreamReader(stream);
+            stream.Position = 0;
+            return sr.ReadToEnd();
         }
 
         public TerminalController()
@@ -117,7 +122,7 @@ namespace Vulner
 
         public void Clear()
         {
-            for (int i = 0; i < Console.BufferHeight; i++) if (!hide) Console.WriteLine();
+            if (!hide) WriteLine("".PadRight(Console.BufferHeight, '\n'));
         }
 
         public void ColorWrite(object o, params object[] obj)
@@ -146,18 +151,15 @@ namespace Vulner
                 try
                 {
                     string str = string.Format(ss, obj);
-                    if ( buffer ) r += str;
-                    if (!hide) Console.Write(str);
+                    if (!hide) Write(str);
                 } catch (Exception)
                 {
                     // It appears that CLSIDS for example: {BB64F8A7-BEE7-4E1A-AB8D-7D8273F7FDB6} make string.Format throw an exception, rest in pieces
-                    if (buffer) r += ss;
-                    if (!hide) Console.Write(ss);
+                    if (!hide) Write(ss);
                 }
                 first = false;
             }
-            if (!hide) Console.WriteLine();
-            if (buffer) r += '\n';
+            if (!hide) WriteLine();
             SetForeColor(reset);
         }
 
@@ -165,7 +167,7 @@ namespace Vulner
         {
             if ( Equals(o,null) ) { o = ""; }
             string s = string.Format((string)Convert.ChangeType(o, typeof(String)), obj);
-            if (buffer) { r += s; }
+            if (buffer) { r.WriteLine(s); }
             if (!hide) Console.WriteLine(s);
         }
 
@@ -173,7 +175,7 @@ namespace Vulner
         {
             if (Equals(o, null)) { o = ""; }
             string s = string.Format((string)Convert.ChangeType(o, typeof(String)), obj);
-            if (buffer) { r += s; }
+            if (buffer) { r.Write(s); }
             if (!hide) Console.Write(s);
         }
 
@@ -182,7 +184,7 @@ namespace Vulner
             SetForeColor('f');
             Write("> ");
             string s = ReadLine();
-            if (buffer) { r += s; }
+            if (buffer) { r.WriteLine("{0}", s); }
             return s;
         }
 
@@ -204,6 +206,7 @@ namespace Vulner
     class Writable {
         int X = 0;
         int Y = 0;
+        int RP = 0;
         int Len = 0;
         TerminalController t = null;
         public Writable(int Length, TerminalController t)
@@ -211,19 +214,36 @@ namespace Vulner
             this.t = t;
             X = Console.CursorLeft;
             Y = Console.CursorTop;
+            RP = (int)t.stream.Position;
             Len = Length;
-            for (int i = 0; i < Length; i++) if (!t.hide) Console.Write(" ");
+            Clear();
         }
 
-        public void Write(object o)
+        public void Clear()
+        {
+            Write("".PadRight(Len), true);
+        }
+
+        public void Write(object o, bool clearing = false)
         {
             string s = (string)Convert.ChangeType(o, typeof(String));
+            string wrt = s.Substring(0, Math.Min(s.Length, Len));
             int[] temp = new int[] { Console.CursorLeft, Console.CursorTop };
             Console.CursorLeft = X;
             Console.CursorTop = Y;
-            if (!t.hide) Console.Write(s.Substring(0, Math.Min(Len, s.Length)));
+            if (!t.hide) Console.Write(wrt);
             Console.CursorLeft = temp[0];
             Console.CursorTop = temp[1];
+            if (t.buffer)
+            {
+                int tempb = (int)t.stream.Position;
+                t.stream.Position = RP;
+                t.r.Write(wrt);
+                if (!clearing) // Why is this something that needs to exist? We may never know...
+                {
+                    t.stream.Position = tempb;
+                }
+            }
         }
     }
 }
