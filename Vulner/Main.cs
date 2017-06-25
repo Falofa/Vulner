@@ -139,7 +139,11 @@ namespace Vulner
                         return;
                     }
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                    t.ColorWrite("$cInvalid command.");
+                    return;
+                }
                 if (!Equals(c, null))
                 {
                     if (a.Parse(c.ParseSW, c.ParsePR))

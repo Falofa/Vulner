@@ -503,45 +503,6 @@ namespace Vulner
                             }
                         }.Save(C, new string[] { "help" });
             #endregion
-            #region Dump Command
-            new Command
-            {
-                Help = new CommandHelp
-                {
-                    Description = "Writes the output of a command to a file.",
-                    Usage = new string[]
-                    {
-                        "{NAME} [FileName] [Command]",
-                        "{NAME} [FileName]",
-                    }
-                },
-                Main = (Argumenter a) =>
-                {
-                    if (a.Get(1).Length == 0) { return null; }
-                    t.StartBuffer();
-
-                    if (a.Get(2).Length > 0)
-                    {
-                        m.RunCommand(a.Get(2));
-                    }
-
-                    byte[] Output = t.EndBuffer().ToCharArray().Select(b => (byte)b).ToArray();
-
-                    try
-                    {
-                        FileStream fs = File.OpenWrite(a.Get(1));
-                        if (Output.Length != 0)
-                            for (int i = 0; i < (1 + Output.Length / 1024); i++)
-                            {
-                                fs.Write(Output, i * 1024, Math.Min(1024, Output.Length - 1024 * i));
-                            }
-                        fs.Close();
-                    }
-                    catch (Exception e) { MessageBox.Show(e.Message, "Vulner", MessageBoxButtons.OK, MessageBoxIcon.Error); }
-                    return null;
-                },
-            }.Save(C, new string[] { "dump" });
-            #endregion
             #region Crypto Command
             new Command
             {
@@ -1698,7 +1659,12 @@ namespace Vulner
                 Switches = new string[] { "s", "q" },
                 Help = new CommandHelp
                 {
-
+                    Description = "Finds malware processes using heuristics",
+                    Usage = new string[]
+                    {
+                        "{NAME} /s $8Tries to solve the problem by killing processes and deleting files",
+                        "{NAME} /s /q $8Same as above but with no prompt"
+                    }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -1864,7 +1830,8 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Downloads the newest version from GitHub",
+                    Usage = new string[] { "{NAME}" }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -1888,7 +1855,13 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Adds invisible characters in between given arguments",
+                    LongDesc = "Makes it look normal but hard to type and compare it",
+                    Usage = new string[]
+                    {
+                        "{NAME} [arg]",
+                        "{NAME} [args] [args] [args]",
+                    }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -1912,7 +1885,8 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Adds 'zalgo' characters in between given arguments",
+                    LongDesc = "(Reference sheet: $bhttps://eeemo.net/$e)"
                 },
                 Main = (Argumenter a) =>
                 {
@@ -1940,7 +1914,12 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Prints and modifies windows hosts",
+                    Usage = new string[]
+                    {
+                        "{NAME}",
+                        "{NAME} localhost=127.0.0.1 otherhost.com=0.0.0.0"
+                    }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -1981,6 +1960,10 @@ namespace Vulner
                                 t.ColorWrite("$cInvalid IP Address: $f{0}", b[1] );
                             }
                         }
+                    } else if (a.Parsed.Length > 1)
+                    {
+                        t.ColorWrite("$cWriting to hosts requires root");
+                        return null;
                     }
 
                     Dictionary<string, string> h = new Dictionary<string, string>();
@@ -1999,6 +1982,7 @@ namespace Vulner
 
                     ReadHosts();
 
+                    List<string> change = new List<string>();
                     if (write && n.Count != 0)
                     {
                         foreach(KeyValuePair<string,string> k in n)
@@ -2006,10 +1990,12 @@ namespace Vulner
                             if (string.IsNullOrEmpty(k.Value))
                             {
                                 h.Remove(k.Key);
+                                change.Add(string.Format("$c- {0}", t.EscapeColor(k.Key)));
                             }
                             else
                             {
                                 h[k.Key] = k.Value;
+                                change.Add(string.Format("$e{0} = $f{1}", t.EscapeColor(k.Key), t.EscapeColor(k.Value)));
                             }
                         }
                         string res = "";
@@ -2017,13 +2003,21 @@ namespace Vulner
                         {
                             res += string.Format("{0} {1}\n", k.Value, k.Key);
                         }
-                        MessageBox.Show(res);
+                        File.WriteAllText(hosts, res);
                     }
 
-
-                    foreach (KeyValuePair<string, string> k in h)
+                    if (change.Count == 0)
                     {
-                        t.ColorWrite("$e{0} = $f{1}", k.Key, k.Value);
+                        foreach (KeyValuePair<string, string> k in h)
+                        {
+                            t.ColorWrite("$e{0} = $f{1}", k.Key, k.Value);
+                        }
+                    } else
+                    {
+                        foreach (string k in change)
+                        {
+                            t.ColorWrite(k);
+                        }
                     }
                     
                     return null;
@@ -2035,7 +2029,12 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-                    Description = ""
+                    Description = "Installs Vulner",
+                    LongDesc = "Copies Vulner to Windows directory and sets file associations for .fal files",
+                    Usage = new string[]
+                    {
+                        "{NAME}"
+                    }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -2060,7 +2059,11 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Prints paths in PATH variable",
+                    Usage = new string[]
+                    {
+                        "{NAME}"
+                    }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -2078,7 +2081,17 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Changes console window size",
+                    LongDesc = "Values get clamped to h=80, w=25 and largest window sizes based on font and \nscreen resolution, so it will never be too small to read.",
+                    Usage = new string[] {
+                        "{NAME} [w] [h]",
+                        "{NAME} [w]",
+                        "{NAME} 0 [h]",
+                    },
+                    Examples = new string[]
+                    {
+                        "{NAME} 200 40"
+                    }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -2104,7 +2117,15 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Finds files in common system directories",
+                    Usage = new string[]
+                    {
+                        "{NAME} [file]"
+                    },
+                    Examples = new string[]
+                    {
+                        "{NAME} cmd"
+                    }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -2167,7 +2188,11 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Runs all arguments as commands without output",
+                    Examples = new string[]
+                    {
+                        "{NAME} \"dns google.com > dns.txt\""
+                    }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -2181,7 +2206,7 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "hide" }, __debug__);
             #endregion
-            #region Example Command
+            #region MsgBox Command
             Dictionary<string, MessageBoxIcon> ms = new Dictionary<string, MessageBoxIcon>()
             {
                 { "", MessageBoxIcon.None },
@@ -2201,7 +2226,22 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Shows a message box",
+                    LongDesc = @"Icon list:
+"""" = None
+""none"" = None
+""x"" = Error
+""*"" = Asterisk
+""!"" = Exclamation
+""?"" = Question
+""info"" = Information
+""hand"" = Hand
+""stop"" = Stop
+""warn"" = Warning",
+                    Usage = new string[]
+                    {
+                        "{NAME} [text] [title] [icon]"
+                    }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -2214,12 +2254,17 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "msgbox" }, __debug__);
             #endregion
-            #region Example Command
+            #region Call Command
             new Command
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Runs a file and prints output in real time",
+                    LongDesc = "$c(REALLY BUGGY FOR THE MOMENT)",
+                    Usage = new string[]
+                    {
+                        "{NAME} ping.exe google.com"
+                    }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -2251,6 +2296,7 @@ namespace Vulner
                     th.Start();
                     while (!p.HasExited)
                     {
+                        p.StandardOutput.BaseStream.Flush();
                         t.Write("{0}", p.StandardOutput.ReadToEnd());
                         Thread.Sleep(50);
                     }
@@ -2267,7 +2313,11 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Waits first argument in milliseconds",
+                    Usage = new string[]
+                    {
+                        "{NAME} [ms]"
+                    }
                 },
                 Main = (Argumenter a) =>
                 {

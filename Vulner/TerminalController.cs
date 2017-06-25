@@ -202,6 +202,11 @@ namespace Vulner
         {
             return new Writable(Length, this);
         }
+
+        public string EscapeColor( string s )
+        {
+            return s.Replace("$", "$$");
+        }
     }
     class Writable {
         int X = 0;
@@ -227,7 +232,7 @@ namespace Vulner
         public void Write(object o, bool clearing = false)
         {
             string s = (string)Convert.ChangeType(o, typeof(String));
-            string wrt = s.Substring(0, Math.Min(s.Length, Len));
+            string wrt = s.Substring(0, Math.Min(s.Length, Len)).PadRight(Len);
             int[] temp = new int[] { Console.CursorLeft, Console.CursorTop };
             Console.CursorLeft = X;
             Console.CursorTop = Y;

@@ -25,6 +25,7 @@ namespace Vulner
     class CommandHelp
     {
         public string Description = null;
+        public string LongDesc = null;
         public string[] Usage = null;
         public string[] Examples = null;
         public Dictionary<string,string> Switches = null;
@@ -32,7 +33,15 @@ namespace Vulner
 
         public void Print(TerminalController Console, Command c)
         {
-            Console.ColorWrite("\n$7{0} - $8{1}\n", c.Name.ToUpper(), Description);
+            if (!Equals(LongDesc, null))
+            {
+                Console.ColorWrite("\n$7{0} - $8{1}\n", c.Name.ToUpper(), Description);
+                Console.ColorWrite("$e" + LongDesc + "\n");
+            } else
+            {
+                Console.ColorWrite("\n$7{0}:", c.Name.ToUpper());
+                Console.ColorWrite("$e" + Description + "\n");
+            }
             if (!Equals(Usage, null) && Usage.Length > 0)
             {
                 Console.ColorWrite("$8Usage:");
@@ -40,6 +49,7 @@ namespace Vulner
                 {
                     Console.ColorWrite("$7" + a.Replace("{NAME}", c.Name));
                 }
+                Console.WriteLine();
             }
 
             if (!Equals(Switches, null) && Switches.Count > 0)
@@ -49,15 +59,17 @@ namespace Vulner
                 {
                     Console.ColorWrite(" $7/{0} $8- {1}", a.Key, a.Value.Replace("{NAME}", c.Name));
                 }
+                Console.WriteLine();
             }
 
             if (!Equals(Param, null) && Param.Count > 0)
             {
-                Console.ColorWrite("$8Switches:");
+                Console.ColorWrite("$8Parameters:");
                 foreach (KeyValuePair<string, string> a in Param)
                 {
                     Console.ColorWrite(" $7-{0} [value] $8- {1}", a.Key, a.Value.Replace("{NAME}", c.Name));
                 }
+                Console.WriteLine();
             }
 
             if (!Equals(Examples, null) && Examples.Length > 0)
@@ -67,6 +79,7 @@ namespace Vulner
                 {
                     Console.ColorWrite("$7" + a.Replace("{NAME}", c.Name));
                 }
+                Console.WriteLine();
             }
         }
     }
