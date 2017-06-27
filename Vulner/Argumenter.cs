@@ -9,6 +9,11 @@ namespace Vulner
 {
     class Argumenter
     {
+        public enum OutputType
+        {
+            Write,
+            Append
+        }
         public String Escapes = "\'\"`´~";
         public String ParamStr = "-";
         public String SwitcStr = "/";
@@ -21,6 +26,7 @@ namespace Vulner
         public Dictionary<int,string[]> FormatStr = new Dictionary<int, string[]>();
         public bool RunCommand = false;
         public string Output = null;
+        public OutputType OutType = OutputType.Write;
         Main m = null;
 
         public String[] Switches = new string[0];
@@ -96,6 +102,19 @@ namespace Vulner
             }
             Full = Full.TakeWhile(t => t != null).ToArray();
         }
+        public string Escape(string s)
+        {
+            string r = s;
+            string[] fc = new string[]
+            {
+                "\"", "\'", "-", "\\", "/", "`", "´", "`", "~"
+            };
+            foreach( string c in fc )
+            {
+                r = r.Replace(c, "\\" + c);
+            }
+            return r;
+        }
         public bool Parse(bool ParseSW = true, bool ParsePR = true)
         {
             foreach( string str in Switches )
@@ -114,8 +133,9 @@ namespace Vulner
                 string Cur = Full[i];
                 string[] Fcur = FormatStr[i];
                 if (i == 0) { Fcur[0] = "Command"; } else if(string.IsNullOrEmpty(Fcur[0])) { Fcur[0] = "Argument"; }
-                if (Fcur[1] == ">")
+                if (Fcur[1] == ">" || Fcur[1] == ">>")
                 {
+                    OutType = Fcur[1] == ">" ? OutputType.Write : OutputType.Append;
                     Fcur[0] = "Operator";
                     if (FormatStr.Count >= i + 2)
                     {
@@ -136,7 +156,15 @@ namespace Vulner
                         m.t.StartBuffer(true);
                         string cm = Fcur[1].Substring(1, Fcur[1].Length-2);
                         m.RunCommand(cm);
-                        Parsed[j++] = m.t.EndBuffer();
+                        object r = m.Return;
+                        if (r != null)
+                        {
+                            Parsed[j++] = (string)Convert.ChangeType(r, typeof(String));
+                        }
+                        else
+                        {
+                            Parsed[j++] = m.t.EndBuffer();
+                        }
                     } else
                     {
                         Parsed[j++] = Fcur[1].Substring(1, Fcur.Length - 2);

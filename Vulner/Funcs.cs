@@ -13,13 +13,17 @@ using System.Threading;
 using System.Management;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Drawing;
 
 namespace Vulner
 {
     class Funcs
     {
         [DllImport("kernel32.dll")]
-        static extern IntPtr GetConsoleWindow();
+        public static extern int GetCurrentThreadId();
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetConsoleWindow();
 
         [DllImport("user32.dll")]
         static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
@@ -30,6 +34,10 @@ namespace Vulner
         public static void HideConsole() { ShowWindow(GetConsoleWindow(), SW_HIDE); }
         public static void ShowConsole() { ShowWindow(GetConsoleWindow(), SW_SHOW); }
 
+        public static Regex RegexFromStr(string s)
+        {
+            return new Regex("^" + Regex.Escape(s).Replace(@"\*", ".*").Replace(@"\?", ".") + "$", RegexOptions.IgnoreCase);
+        }
         public static bool IsAdmin()
         {
             return new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
@@ -146,6 +154,12 @@ namespace Vulner
         public static byte[] RandomBytes(int min, int max)
         {
             byte[] bts = new byte[Rnd(min, max)];
+            RandomNumberGenerator.Create().GetBytes(bts);
+            return bts;
+        }
+        public static byte[] RandomBytes(long c)
+        {
+            byte[] bts = new byte[c];
             RandomNumberGenerator.Create().GetBytes(bts);
             return bts;
         }
@@ -586,6 +600,78 @@ namespace Vulner
                 }
             }
             return e.ToArray();
+        }
+
+
+        [DllImport("kernel32.dll")]
+        static extern bool SetConsoleMode( IntPtr hConsoleHandle, int dwMode );
+
+        const int ENABLE_QUICK_EDIT_MODE = 0x0040;
+
+        public static void EnableRightClick()
+        {
+            SetConsoleMode(GetConsoleWindow(), ENABLE_QUICK_EDIT_MODE);
+        }
+
+        [DllImport("kernel32.dll")]
+        static extern bool GetConsoleMode( IntPtr hConsoleHandle, out int lpMode );
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern bool GetWindowRect(IntPtr hwnd, out Rectangle lpRect);
+
+        public static void Attach( )
+        {
+            Rectangle r = new Rectangle();
+            GetWindowRect(GetConsoleWindow(), out r);
+            MessageBox.Show(r.ToString());
+        }
+
+    }
+    class MouseHook
+    {
+        public delegate int HookProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+        public const int WH_MOUSE = 7;
+        
+        [StructLayout(LayoutKind.Sequential)]
+        public class POINT
+        {
+            public int x;
+            public int y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public class MouseHookStruct
+        {
+            public POINT pt;
+            public int hwnd;
+            public int wHitTestCode;
+            public int dwExtraInfo;
+        }
+
+        [DllImport("user32.dll")]
+        public static extern int SetWindowsHookEx(int idHook, HookProc lpfn,
+        IntPtr hInstance, int threadId);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto,
+         CallingConvention = CallingConvention.StdCall)]
+        public static extern bool UnhookWindowsHookEx(int idHook);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto,
+         CallingConvention = CallingConvention.StdCall)]
+        public static extern int CallNextHookEx(int idHook, int nCode,
+        IntPtr wParam, IntPtr lParam);
+
+        public static int MakeHook(int tid)
+        {
+            int hook = 0;
+            HookProc mh = new HookProc((int nCode, IntPtr wParam, IntPtr lParam) =>
+            {
+                Console.WriteLine("{0}", wParam);
+                return 0;
+            });
+            hook = MouseHook.SetWindowsHookEx(WH_MOUSE, mh, (IntPtr)0, tid);
+            return hook;
         }
     }
 }

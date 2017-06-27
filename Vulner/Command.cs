@@ -17,9 +17,9 @@ namespace Vulner
         public string[] Parameters = new string[0];
         public string[] Switches = new string[0];
         public Dictionary<string, object> Memory = new Dictionary<string, object>();
-        public void Run(TerminalController Console, Argumenter Arg)
+        public object Run(TerminalController Console, Argumenter Arg)
         {
-            Main.Invoke(Arg);
+            return Main.Invoke(Arg);
         }
     }
     class CommandHelp

@@ -15,13 +15,16 @@ namespace Vulner
         public Dictionary<string, Command> Cmds = new Dictionary<string,Command>();
         public DirectoryInfo VulnerFolder = null;
         public TerminalController t = null;
-        public Main(TerminalController te)
+        public int tid = 0;
+        public Main(TerminalController te, int tid = 0)
         {
+            this.tid = tid;
             VulnerFolder = new DirectoryInfo(Path.Combine(Environment.ExpandEnvironmentVariables("%appdata%"), "vulner"));
             if (!VulnerFolder.Exists) { VulnerFolder.Create(); }
             if (Environment.GetCommandLineArgs().Contains("root"))
             {
-                Process.Start(new ProcessStartInfo {
+                Process.Start(new ProcessStartInfo
+                {
                     FileName = Environment.GetCommandLineArgs()[0],
                     Arguments = "runas",
                     Verb = "runas",
@@ -37,7 +40,7 @@ namespace Vulner
                 Process.GetProcesses().Where(t => t.ProcessName.ToLower().Contains("vulner") && t.Id != id).Select(t => { t.Kill(); return 0; });
                 string self = Environment.GetCommandLineArgs().Skip(1).Where(t => t != "update").First();
 #if (DEBUG)
-                    string vr = "Debug";
+                string vr = "Debug";
 #else
                 string vr = "Release";
 #endif
@@ -50,7 +53,7 @@ namespace Vulner
             }
 
             t = te;
-            Cmds = new Commands().Get(this,t);
+            Cmds = new Commands().Get(this, t);
             Cmds[""] = new Command();
 
             Environment.SetEnvironmentVariable("vulner", Environment.GetCommandLineArgs()[0]);
@@ -63,7 +66,7 @@ namespace Vulner
   $f║$c  \   \ /   __ __|  |   ____   ___________     $f║
   $f║$c   \   Y   |  |  |  |  /    \_/ __ \_  __ \    $f║
   $f║$c    \     /|  |  |  |_|   |  \  ___/|  | \/    $f║
-  $f║$c     \___/ |____/|____|___|__/\____/|__|       $f║".Substring(2);     
+  $f║$c     \___/ |____/|____|___|__/\____/|__|       $f║".Substring(2);
             string capt = "  ╔═══════════════════════════════════════════════╗";
             string capb = "  ╚═══════════════════════════════════════════════╝";
 
@@ -75,7 +78,7 @@ namespace Vulner
 
             string fbuild = string.Format("$a[[ {0} ]]", build);
 
-            fbuild = string.Format("  ║{0} $f║", fbuild.PadLeft(capt.Length-3));
+            fbuild = string.Format("  ║{0} $f║", fbuild.PadLeft(capt.Length - 3));
 
             t.WriteLine();
             t.ColorWrite(capt);
@@ -90,7 +93,7 @@ namespace Vulner
             {
                 t.ColorWrite("$aVulner was updated!");
             }
-            
+
             foreach (string s in Environment.GetCommandLineArgs())
             {
                 if (s.ToLower().EndsWith(".fal"))
@@ -103,6 +106,16 @@ namespace Vulner
             }
             Funcs.ShowConsole();
         }
+            
+
+        private void K_MouseEvent(Kennedy.ManagedHooks.MouseEvents mEvent, Point point)
+        {
+            if (mEvent == Kennedy.ManagedHooks.MouseEvents.MouseWheel)
+            {
+                t.WriteLine("FUCK");
+            }
+        }
+
         public void Run()
         {
             while (true)
@@ -116,8 +129,10 @@ namespace Vulner
         public string[] IgnoreFileNames = new string[] { "CON", "PRN", "AUX", "NUL",
                                                          "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
                                                          "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
+        public object Return = null;
         public bool RunCommand(string interp)
         {
+            Return = null;
             Thread ct = new Thread(() =>
             {
                 Argumenter a = new Argumenter(interp, true);
@@ -152,14 +167,26 @@ namespace Vulner
                         bool ot = !Equals(a.Output, null) && a.Output != "";
                         if (ot)
                         {
-                            t.StartBuffer();
+                            Stream ms = null;
+                            if (ot)
+                            {
+                                string fl = Path.Combine(Environment.CurrentDirectory, a.FormatStr.Where(u => u.Value[0] == "Output").Select(u => u.Value[1]).First<string>());
+
+                                if (a.OutType == Argumenter.OutputType.Write)
+                                    ms = (Stream)(new FileInfo(fl).OpenWrite());
+
+                                if (a.OutType == Argumenter.OutputType.Append)
+                                    ms = (Stream)(new FileInfo(fl).AppendText().BaseStream);
+
+                            }
+                            t.StartBuffer(true, ms);
                         }
 #if (DEBUG)
-                        c.Run(t, a);
+                        Return = c.Run(t, a);
 #else
                             try
                             {
-                                c.Run(t, a);
+                                Return = c.Run(t, a);
                             } catch(Exception e)
                             {
                                 Trace(e);
@@ -167,43 +194,8 @@ namespace Vulner
 #endif
                         if (ot)
                         {
-                            byte[] Output = t.EndBuffer().ToCharArray().Select(t => (byte)t).ToArray();
-
-                            //try
-                            //{
-                                string fl = Path.Combine(Environment.CurrentDirectory, a.FormatStr.Where(u => u.Value[0] == "Output").Select(u => u.Value[1]).First<string>());
-                                //string fl = Path.Combine(Environment.CurrentDirectory, a.Parsed.Last());
-                                //Console.WriteLine(fl);
-                                bool IgnoreWrite = false;
-                                if (IgnoreFileNames.Contains(new FileInfo(fl).Name.ToUpper())) { IgnoreWrite = true; }
-                                if (!IgnoreWrite)
-                                {
-                                    if (new DirectoryInfo(fl).Exists) { throw new Exception("Output is a folder."); }
-                                    if (File.Exists(fl))
-                                    {
-                                        File.SetAttributes(fl, FileAttributes.Normal);
-                                        File.Delete(fl);
-                                    }
-                                    FileStream fs = File.OpenWrite(fl);
-                                    if (Output.Length != 0)
-                                        for (int i = 0; i < (1 + Output.Length / 1024); i++)
-                                        {
-                                            fs.Write(Output, i * 1024, Math.Min(1024, Output.Length - 1024 * i));
-                                        }
-                                    fs.Close();
-                                }
-                            //}
-                            //catch (Exception e) { MessageBox.Show(e.Message, "Vulner", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+                            t.KillBuffer();
                         }
-                        /* DEBUG
-                        foreach (KeyValuePair<int, string[]> b in arg.FormatStr)
-                        {
-                            t.ColorWrite("$a{0} - $f{1}", b.Value[0], b.Value[1]);
-                        }/* */
-                    }
-                    else
-                    {
-                        t.WriteLine("Malformed arguments.");
                     }
                 }
             });

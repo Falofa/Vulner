@@ -22,14 +22,17 @@ namespace Vulner
 
         public bool buffer = false;
         public bool hide = false;
-        public MemoryStream stream = null;
+        public Stream stream = null;
         public StreamWriter r = null;
 
-        public void StartBuffer(bool hide = false)
+        public void StartBuffer(bool hide = false, Stream cm = null)
         {
             if (hide) this.hide = hide;
             buffer = true;
-            stream = new MemoryStream();
+            if (!Equals(cm, null))
+                stream = cm;
+            else
+                stream = new MemoryStream();
             r = new StreamWriter(stream);
             r.AutoFlush = true;
         }
@@ -39,7 +42,33 @@ namespace Vulner
             buffer = false;
             StreamReader sr = new StreamReader(stream);
             stream.Position = 0;
-            return sr.ReadToEnd();
+            string ret = sr.ReadToEnd();
+            EndStreams();
+            return ret;
+        }
+        public void KillBuffer()
+        {
+            hide = false;
+            buffer = false;
+            EndStreams();
+            return;
+        }
+        void EndStreams()
+        {
+            r.Flush();
+            r.Close();
+            r.Dispose();
+            r = null;
+
+            try
+            {
+                stream.Flush();
+            }
+            catch (Exception) { }
+
+            stream.Close();
+            stream.Dispose();
+            stream = null;
         }
 
         public TerminalController()
@@ -122,61 +151,90 @@ namespace Vulner
 
         public void Clear()
         {
-            if (!hide) WriteLine("".PadRight(Console.BufferHeight, '\n'));
+            WriteLine("".PadRight(Console.BufferHeight, '\n'));
         }
 
         public void ColorWrite(object o, params object[] obj)
         {
             bool skiponce = false;
+            bool next = false;
             string s = (string)Convert.ChangeType(o, typeof(String));
 
             bool first = true;
             ConsoleColor reset = Fore;
             foreach (string se in s.Split('$'))
             {
+                if (next)
+                {
+                    next = false;
+                    continue;
+                }
                 string ss = se;
                 if (!first && !skiponce)
                 {
                     if (se.Length < 2) { skiponce = true; continue; }
                     char ch = ss.ToLower()[0];
-                    SetForeColor(ltc[ch]);
+                    if (ch == '$') { next = true; continue; }
+                    try
+                    {
+                        SetForeColor(ltc[ch]);
+                    } catch(Exception) { }
                     if (Equals(Fore, null)) { SetForeColor(reset); }
                     ss = ss.Substring(1);
                 }
                 if (skiponce)
                 {
                     ss = "$" + ss;
+                    next = true;
                 }
                 skiponce = false;
                 try
                 {
                     string str = string.Format(ss, obj);
-                    if (!hide) Write(str);
+                    Write(str);
                 } catch (Exception)
                 {
                     // It appears that CLSIDS for example: {BB64F8A7-BEE7-4E1A-AB8D-7D8273F7FDB6} make string.Format throw an exception, rest in pieces
-                    if (!hide) Write(ss);
+                    Write(ss);
                 }
                 first = false;
             }
-            if (!hide) WriteLine();
+            WriteLine();
             SetForeColor(reset);
         }
 
         public void WriteLine(object o = null, params object[] obj)
         {
-            if ( Equals(o,null) ) { o = ""; }
-            string s = string.Format((string)Convert.ChangeType(o, typeof(String)), obj);
-            if (buffer) { r.WriteLine(s); }
-            if (!hide) Console.WriteLine(s);
+            if (Equals(o, null)) { o = ""; }
+            string s = (string)Convert.ChangeType(o, typeof(String));
+            try
+            {
+                s = string.Format(s, obj);
+            }
+            catch (Exception) { }
+            try
+            {
+                if (buffer) { r.WriteLine(s); }
+            }
+            catch (Exception) { }
+            if (!hide) Console.WriteLine("{0}", s);
         }
 
         public void Write(object o = null, params object[] obj)
         {
+            string s = (string)Convert.ChangeType(o, typeof(String));
             if (Equals(o, null)) { o = ""; }
-            string s = string.Format((string)Convert.ChangeType(o, typeof(String)), obj);
-            if (buffer) { r.Write(s); }
-            if (!hide) Console.Write(s);
+            try
+            {
+                s = string.Format(s, obj);
+            }
+            catch (Exception) { }
+            try
+            {
+                if (buffer) { r.Write(s); }
+            }
+            catch (Exception) { }
+            if (!hide) Console.Write("{0}", s);
         }
 
         public string FancyInput()
@@ -219,7 +277,8 @@ namespace Vulner
             this.t = t;
             X = Console.CursorLeft;
             Y = Console.CursorTop;
-            RP = (int)t.stream.Position;
+            if (t.buffer)
+                RP = (int)t.stream.Position;
             Len = Length;
             Clear();
         }
@@ -236,7 +295,7 @@ namespace Vulner
             int[] temp = new int[] { Console.CursorLeft, Console.CursorTop };
             Console.CursorLeft = X;
             Console.CursorTop = Y;
-            if (!t.hide) Console.Write(wrt);
+            if (!t.hide) Console.Write("{0}", wrt);
             Console.CursorLeft = temp[0];
             Console.CursorTop = temp[1];
             if (t.buffer)

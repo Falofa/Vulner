@@ -3,3 +3,5 @@ c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Release\
 c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.exe
 c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.pdb
 c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Release\Vulner.csprojResolveAssemblyReference.cache
+C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Release\Kennedy.ManagedHooks.dll
+C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Release\Kennedy.ManagedHooks.xml

@@ -603,6 +603,7 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "insert" });
             #endregion
+            // General File Stuff
             #region Cat Command
             new Command
             {
@@ -616,37 +617,12 @@ namespace Vulner
                     FileInfo f = new FileInfo(a.Get(1));
                     if (f.Exists)
                     {
-                        string r = "";
                         try
                         {
                             string s = File.ReadAllText(f.FullName);
-                            if (f.Length > 3000)
-                            {
-                                r += string.Format("File is longer than 3000 bytes({0} bytes)", f.Length);
-                            }
-                            if (s.Contains('\0'))
-                            {
-                                if (r.Length > 0)
-                                {
-                                    r += " and contains binary data";
-                                }
-                                else
-                                {
-                                    r += "File contains binary data";
-                                }
-                            }
-                            if (r.Length > 0)
-                            {
-                                t.ColorWrite("$c{0}.\n$f Do you want to proceed? $aYes$f/$cNo", r);
-                                if ((t.ReadLine() + "n").ToLower()[0] != 'y')
-                                {
-                                    t.ColorWrite("$f> No");
-                                    return null;
-                                }
-                                t.ColorWrite("$f> Yes");
-                            }
                             t.SetForeColor(t.ltc['8']);
                             t.WriteLine(s);
+                            return s;
                         }
                         catch (IOException ex)
                         {
@@ -661,7 +637,6 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "cat" });
             #endregion
-            // General File Stuff
             #region CD Command
             new Command
             {
@@ -778,6 +753,7 @@ namespace Vulner
             new Command
             {
                 Switches = new string[] { "r", "f" },
+                Parameters = new string[] { "p" },
                 Help = new CommandHelp
                 {
                     Description = "Deletes files and folders",
@@ -939,11 +915,44 @@ namespace Vulner
                         w.Write(string.Format("{0}/{1} ({2:0.00}%)", count, all, (count / all) * 100));
                         t.WriteLine();
 
+                        int passes = 0;
+                        int.TryParse(a.GetPr("p"), out passes);
+
+                        FileJump = 0;
                         foreach (string f in fls)
                         {
                             try
                             {
-                                File.Delete(f);
+                                string nam = f;
+                                if (passes > 0)
+                                {
+                                    FileInfo fi = new FileInfo(f);
+                                    long fll = fi.Length;
+                                    string dn = fi.DirectoryName;
+                                    string fn = fi.Name;
+                                    bool sc = false;
+                                    for ( int i = 0; i < passes; i++ )
+                                    {
+                                        File.WriteAllBytes(f, Funcs.RandomBytes(fll));
+                                    }
+                                    for (int i = 0; i < passes; i++)
+                                    {
+                                        int k = 0;
+                                        while (!sc)
+                                        {
+                                            try
+                                            {
+
+                                                string newn = Path.Combine(dn, Funcs.RandomString(fn.Length + k++));
+                                                File.Move(nam, newn);
+                                                nam = newn;
+                                                sc = true;
+                                            }
+                                            catch (IOException) { }
+                                        }
+                                    }
+                                }
+                                File.Delete(nam);
                                 count++;
                                 if (count - oldc > FileJump)
                                 {
@@ -961,7 +970,30 @@ namespace Vulner
                         {
                             try
                             {
-                                Directory.Delete(f);
+                                string nam = f;
+                                if (passes > 0)
+                                {
+                                    DirectoryInfo fi = new DirectoryInfo(f);
+                                    string dn = fi.Parent.FullName;
+                                    string fn = fi.Name;
+                                    bool sc = false;
+                                    for (int i = 0; i < passes; i++)
+                                    {
+                                        int k = 0;
+                                        while (!sc)
+                                        {
+                                            try
+                                            {
+                                                string newn = Path.Combine(dn, Funcs.RandomString(fn.Length + k++));
+                                                Directory.Move(nam, newn);
+                                                nam = newn;
+                                                sc = true;
+                                            }
+                                            catch (IOException) { }
+                                        }
+                                    }
+                                }
+                                Directory.Delete(nam);
                                 count++;
                                 if (count - oldc > FileJump)
                                 {
@@ -970,9 +1002,9 @@ namespace Vulner
                                     w.Write(string.Format("{0}/{1} ({0:2.00}%)", count, all, (count / all) * 100));
                                 }
                             }
-                            //catch (IOException) { Exceptions["IO"]++; }
-                            //catch (UnauthorizedAccessException) { Exceptions["Access"]++; }
-                            catch (Exception e) { MessageBox.Show(e.Message); Exceptions["Generic"]++; }
+                            catch (IOException) { Exceptions["IO"]++; }
+                            catch (UnauthorizedAccessException) { Exceptions["Access"]++; }
+                            catch (Exception) { Exceptions["Generic"]++; }
                         }
                         w.Write(string.Format("{0}/{1} ({2:0.00}%)", count, all, (count / all) * 100));
 
@@ -1427,6 +1459,66 @@ namespace Vulner
                     return null;
                 },
             }.Save(C, new string[] { "kp" });
+            #endregion
+            #region PI Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Switches = new string[] { "m" },
+                Main = (Argumenter a) =>
+                {
+                    Regex b = Funcs.RegexFromStr(a.Get(1));
+                    Process[] pr = Process.GetProcesses().Where(pe => b.IsMatch(pe.ProcessName)).ToArray();
+                    if (!a.GetSw("m"))
+                        pr = pr.Take(1).ToArray();
+                    foreach (Process p in pr)
+                    {
+                        try
+                        {
+                            if (p.ProcessName != "")
+                            {
+                                t.ColorWrite("$a[{0}] $f{1}", p.Id, p.ProcessName);
+                                t.ColorWrite("$e  Memory size: $f{1}", p.Id, p.PagedMemorySize64);
+                                try { t.ColorWrite("$e  Priority: $f{1}", p.Id, p.PriorityClass); } catch (Exception) { }
+                                t.WriteLine();
+
+                                try
+                                {
+                                    t.ColorWrite("$a  Threads:");
+                                    foreach (ProcessThread th in p.Threads)
+                                    {
+                                        t.ColorWrite("$a    {0} - $f{1}", th.Id, th.ThreadState);
+                                        t.ColorWrite("$e      Priority: - $f{1}", th.Id, th.PriorityLevel);
+                                        t.ColorWrite("$e      Start time: - $f{1}", th.Id, th.StartTime);
+                                        t.WriteLine();
+                                    }
+                                }
+                                catch (Exception) { }
+                                try
+                                {
+                                    t.ColorWrite("$a  Modules:");
+                                    foreach (ProcessModule pm in p.Modules)
+                                    {
+                                        t.ColorWrite("$a    Modules: $f{0}", pm.ModuleName);
+                                        t.ColorWrite("$e      File Name: $f{0}", pm.FileVersionInfo.FileName);
+                                        t.ColorWrite("$e      Original name: $f{0}", pm.FileVersionInfo.OriginalFilename);
+                                        t.ColorWrite("$e      Description: $f{0}", pm.FileVersionInfo.FileDescription);
+                                        t.ColorWrite("$e      File Version: $f{0}", pm.FileVersionInfo.FileVersion);
+                                        t.ColorWrite("$e      Prod Version: $f{0}", pm.FileVersionInfo.ProductVersion);
+                                        t.WriteLine();
+                                    }
+                                }
+                                catch (Exception) { }
+                            }
+                        }
+                        catch (InvalidOperationException) { }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "pi" }, __debug__);
             #endregion
             #region Start Command
             new Command
@@ -2327,6 +2419,253 @@ namespace Vulner
                     return null;
                 },
             }.Save(C, new string[] { "wait" }, __debug__);
+            #endregion
+            #region HexDump Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Switches = new string[] { "f" },
+                Main = (Argumenter a) =>
+                {
+                    Dictionary<char, char> repl = new Dictionary<char, char>()
+                    { 
+
+                    };
+                    Regex rg = new Regex("[\x20-\x7E\x80-\xFE]", RegexOptions.IgnoreCase);
+                    byte[] b = a.Get(1).Select(u => (byte)u).ToArray();
+                    if (a.GetSw("f"))
+                    {
+                        try
+                        {
+                            b = File.ReadAllBytes(Path.Combine(Environment.CurrentDirectory, a.Get(1)));
+                        } catch(Exception)
+                        {
+                            t.ColorWrite("$cFile not found.");
+                            return null;
+                        }
+                    }
+
+                    int p = 0;
+                    int l = 16;
+                    t.WriteLine();
+                    t.Write("".PadRight(8 + 3));
+                    for( int i = 0; i < 16; i++ )
+                    {
+                        t.Write("{0} ", i.ToString("X2"));
+                    }
+                    while ( p < b.Length )
+                    {
+                        t.WriteLine();
+                        t.Write("  {0} ", p.ToString("X8"));
+                        int c = 0;
+                        for (int i = 0; i < l; i++)
+                        {
+                            if (p + i >= b.Length) { break; }
+                            t.Write("{0} ", ((byte)b[p + i]).ToString("X2"));
+                            c++;
+                        }
+                        t.Write("".PadRight((l - c) * 3));
+                        for (int i = 0; i < l; i++)
+                        {
+                            if (p + i >= b.Length) { break; }
+                            char ch = (char)b[p + i];
+
+                            if (repl.ContainsKey(ch))
+                            {
+                                ch = repl[ch];
+                            }
+                            else
+                            {
+                                if ( !rg.IsMatch(ch.ToString()) )
+                                {
+                                    ch = '.';
+                                }
+                            }
+
+                            t.Write("{0}", ch);
+                        }
+                        p += l;
+                    }
+
+                    t.WriteLine();
+
+                    return null;
+                },
+            }.Save(C, new string[] { "hexdump" }, __debug__);
+            #endregion
+            #region Fi Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Parameters = new string[] { "m" },
+                Main = (Argumenter a) =>
+                {
+                    string f = a.Get(1);
+                    FileInfo fi = null;
+                    try
+                    {
+                        {
+                            FileInfo ftemp = null;
+                            if ((ftemp = new FileInfo(f)).Exists) { fi = ftemp; }
+                            if ((ftemp = new FileInfo(Path.Combine(Environment.CurrentDirectory, f))).Exists) { fi = ftemp; }
+                            foreach (string s in Environment.GetEnvironmentVariable("path").Split(';'))
+                            {
+                                if ((ftemp = new FileInfo(Path.Combine(s, f))).Exists) { fi = ftemp; }
+                            }
+                        }
+                    } catch(IOException) { t.ColorWrite("$cFile not found.") ; return null; }
+                    if( Equals(fi, null) )
+                    {
+                        t.ColorWrite("$cFile not found.");
+                        return null;
+                    } else
+                    {
+                        if ( a.GetPr("m") != string.Empty )
+                        {
+                            Regex r = null;
+                            try
+                            {
+                                r = new Regex(string.Format("({0})", a.GetPr("m")), RegexOptions.IgnoreCase);
+                            } catch(Exception)
+                            {
+                                t.ColorWrite("$cInvalid regex");
+                                return null;
+                            }
+                            string ft = File.ReadAllText(fi.FullName);
+                            Dictionary<string, object[]> h = new Dictionary<string, object[]>();
+                            foreach (Match v in Regex.Matches(ft, "([\x20-\x7E\x80-\xFE]{5,99999})"))
+                            {
+                                string match = v.Groups[1].Value;
+                                Match ma = null;
+                                if ((ma = r.Match(match)).Success)
+                                {
+                                    Group g = ma.Groups[1];
+
+                                    int i = g.Index;
+                                    int l = g.Length;
+
+                                    string pre = match.Substring(0, i).Replace("$","$$");
+                                    string mid = match.Substring(i, l).Replace("$", "$$");
+                                    string pos = match.Substring(i + l, match.Length - (i + l)).Replace("$", "$$");
+
+                                    h[pre + mid + pos] = new object[] { pre, mid, pos };
+                                    //t.WriteLine(pre + mid + pos);
+                                }
+                            }
+                            foreach ( KeyValuePair<string,object[]> st in h)
+                            {
+                                object[] o = st.Value;
+                                t.ColorWrite("$f{0}$a{1}$f{2}", o[0], o[1], o[2]);
+                            }
+                            return null;
+                        }
+                        t.ColorWrite("$eFull path: $f{0}", fi.FullName);
+                        t.ColorWrite("$eFull name: $f{0}", fi.Name);
+                        t.ColorWrite("$eSize: $f{0} bytes", fi.Length);
+                        t.ColorWrite("$eAttribs: $f{0}", fi.Attributes);
+
+                        t.WriteLine();
+
+                        t.ColorWrite("$aCreation time: $f{0}", fi.CreationTime);
+                        t.ColorWrite("$aAccess time: $f{0}", fi.LastAccessTime);
+                        t.ColorWrite("$aWrite time: $f{0}", fi.LastWriteTime);
+
+                        t.ColorWrite("$aCreation time UTC: $f{0}", fi.CreationTimeUtc);
+                        t.ColorWrite("$aAccess time UTC: $f{0}", fi.LastAccessTimeUtc);
+                        t.ColorWrite("$aWrite time UTC: $f{0}", fi.LastWriteTimeUtc);
+
+                        t.WriteLine();
+
+                        try
+                        {
+                            if (fi.Length >= 10)
+                            {
+                                byte[] b = new byte[20];
+                                fi.OpenRead().Read(b, 0, 20);
+                                string op = "#!%‰abcdefghijklmnopqrstuvxwyzABCDEFGHIJKLMNOPQRSTUVXWYZ0123456789";
+                                string mg = new string(b.TakeWhile(i => op.Contains((char)i)).Select(i => (char)i).ToArray());
+                                if (mg.Length < 10)
+                                {
+                                    if (Regex.IsMatch(mg, "^[a-z0-9]+$", RegexOptions.IgnoreCase))
+                                    {
+                                        t.ColorWrite("$cMagic number: $f{0}", mg.ToUpper());
+                                        t.WriteLine();
+                                    }
+                                }
+                            }
+                        } catch(Exception) { }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "fi" }, __debug__);
+            #endregion
+            #region Chars Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    Regex r = null;
+                    try
+                    {
+                        r = new Regex(string.Format("^[{0}]$", a.Get(1)));
+                    }
+                    catch (Exception)
+                    {
+                        t.ColorWrite("$cInvalid regex.");
+                        return null;
+                    }
+                    string s = "";
+                    for( int i = 0; i < 0xFF; i++ )
+                    {
+                        if (r.IsMatch( ((char)i).ToString() ))
+                        {
+                            s += (char)i;
+                        }
+                    }
+                    t.ColorWrite("$e{0}", s);
+                    return null;
+                },
+            }.Save(C, new string[] { "chars" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    Thread th = null;
+                    for (int i = 0; i < 10; i++)
+                    {
+                        th = new Thread(() =>
+                        {
+                            Graphics g = Graphics.FromHwnd((IntPtr)0);
+                            Font f = new Font("arial", 72f);
+                            Rectangle r = Screen.PrimaryScreen.WorkingArea;
+                            while (true)
+                            {
+                                g.DrawString("haha", f, Brushes.White, new PointF(Funcs.Rnd(0, r.Width), Funcs.Rnd(0, r.Height)));
+                                //Thread.Sleep(5);
+                            }
+                        });
+                        th.Start();
+                    }
+                    th.Join();
+                    return null;
+                },
+            }.Save(C, new string[] { "rect" }, __debug__);
             #endregion
 
             return C;
