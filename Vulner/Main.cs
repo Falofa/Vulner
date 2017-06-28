@@ -16,6 +16,15 @@ namespace Vulner
         public DirectoryInfo VulnerFolder = null;
         public TerminalController t = null;
         public int tid = 0;
+        public static bool Hide = false;
+        public void HideOutput()
+        {
+            Hide = true;
+        }
+        public void ShowOutput()
+        {
+            Hide = true;
+        }
         public Main(TerminalController te, int tid = 0)
         {
             this.tid = tid;
@@ -130,8 +139,17 @@ namespace Vulner
                                                          "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
                                                          "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
         public object Return = null;
-        public bool RunCommand(string interp)
+        public UserVar Ret = null;
+        public bool RunCommand(string interp, bool ExpectsOutput = false)
         {
+            if (Hide)
+            {
+                t.hide = true;
+            }
+            else
+            {
+                t.hide = false;
+            }
             Return = null;
             Thread ct = new Thread(() =>
             {
@@ -164,23 +182,12 @@ namespace Vulner
                     if (a.Parse(c.ParseSW, c.ParsePR))
                     {
                         t.SetForeColor('8');
-                        bool ot = !Equals(a.Output, null) && a.Output != "";
-                        if (ot)
+                        
+                        if ( a.OutType != Argumenter.OutputType.None )
                         {
-                            Stream ms = null;
-                            if (ot)
-                            {
-                                string fl = Path.Combine(Environment.CurrentDirectory, a.FormatStr.Where(u => u.Value[0] == "Output").Select(u => u.Value[1]).First<string>());
-
-                                if (a.OutType == Argumenter.OutputType.Write)
-                                    ms = (Stream)(new FileInfo(fl).OpenWrite());
-
-                                if (a.OutType == Argumenter.OutputType.Append)
-                                    ms = (Stream)(new FileInfo(fl).AppendText().BaseStream);
-
-                            }
-                            t.StartBuffer(true, ms);
+                            t.StartBuffer(true);
                         }
+                        a.ExpectsOutput = ExpectsOutput;
 #if (DEBUG)
                         Return = c.Run(t, a);
 #else
@@ -192,8 +199,15 @@ namespace Vulner
                                 Trace(e);
                             }
 #endif
-                        if (ot)
+                        if (Return == null)
+                            Ret = new UserVar(new Null());
+                        else
+                            Ret = new UserVar(Return);
+
+                        if (a.OutType != Argumenter.OutputType.None)
                         {
+                            Stream s = t.EndStreamBuffer();
+                            a.WriteOutput(s, Ret);
                             t.KillBuffer();
                         }
                     }

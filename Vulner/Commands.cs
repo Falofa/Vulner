@@ -215,9 +215,10 @@ namespace Vulner
                 },
                 Main = (Argumenter a) =>
                 {
+                    
                     foreach (string s in a.Parsed.Skip(1))
                     {
-                        t.WriteLine(s);
+                        t.WriteLine("{0}", s);
                     }
                     return null;
                 },
@@ -734,6 +735,7 @@ namespace Vulner
                     t.ColorWrite("$e{0}", Path.Combine(Environment.CurrentDirectory, M));
                     string[] Af = Funcs.GetFilesSmarty(M, false);
                     Af = Funcs.GetDirsSmarty(M, false).Concat(Af).ToArray();
+                    if (a.ExpectsOutput) { return Af; }
                     foreach (string Fil in Af)
                     {
                         FileInfo f = new FileInfo(Fil);
@@ -2637,6 +2639,7 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "chars" }, __debug__);
             #endregion
+            // Strings
             #region Example Command
             new Command
             {
@@ -2646,26 +2649,33 @@ namespace Vulner
                 },
                 Main = (Argumenter a) =>
                 {
-                    Thread th = null;
-                    for (int i = 0; i < 10; i++)
+                    string[] sep = new string[] { a.Get(1) };
+                    List<string> re = new List<string>();
+                    foreach( string b in a.Parsed.Skip(1) )
                     {
-                        th = new Thread(() =>
-                        {
-                            Graphics g = Graphics.FromHwnd((IntPtr)0);
-                            Font f = new Font("arial", 72f);
-                            Rectangle r = Screen.PrimaryScreen.WorkingArea;
-                            while (true)
-                            {
-                                g.DrawString("haha", f, Brushes.White, new PointF(Funcs.Rnd(0, r.Width), Funcs.Rnd(0, r.Height)));
-                                //Thread.Sleep(5);
-                            }
-                        });
-                        th.Start();
+                        re.Concat(b.Split(sep, StringSplitOptions.None));
                     }
-                    th.Join();
-                    return null;
+                    return re.ToArray();
                 },
-            }.Save(C, new string[] { "rect" }, __debug__);
+            }.Save(C, new string[] { "Explode" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    byte[] b = new byte[256];
+                    for(int i = 0; i < 255; i++)
+                    {
+                        b[i] = (byte)i;
+                    }
+                    return b;
+                },
+            }.Save(C, new string[] { "bytes" }, __debug__);
             #endregion
 
             return C;

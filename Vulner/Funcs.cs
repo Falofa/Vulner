@@ -626,6 +626,11 @@ namespace Vulner
             MessageBox.Show(r.ToString());
         }
 
+        public static T ToType<T>(object o)
+        {
+            return (T)Convert.ChangeType(o, typeof(T));
+        }
+
     }
     class MouseHook
     {

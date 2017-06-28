@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using System.IO;
 
 namespace Vulner
 {
@@ -11,28 +12,33 @@ namespace Vulner
     {
         public enum OutputType
         {
+            None,
             Write,
-            Append
+            Append,
+            Ret,
         }
         public String Escapes = "\'\"`´~";
         public String ParamStr = "-";
         public String SwitcStr = "/";
+        public Char EscOnceChar = '\\';
         public String[] Full = new string[80];
-        public String[] Parsed = new string[80];
+        public Object[] Parsed = null;
         public String RawCmd;
         public String Cmd;
         public bool CaseSensitive = true;
+        public bool ExpectsOutput = false;
 
         public Dictionary<int,string[]> FormatStr = new Dictionary<int, string[]>();
         public bool RunCommand = false;
-        public string Output = null;
-        public OutputType OutType = OutputType.Write;
+        public UserVar Output = null;
+        public OutputType OutType = OutputType.None;
         Main m = null;
 
         public String[] Switches = new string[0];
         public String[] Params = new string[0];
         public Dictionary<string, bool> Sw = new Dictionary<string, bool>();
         public Dictionary<string, string> Pr = new Dictionary<string, string>();
+        public UserVar[] InputVars = null;
 
         public void SetM(Main M) { m = M; }
 
@@ -46,40 +52,22 @@ namespace Vulner
             string Fcur = "";
             bool Escaping = false;
             char EscChar = (char)0;
+            bool EscOnce = false;
             for ( int i = 0; i < s.Length; i++ )
             {
                 char Ch = s[i];
-                if ( Escaping )
-                {
-                    if (Escapes.Contains(Ch) && Ch == EscChar)
-                    {
-                        Escaping = false;
-                        EscChar = (char)0;
-                        {
-                            FormatStr[k] = new string[] { "", string.Format(Fcur, Cur) };
-                            Full[k++] = Cur;
-                            Cur = "";
-                        }
-                    } else
-                    {
-                        Cur += Ch;
-                    }
-                }
+                if ( Ch == EscOnceChar) { EscOnce = true; continue; }
+                if (EscOnce) { Cur += Ch; }
                 else
                 {
-                    if (Escapes.Contains(Ch) && Cur.Length == 0)
+                    if (Escaping)
                     {
-                        Escaping = true;
-                        EscChar = Ch;
-                        Fcur = string.Format("{0}{1}{0}", EscChar, "{0}");
-                    }
-                    else
-                    {
-                        if (Ch.ToString().Trim().Length == 0)
+                        if (Escapes.Contains(Ch) && Ch == EscChar)
                         {
-                            if ( Cur.Length > 0 )
+                            Escaping = false;
+                            EscChar = (char)0;
                             {
-                                FormatStr[k] = new string[] { "", Cur };
+                                FormatStr[k] = new string[] { "", string.Format(Fcur, Cur) };
                                 Full[k++] = Cur;
                                 Cur = "";
                             }
@@ -87,6 +75,31 @@ namespace Vulner
                         else
                         {
                             Cur += Ch;
+                        }
+                    }
+                    else
+                    {
+                        if (Escapes.Contains(Ch) && Cur.Length == 0)
+                        {
+                            Escaping = true;
+                            EscChar = Ch;
+                            Fcur = string.Format("{0}{1}{0}", EscChar, "{0}");
+                        }
+                        else
+                        {
+                            if (Ch.ToString().Trim().Length == 0)
+                            {
+                                if (Cur.Length > 0)
+                                {
+                                    FormatStr[k] = new string[] { "", Cur };
+                                    Full[k++] = Cur;
+                                    Cur = "";
+                                }
+                            }
+                            else
+                            {
+                                Cur += Ch;
+                            }
                         }
                     }
                 }
@@ -107,7 +120,7 @@ namespace Vulner
             string r = s;
             string[] fc = new string[]
             {
-                "\"", "\'", "-", "\\", "/", "`", "´", "`", "~"
+                "\"", "\'", "-", "`", "´", "`", "~"
             };
             foreach( string c in fc )
             {
@@ -115,9 +128,49 @@ namespace Vulner
             }
             return r;
         }
+        UserVar Run(string s, bool ExpectsOutput = false)
+        {
+            if (s.StartsWith("`") && s.EndsWith("`"))
+            {
+                if (RunCommand && !Equals(m, null))
+                {
+                    string cm = s.Substring(1, s.Length - 2);
+                    m.HideOutput();
+                    m.RunCommand(cm, ExpectsOutput);
+                    m.ShowOutput();
+                    UserVar r = m.Ret;
+                    m.t.KillBuffer();
+                    if (r != null && !r.IsNull())
+                    {
+                        return r;
+                    }
+                    else
+                    {
+                        return new UserVar(m.Return);
+                    }
+                }
+            }
+            return new UserVar(new Null());
+        }
+        public void ParseOutput(int i, List<object> Ps)
+        {
+            if ( i < 0 ) { Output = new UserVar(""); return; }
+            string Out = FormatStr[i][1];
+            if (Out.StartsWith("`") && Out.EndsWith("`"))
+            {
+                UserVar v = Run(Out, true);
+                Ps.Add(v);
+                Output = v;
+            }
+            else
+            {
+                Output = new UserVar(FormatStr[i][1]);
+            }
+        }
         public bool Parse(bool ParseSW = true, bool ParsePR = true)
         {
-            foreach( string str in Switches )
+            List<object> Ps = new List<object>();
+            foreach ( string str in Switches )
             {
                 Sw[str] = false;
             }
@@ -125,7 +178,6 @@ namespace Vulner
             {
                 Pr[str] = string.Empty;
             }
-            int j = 0;
             bool skip = false;
             for (int i = 0; i < Full.Length; i++)
             {
@@ -133,17 +185,26 @@ namespace Vulner
                 string Cur = Full[i];
                 string[] Fcur = FormatStr[i];
                 if (i == 0) { Fcur[0] = "Command"; } else if(string.IsNullOrEmpty(Fcur[0])) { Fcur[0] = "Argument"; }
-                if (Fcur[1] == ">" || Fcur[1] == ">>")
+                if (Fcur[1] == ">" || Fcur[1] == ">>" || Fcur[1] == "#>")
                 {
+                    if (Fcur[1] == "#>")
+                    {
+                        OutType = OutputType.Ret;
+                        Fcur[0] = "Operator";
+                        ParseOutput(i + 1, Ps);
+                        FormatStr[i + 1][0] = "Output";
+                        skip = true;
+                        continue;
+                    }
                     OutType = Fcur[1] == ">" ? OutputType.Write : OutputType.Append;
                     Fcur[0] = "Operator";
                     if (FormatStr.Count >= i + 2)
                     {
-                        Output = FormatStr[i + 1][1];
+                        ParseOutput(i + 1, Ps);
                         FormatStr[i + 1][0] = "Output";
                     } else
                     {
-                        Output = "";
+                        ParseOutput(-1, Ps);
                         FormatStr.Add(FormatStr.Count, new string[] { "Output", "" });
                     }
                     skip = true;
@@ -152,23 +213,7 @@ namespace Vulner
                 if ( Fcur[1].StartsWith("`") && Fcur[1].EndsWith("`"))
                 {
                     string C = Fcur[1];
-                    if (RunCommand && !Equals(m, null)) {
-                        m.t.StartBuffer(true);
-                        string cm = Fcur[1].Substring(1, Fcur[1].Length-2);
-                        m.RunCommand(cm);
-                        object r = m.Return;
-                        if (r != null)
-                        {
-                            Parsed[j++] = (string)Convert.ChangeType(r, typeof(String));
-                        }
-                        else
-                        {
-                            Parsed[j++] = m.t.EndBuffer();
-                        }
-                    } else
-                    {
-                        Parsed[j++] = Fcur[1].Substring(1, Fcur.Length - 2);
-                    }
+                    Ps.Add(Run(C, true));
                     skiponce = true;
                 }
                 if (!skiponce && !skip)
@@ -204,22 +249,111 @@ namespace Vulner
                         }
                         catch (Exception) { return false; }
                     }
-                    Parsed[j++] = Cur;
+                    Ps.Add(Cur);
                 }
             }
-            Parsed = Parsed.Select(t => Environment.ExpandEnvironmentVariables(!Equals(t, null) ? t : "")).Take(j).ToArray();
+            Parsed = Ps.ToArray();
             return true;
+        }
+        public void Write(string f, UserVar v, UserVar ret = null)
+        {
+            FileStream fil = null;
+            UserVar wr = v;
+            if (OutType == OutputType.Write)
+            {
+                fil = new FileInfo(f).OpenWrite();
+                fil.SetLength(0);
+            }
+
+            if (OutType == OutputType.Append)
+                fil = (FileStream)new FileInfo(f).AppendText().BaseStream;
+
+            if (OutType == OutputType.Ret)
+            {
+                fil = new FileInfo(f).OpenWrite();
+                wr = ret == null ? new UserVar(new Null()) : ret;
+            }
+            if (v.Is(typeof(string)))
+            {
+                byte[] bt = v.Get<string>().Select(a => (byte)a).ToArray();
+                fil.Write(bt, 0, bt.Length);
+            }
+            else if (v.Is(typeof(string[])))
+            {
+                string[] s = v.Get<string[]>();
+                foreach (string str in s)
+                {
+                    byte[] bt = str.Select(a => (byte)a).ToArray();
+                    fil.Write(bt, 0, bt.Length);
+                    fil.WriteByte((byte)'\n');
+                }
+            } else if (v.Is(typeof(byte[])))
+            {
+                byte[] bt = v.Get<byte[]>();
+                fil.Write(bt, 0, bt.Length);
+            } else if (v.Is(typeof(MemoryStream)))
+            {
+                byte[] bt = v.Get<MemoryStream>().ToArray();
+                fil.Write(bt, 0, bt.Length);
+            } else
+            {
+                byte[] bt = v.Get().ToString().Select(a => (byte)a).ToArray();
+                fil.Write(bt, 0, bt.Length);
+            }
+            fil.Flush();
+            fil.Close();
+            fil.Dispose();
+            fil = null;
+        }
+        public void WriteOutput(Stream o, UserVar u = null)
+        {
+            UserVar v = Output;
+            if (OutType == OutputType.None) { return; }
+            UserVar wr = (u != null && !u.IsNull()) ? u : new UserVar(o);
+            if ( !wr.IsNull() )
+            {
+                List<string> Out = new List<string>();
+                if (Output.Is(typeof(String[])))
+                {
+                    foreach (string s in Output.Get<string[]>())
+                    {
+                        Out.Add(s);
+                    }
+                }
+                else if (Output.Is(typeof(String)))
+                {
+                    Out.Add(Output.Get<string>());
+                }
+                foreach( string a in Out )
+                {
+                    Write(a, wr, u);
+                }
+            }
         }
         public string Get(int i)
         {
             try
             {
-                if (CaseSensitive) return Equals( Parsed[i], null ) ? "" : Parsed[i];
-                return Equals(Parsed[i], null) ? "" : Parsed[i].ToLower();
+                string s = Funcs.ToType<string>(Parsed[i]);
+                if (CaseSensitive) return Equals( s, null ) ? "" : s;
+                return Equals(Parsed[i], null) ? "" : s;
             } catch(Exception)
             {
                 return "";
             }
+        }
+        public T Get<T>(int i)
+        {
+            return Funcs.ToType<T>(Parsed[i]);
+        }
+        public Type GetType(int i)
+        {
+            try
+            {
+                object o = Parsed[i];
+                return o.GetType();
+            } catch(Exception) { }
+            return new Null().GetType();
         }
         public string GetRaw(int i)
         {

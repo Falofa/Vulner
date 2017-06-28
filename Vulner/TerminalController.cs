@@ -53,21 +53,28 @@ namespace Vulner
             EndStreams();
             return;
         }
+        public Stream EndStreamBuffer()
+        {
+            return stream;
+        }
         void EndStreams()
         {
-            r.Flush();
-            r.Close();
-            r.Dispose();
+            try
+            {
+                r.Flush();
+                r.Close();
+                r.Dispose();
+            }
+            catch (Exception) { }
             r = null;
 
             try
             {
                 stream.Flush();
+                stream.Close();
+                stream.Dispose();
             }
             catch (Exception) { }
-
-            stream.Close();
-            stream.Dispose();
             stream = null;
         }
 
