@@ -12,11 +12,15 @@ namespace Vulner
 {
     class Main
     {
-        public Dictionary<string, Command> Cmds = new Dictionary<string,Command>();
+        public String Name = null;
+        public String FileName = null;
         public DirectoryInfo VulnerFolder = null;
+
+        public Dictionary<string, Command> Cmds = new Dictionary<string,Command>();
         public TerminalController t = null;
-        public int tid = 0;
-        public static bool Hide = false;
+        public Int32 tid = 0;
+        public static Boolean Hide = false;
+        public static Boolean killthread = false;
         public void HideOutput()
         {
             Hide = true;
@@ -25,10 +29,26 @@ namespace Vulner
         {
             Hide = true;
         }
+        public void Config()
+        {
+            this.Name = "Vulner";
+            this.FileName = Environment.GetCommandLineArgs()[0];
+            FileInfo fi = new FileInfo(FileName);
+            if (fi.Name.Contains( ".vshost" ) )
+            {
+                FileName = Path.Combine(fi.Directory.FullName, fi.Name.Replace(".vshost", ""));
+            }
+            fi = null;
+            Console.WindowWidth = 80;
+            Console.WindowHeight = 25;
+            Console.BufferWidth = 80;
+            Console.BufferHeight = 500;
+        }
         public Main(TerminalController te, int tid = 0)
         {
+            this.Config();
             this.tid = tid;
-            VulnerFolder = new DirectoryInfo(Path.Combine(Environment.ExpandEnvironmentVariables("%appdata%"), "vulner"));
+            VulnerFolder = new DirectoryInfo(Path.Combine(Environment.ExpandEnvironmentVariables("%appdata%"), Name.ToLower()));
             if (!VulnerFolder.Exists) { VulnerFolder.Create(); }
             if (Environment.GetCommandLineArgs().Contains("root"))
             {
@@ -46,7 +66,7 @@ namespace Vulner
             if (Environment.GetCommandLineArgs().Contains("update"))
             {
                 int id = Process.GetCurrentProcess().Id;
-                Process.GetProcesses().Where(t => t.ProcessName.ToLower().Contains("vulner") && t.Id != id).Select(t => { t.Kill(); return 0; });
+                Process.GetProcesses().Where(t => t.ProcessName.ToLower().Contains(Name.ToLower()) && t.Id != id).Select(t => { t.Kill(); return 0; });
                 string self = Environment.GetCommandLineArgs().Skip(1).Where(t => t != "update").First();
 #if (DEBUG)
                 string vr = "Debug";
@@ -65,11 +85,10 @@ namespace Vulner
             Cmds = new Commands().Get(this, t);
             Cmds[""] = new Command();
 
-            Environment.SetEnvironmentVariable("vulner", Environment.GetCommandLineArgs()[0]);
+            Environment.SetEnvironmentVariable(Name, Environment.GetCommandLineArgs()[0]);
             Environment.SetEnvironmentVariable("startup", Environment.GetFolderPath(Environment.SpecialFolder.Startup));
             Environment.SetEnvironmentVariable("startmenu", Environment.GetFolderPath(Environment.SpecialFolder.StartMenu));
-
-            //string name = "Vulner";
+            
             string asciiName = @"
   $f║$c  ____   ____     __       $fDeveloped by Falofa $f║
   $f║$c  \   \ /   __ __|  |   ____   ___________     $f║
@@ -100,7 +119,7 @@ namespace Vulner
 
             if (Environment.GetCommandLineArgs().Contains("updated"))
             {
-                t.ColorWrite("$aVulner was updated!");
+                t.ColorWrite("$a{0} was updated!", Name);
             }
 
             foreach (string s in Environment.GetCommandLineArgs())
@@ -114,14 +133,28 @@ namespace Vulner
                 }
             }
             Funcs.ShowConsole();
-        }
-            
+            Funcs.EnableRightClick();
 
-        private void K_MouseEvent(Kennedy.ManagedHooks.MouseEvents mEvent, Point point)
-        {
-            if (mEvent == Kennedy.ManagedHooks.MouseEvents.MouseWheel)
+            ConsoleCancelEventHandler ce = (o, e) =>
             {
-                t.WriteLine("FUCK");
+                if ((e.SpecialKey & ConsoleSpecialKey.ControlC) == ConsoleSpecialKey.ControlC)
+                {
+                    killthread = true;
+                }
+                e.Cancel = true;
+            };
+            Console.CancelKeyPress += ce;
+        }
+
+        public void Error(string s)
+        {
+            if (!t.hide)
+            {
+                t.ColorWrite("$c{0}", s);
+            } else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(s);
             }
         }
 
@@ -129,15 +162,20 @@ namespace Vulner
         {
             while (true)
             {
+                if ( Console.CursorLeft != 0 ) { Console.WriteLine(); }
                 t.SetForeColor('f');
                 Console.Write("> ");
                 string s = t.ReadLine();
-                this.RunCommand(s);
+                killthread = false;
+                if (s != null)
+                {
+                    this.RunCommand(s);
+                } else
+                {
+                    t.WriteLine();
+                }
             }
         }
-        public string[] IgnoreFileNames = new string[] { "CON", "PRN", "AUX", "NUL",
-                                                         "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-                                                         "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
         public object Return = null;
         public UserVar Ret = null;
         public bool RunCommand(string interp, bool ExpectsOutput = false)
@@ -163,9 +201,10 @@ namespace Vulner
                 Command c = null;
                 try
                 {
-                    c = Cmds[a.GetRaw(0)];
+                    c = Cmds[a.GetRaw(0).ToLower()];
                     a.Switches = c.Switches;
                     a.Params = c.Parameters;
+                    a.AllSP = c.AllSP;
                     if (!c.Valid())
                     {
                         t.ColorWrite("$cInvalid command.");
@@ -213,26 +252,19 @@ namespace Vulner
                     }
                 }
             });
-            ConsoleCancelEventHandler ce = (o, e) =>
+            ct.Start();
+            while(ct.IsAlive)
             {
-                if ((e.SpecialKey & ConsoleSpecialKey.ControlC) == ConsoleSpecialKey.ControlC)
+                if (killthread)
                 {
-                    t.ColorWrite("$e-> Terminating thread...");
-                    int i = 0;
-                    while (ct.IsAlive && i < 50)
+                    for (int i = 0; i < 500; i++)
                     {
-                        i++;
                         ct.Abort();
-                        Thread.Sleep(50);
+                        if (!ct.IsAlive) { break; }
                     }
                 }
-                e.Cancel = true;
-
-            };
-            Console.CancelKeyPress += ce;
-            ct.Start();
-            ct.Join();
-            Console.CancelKeyPress -= ce;
+                Thread.Sleep(100);
+            }
             return false;
         }
         public void Trace(Exception e)

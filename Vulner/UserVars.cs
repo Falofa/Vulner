@@ -23,6 +23,17 @@ namespace Vulner
             return Vars.ContainsKey(s) ? Vars[s] : new UserVar(new Null());
         }
     }
+    static class UserVarExp
+    {
+        public static string[] StringArray(this UserVar[] O)
+        {
+            return O.Select(t => t.Get<string>()).ToArray();
+        }
+        public static string[] StringArray(this IEnumerable<UserVar> O)
+        {
+            return O.Select(t => t.Get<string>()).ToArray();
+        }
+    }
     class UserVar
     {
         Object Value = null;
@@ -40,11 +51,22 @@ namespace Vulner
         }
         public T Get<T>()
         {
-            return Funcs.ToType<T>(Value);
+            try
+            {
+                return Funcs.ToType<T>(Value);
+            } catch(Exception) { }
+            if ( typeof(T) == typeof(String) ) { return Funcs.ToType<T>(Value.ToString()); }
+            throw new Exception();
         }
         public object Get()
         {
-            return Funcs.ToType<ValueType>(Value);
+            try
+            {
+                return Funcs.ToType<ValueType>(Value);
+            }
+            catch (Exception) { }
+            if (typeof(ValueType) == typeof(String)) { return Value.ToString(); }
+            throw new Exception();
         }
         public Type Type()
         {

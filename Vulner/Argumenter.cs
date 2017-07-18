@@ -20,13 +20,24 @@ namespace Vulner
         public String Escapes = "\'\"`´~";
         public String ParamStr = "-";
         public String SwitcStr = "/";
-        public Char EscOnceChar = '\\';
+        public Char EscOnceChar = '&';
         public String[] Full = new string[80];
-        public Object[] Parsed = null;
+        public UserVar[] Parsed = null;
         public String RawCmd;
         public String Cmd;
         public bool CaseSensitive = true;
         public bool ExpectsOutput = false;
+        public bool AllSP = false;
+        public Dictionary<char, char> EscapeCh = new Dictionary<char, char> {
+            { 'n', '\n' },
+            { 'r', '\r' },
+            { 't', '\t' },
+            { 'v', '\v' },
+            { 'b', '\b' },
+            { 'a', '\a' },
+            { 'f', '\f' },
+            { '0', '\0' },
+        };
 
         public Dictionary<int,string[]> FormatStr = new Dictionary<int, string[]>();
         public bool RunCommand = false;
@@ -56,8 +67,19 @@ namespace Vulner
             for ( int i = 0; i < s.Length; i++ )
             {
                 char Ch = s[i];
-                if ( Ch == EscOnceChar) { EscOnce = true; continue; }
-                if (EscOnce) { Cur += Ch; }
+                if ( Ch == EscOnceChar && !EscOnce) { EscOnce = true; continue; }
+                if (EscOnce) {
+                    char lower = Ch.ToString().ToLower()[0];
+                    if (EscapeCh.ContainsKey(lower))
+                    {
+                        Cur += EscapeCh[lower];
+                    }
+                    else
+                    {
+                        Cur += Ch;
+                    }
+                    EscOnce = false;
+                }
                 else
                 {
                     if (Escaping)
@@ -152,7 +174,7 @@ namespace Vulner
             }
             return new UserVar(new Null());
         }
-        public void ParseOutput(int i, List<object> Ps)
+        public void ParseOutput(int i, List<UserVar> Ps)
         {
             if ( i < 0 ) { Output = new UserVar(""); return; }
             string Out = FormatStr[i][1];
@@ -169,7 +191,7 @@ namespace Vulner
         }
         public bool Parse(bool ParseSW = true, bool ParsePR = true)
         {
-            List<object> Ps = new List<object>();
+            List<UserVar> Ps = new List<UserVar>();
             foreach ( string str in Switches )
             {
                 Sw[str] = false;
@@ -223,7 +245,7 @@ namespace Vulner
                         try
                         {
                             string s = Cur.Substring(SwitcStr.Length).ToLower();
-                            if (Switches.Contains(s))
+                            if (Switches.Contains(s) || AllSP)
                             {
                                 Sw[s] = true;
                                 continue;
@@ -236,7 +258,7 @@ namespace Vulner
                         try
                         {
                             string s = Cur.Substring(ParamStr.Length).ToLower();
-                            if (Pr[s] == string.Empty)
+                            if ((!Pr.ContainsKey(s) && AllSP) || Pr[s] == string.Empty)
                             {
                                 if (FormatStr[i + 1][1] == ">")
                                 {
@@ -249,31 +271,51 @@ namespace Vulner
                         }
                         catch (Exception) { return false; }
                     }
-                    Ps.Add(Cur);
+                    Ps.Add(new UserVar(Environment.ExpandEnvironmentVariables(Cur)));
                 }
             }
             Parsed = Ps.ToArray();
             return true;
         }
+
+        public string[] IgnoreFileNames = new string[] { "CON", "PRN", "AUX", "NUL",
+                                                         "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+                                                         "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9" };
         public void Write(string f, UserVar v, UserVar ret = null)
         {
+            FileInfo fi = null;
+            if (IgnoreFileNames.Contains(f, StringComparer.InvariantCultureIgnoreCase)) return;
+            try
+            {
+                fi = new FileInfo(f);
+            } catch(Exception)
+            {
+                m.Error("Invalid file name");
+                return;
+            }
             FileStream fil = null;
             UserVar wr = v;
+            //MessageBox.Show(OutType.ToString());
             if (OutType == OutputType.Write)
             {
-                fil = new FileInfo(f).OpenWrite();
+                fil = fi.OpenWrite();
                 fil.SetLength(0);
             }
 
             if (OutType == OutputType.Append)
-                fil = (FileStream)new FileInfo(f).AppendText().BaseStream;
+                fil = (FileStream)fi.AppendText().BaseStream;
 
             if (OutType == OutputType.Ret)
             {
-                fil = new FileInfo(f).OpenWrite();
+                fil = fi.OpenWrite();
                 wr = ret == null ? new UserVar(new Null()) : ret;
             }
-            if (v.Is(typeof(string)))
+            if (v.Is(typeof(byte[])))
+            {
+                byte[] bt = v.Get<byte[]>();
+                fil.Write(bt, 0, bt.Length);
+            }
+            else if(v.Is(typeof(string)))
             {
                 byte[] bt = v.Get<string>().Select(a => (byte)a).ToArray();
                 fil.Write(bt, 0, bt.Length);
@@ -287,11 +329,7 @@ namespace Vulner
                     fil.Write(bt, 0, bt.Length);
                     fil.WriteByte((byte)'\n');
                 }
-            } else if (v.Is(typeof(byte[])))
-            {
-                byte[] bt = v.Get<byte[]>();
-                fil.Write(bt, 0, bt.Length);
-            } else if (v.Is(typeof(MemoryStream)))
+            } else  if (v.Is(typeof(MemoryStream)))
             {
                 byte[] bt = v.Get<MemoryStream>().ToArray();
                 fil.Write(bt, 0, bt.Length);
@@ -334,13 +372,22 @@ namespace Vulner
         {
             try
             {
-                string s = Funcs.ToType<string>(Parsed[i]);
+                string s = Parsed[i].Get<string>();
                 if (CaseSensitive) return Equals( s, null ) ? "" : s;
                 return Equals(Parsed[i], null) ? "" : s;
             } catch(Exception)
             {
                 return "";
             }
+        }
+        public string[] VarArgs()
+        {
+            if ( this.Parsed.Length > 1 )
+            {
+                if (this.Parsed[1].Type() == typeof(string[]))
+                    return this.Parsed[1].Get<string[]>();
+            }
+            return this.Parsed.Skip(1).StringArray();
         }
         public T Get<T>(int i)
         {

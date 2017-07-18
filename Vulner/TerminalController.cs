@@ -224,7 +224,7 @@ namespace Vulner
                 if (buffer) { r.WriteLine(s); }
             }
             catch (Exception) { }
-            if (!hide) Console.WriteLine("{0}", s);
+            if (!hide) Console.WriteLine("{0}", s.Replace('\a', '\0'));
         }
 
         public void Write(object o = null, params object[] obj)
@@ -241,7 +241,7 @@ namespace Vulner
                 if (buffer) { r.Write(s); }
             }
             catch (Exception) { }
-            if (!hide) Console.Write("{0}", s);
+            if (!hide) Console.Write("{0}", s.Replace('\a', '\0'));
         }
 
         public string FancyInput()

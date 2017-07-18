@@ -17,6 +17,8 @@ using System.Web;
 using System.Management;
 using System.Drawing;
 using System.Globalization;
+using Microsoft.Win32.SafeHandles;
+using IWshRuntimeLibrary;
 
 namespace Vulner
 {
@@ -96,7 +98,7 @@ namespace Vulner
                 {
                     char[] ch = Funcs.InvisibleChars();
                     List<char> c = new List<char>();
-                    foreach( char cha in ch )
+                    foreach (char cha in ch)
                     {
                         t.WriteLine("Use this one: A{0}B?", cha);
                         if (t.ReadLine().ToLower().StartsWith("y"))
@@ -109,8 +111,390 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "invs" }, __debug__);
             #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string h = @"
+DW6BY-8DVYG-M38WF-FM8HQ-8RFTB
+H3PBV-FHB27-RJTGH-X9YDC-JDDH6
+XTRXD-K3H9T-4CK86-38BJG-JDW7W
+B8T7K-67M97-2YMKD-67J3G-MJ6R6
+BHFRD-H9FD4-D3PFQ-7GW4P-9KHBW
+DQTYY-7BFDD-X2B2W-X2JJW-KP33Y
+V22CM-2M3KJ-VY2H2-8GB74-K48KQ
+WGJ2H-QD94T-67HWJ-2CJF3-3289T
+JYJDJ-R7B2K-RJBHW-6W8WC-Q2W4J
+W8HJJ-8C6XR-9DR2Y-K38KP-G2DGQ
+BXP73-YFQ9Q-TJK64-73RBJ-2Q8CG
+J47PT-GDT8X-YX7RD-48HKY-MK768
+VKGC2-DQ2QX-C3MGT-336P2-VC44M
+CMXQ7-M3HM2-2J6F6-QC8HM-X822M
+BMF6R-CDJTV-V7YYT-WVT8P-DFTC6
+HVD4T-4J86W-VQ9YC-3D8DR-DJ9QG
+KKKYF-FK76B-BHCC6-VX2RC-PQ3QB
+MMYG8-WXBMX-FHQPM-FRT2X-H6TY8
+WFFV6-TCTTJ-BFJKC-CV4Q9-4WRCW
+TPQPG-J6KJ2-JCX8V-KBXMP-XQGPQ
+HCD3C-BWWCV-F92RM-Y2KWG-3MR6Q
+PG3TH-YCRQD-T9Q2C-7KV26-YKKQB
+JRDRG-3BVWD-GBG49-TH3CJ-YX4TW
+JK3WW-XJHFV-9H47R-FK68X-GHQGG
+R8MGB-3VG42-VRC8M-6G8PK-XC78B
+D4JC6-FGJV7-BWJDG-FGF28-P86P3
+W4PB7-2QVD7-HBDFR-RYGGD-389VY
+BDJXP-BH7BT-RKY7B-JF3D6-29D88
+QDBDK-DBXBW-74M8K-Q46J6-DRV96
+JBF7Q-J3JKK-WJ429-W8Y3J-7H3JY
+BVMTY-DD3GM-WCX6Y-6B2JC-M8R3B
+THG4M-2TWCC-8D6Q7-97WHJ-YHXWJ
+CY4JC-9VMHJ-TR6CP-PK9HQ-FTXR6
+WM2XQ-HMVT3-77GQT-GTX4J-86TTJ
+FQYWR-YJBXV-Y3XGD-8DD38-HTKDT
+RGD7Y-TDYD7-9CP7R-B9M9P-GV8RY
+W72JV-F99WQ-6JKHJ-RT38Q-RQH3T
+B44HM-7PD4Q-C4CC9-TFY7M-2Q6PT
+RMGB8-6MVW9-TQ6QQ-Q6J4Y-HWFMW
+B9M4P-7PY3X-MMTKQ-VT33H-QBT4G
+FJ972-3PCTC-CR76R-VPG6G-PJ9YY
+V283T-JQCCQ-PT7T9-X3CHY-8WVXG
+FF6P3-WXFTV-743G9-T9QJJ-6M4WJ
+MVPW2-X9TWH-YHQMD-XK798-F6XFD
+TMTVD-6G74G-TBTCK-RHVRB-P8GXW
+B8RRK-446HW-9F67D-JX8J8-3MXXD
+PQDHX-P8HYV-DM3CJ-CXG8R-G4WG6
+PCF6M-CKF7R-HYWGX-HPD2W-WP89D
+T2JWW-B3WMR-3KK3J-7WQK3-38BBJ
+JDF2H-9632Y-YCFRY-DMG3F-6DHMQ
+P49CV-TMJ39-DPJBM-JTCV8-8QRJG
+C2MM7-P4488-BYXRH-CDF8K-W7CCM
+MH34B-7H7DW-4Y2VQ-78P46-HJ766
+MBMYW-TFFRB-4TJKT-7JJWV-9672T
+FMHH4-26R34-BRXBH-JBWTB-4FGFG
+FCYBR-8GYP2-JGVXF-843KC-7FRV3
+PKWVF-TK664-P6D9G-QRTWD-9W47T
+TGHK8-7BMW3-6V89T-FD3TC-9Q3GB
+FGJW4-4G94V-PVRJ8-MW8Y6-32VWT
+B4P6H-CX3M2-2KK9W-WB6WF-BMGDJ
+HHK8F-7329C-X7V6M-RFWPX-67HXY
+QGCH8-3F2WY-V3BYR-8W7H2-9FJQ8
+HCRTP-M3968-F4BM8-YFP29-68PCB
+FYC88-GMMQM-GRCGD-J6RPH-WTBCJ
+HMGWV-D8TRX-DTFRB-8MH4Q-W9M6Q
+VVV3F-FXH7G-2HT7J-G4FJC-9XB28
+K4KGH-9B777-T74TT-VRJH2-KDB3Y
+VHHWQ-KK73B-DWQK4-4BH66-KD8QT
+JJX3F-6QV7F-DDJ3H-3VH4B-FKKPT
+B4BFK-J7VGQ-7DY96-F27M9-7G6YG
+WT74K-MW33W-VT8B7-BHHCQ-XVQWM
+WT8TK-WHQMX-JCJVD-KG8D9-4D7Y3
+HYV86-DY92B-MMJV3-MR4KX-7Q9BT
+XH9YK-T7VJD-23JJ9-CKWVT-2QKJ6
+Q7DQ7-YQ24T-KQVW7-3YPXQ-YQRCB
+WFP4X-QXBH7-646TC-DPG67-JWDMD
+PC2CR-TCPBM-WY648-XVCWV-43438
+GD6GV-T6GGW-QGTXF-99TV3-R3FFG
+K3KFR-49TPH-BCYQH-MMFCQ-GWMTT
+M8PWM-BRGTX-3GRTH-WJTFK-6R7RJ
+BJ4F4-XXBXY-Y83Q7-7J744-BWQFQ
+VQFQ6-97JHT-9DJRV-XD2YQ-DC77J
+DCCYB-W32VD-BGCMM-D4TK4-F4GWM
+DPHQ8-BCCFF-47F96-3FXX6-2BCWY
+CDWVX-FV674-3G2XW-7C6K2-GGPXY
+HPPD9-HKRR3-XDJX9-HC9M3-GH6K6
+WW8XM-TT7VY-W7D9F-CBHV4-YXPVB
+W2F8Q-DKCB6-GMGFW-3WDXC-VPRJ6
+FPTHR-GHKTP-6RRKY-DWV63-H8T66
+DG6VR-PQR3F-6PWPP-3R944-W24VJ
+DTCYK-T2XW2-G2JY6-K9PT2-VMKCM
+JHKTQ-XT7X9-Y2G4B-7GKKW-X4TFT
+XCRBY-QRWFC-KW3YK-8FQ6Y-KBPV3
+RFGF7-J6TYH-XVC7K-C82QQ-XJPD3
+PMYRK-FBM8T-BTBKB-MGQK8-6G97D
+V286D-2VRTM-24G2J-Q6PXD-P233G
+K4GXD-XY83H-DQMKP-9K233-4JKRY
+K7PKQ-HHRK2-88WXM-76T7C-PYCFT
+RQ7W7-YV47C-MWHGH-VWRJJ-C4GYG
+RC8Q4-V7MYY-VHJPJ-MX7GJ-C266D
+BMXCJ-4DGDT-PJBH8-H3Y63-CJJFT
+BW96C-T3W72-KQRHF-TXWTF-B87CW
+QGWD4-G74KP-FKTRV-VJ333-DFCRG
+TK9GT-PBP6D-DWXWG-3G3MP-T43GD
+HB9HY-7X82H-PQHKM-2YP9G-C844T
+CRGJ8-FGT84-XRQMT-BW88R-V6XJ3
+M6F3B-2GB7H-MQPWB-Q46CH-KFRVT
+PYJBW-GR4MQ-4JDD3-4GWCF-XR46B
+H2KK7-CBD2W-BP4BQ-HK9MH-TG4RQ
+GKKJ6-VYTK6-3H7FY-GWYR9-P8H28
+DFXWK-T4T29-T8QCC-8XGJK-PWTR8
+GWY9W-99WCM-VBR2Y-8RGCC-CMWBQ
+MCGC4-XVFKX-J7JTF-8VDF7-8HQWQ
+J2C3Q-V3Q7G-D89J7-VWX8X-FQKYY
+Q6XGY-HB789-76PMB-CQHC2-F6FW6
+VYDDH-9M3K3-27PP7-6X9GB-QPFRW
+PCCPP-96YHV-FY344-W8XMV-7VH2Y
+RV72G-2QHM8-X9DHT-H36WX-WC3K6
+DT9GD-CGCQG-V3CKP-73732-4JRPJ
+R4FJW-6PG36-6VR92-9YPYF-YDW28
+RW386-XGBWW-PCT4Y-33K3K-47FGG
+KR2WG-KVJHY-FMMBT-94WHQ-3Q4GM
+F479C-Q299Y-HQTJG-PC83Y-8RGB3
+P467Q-H8HXM-7T92Q-33CG9-8T3HW
+BD949-QWM9R-PQJ2J-4GGHF-9FD7T
+CHXV7-49YYQ-YMMQG-6VVMG-6MP2D
+HGP6K-H2G7P-2FBWP-YQ9XY-TQBY6
+V293Y-QXMKR-R8CYR-DGH8W-TRB7B
+GT4PM-2VFRK-M23WT-P6JQV-CJ37M
+WKFV9-YQJGH-K6CCD-Y4CJK-XCGRQ
+JDGVP-BC8CD-JH8WM-XD2Q4-CQ3DW
+KT2GJ-4F99Y-JW6D3-JRGCC-DG4C3
+Q2VK6-3D84H-VGDVP-MBMH2-XHKRM
+PXXXC-RYG99-7JHHY-TD6CK-PGJ43
+V4J6V-QQPB9-4C3P2-J94HG-48RWQ
+QHPPM-38KC6-J3Y28-RFJ76-79K7D
+M6X2K-PRXMC-DQF34-9VHMR-KMYTQ
+G874F-YJ69M-C2XBY-MXG38-6RM8Y
+WMPYK-C7624-76VPX-CGRGK-YHQFD
+FKQKV-FK8PX-QG6JW-7DHYR-CMKFT
+VRK49-24R7F-4WXMC-6YQ68-6FDYJ
+TKGTP-WPXR3-7QRD2-4YFBB-VMM7B
+JK6BW-4P2XW-W4KJD-K9R67-437FY
+Q4HTC-DYW64-69CW7-X6BCQ-QXDW3
+TQCH6-28H62-RQ2W3-Y823G-CDPHY
+QHBJJ-JDVDW-K8D8P-QVQH3-DWXTG
+HXF4X-X8QDQ-H4CJW-DDFFM-V3MB6
+G3T8Q-GKXQ4-29RPK-Y3JKG-7J6XQ
+B4JHY-G249M-8YFHR-GP9QF-27PYM
+MHKR2-9K7BY-7X82H-3DQPT-2KMQQ
+M6GK9-V6TJ7-JYFH4-6Q4VM-496MD
+FHT87-GXCMT-FVK4M-FWVKQ-B8X2D
+HR6MR-M2MYM-TKKX3-FPGVF-XJ4C8
+PVR34-YHX24-J6YVV-TWKFH-MV42Q
+TRCMM-89XVK-Y94MT-BYDVR-3FR3J
+FQ3WJ-6HJF7-GHQ6T-TGGMY-KB4GT
+JQKRX-27CDR-T8W3T-KG2QW-8KXMM
+XP3VC-VBCJR-7QKQ2-KD2Q4-FC3Y8
+PKW3J-4KVXY-XQVVT-R77WJ-QFF7W
+B8RYC-WQ4JM-7YHCY-BYDDH-7PPGW
+JVM66-Q8BHJ-YTF7C-JHRVM-YK438
+TD3G7-MGGK8-KQW7M-6TTCP-Q797M
+WJGC3-BXF8M-Y47H4-GG7HH-JYT23
+BV4FC-KHG6Y-2DV88-P2BH7-99B3D
+QG6V8-K63WT-D4GB4-FF7QH-Q3HTQ
+HK99T-XVDD2-MXY8G-B6Q9P-X89BG
+VPW2W-3MYRX-KBBXK-9D6JH-KY8D6
+DDPYV-7JYHP-7KHR6-WCGVF-4GDKW
+FRCKF-X8H6J-K8DR2-DYTQ7-CTJCJ
+DKYBG-VYDW7-XVTDV-72TT7-RTDT6
+TYMH3-7C9VD-7T3V2-9WVX6-K8YPM
+KQPR3-DGXXC-GKWGW-8W94V-GPPKW
+KWT97-9H2XB-TYRWB-8HBVJ-49R9Y
+WKDKY-RTQKW-7VH44-6B2BQ-RKBTT
+WPT9F-RVVQ2-82MQF-R2JPP-3JWCJ
+V34JB-MGQ3D-BJ9VJ-WC927-JBTR6
+C3F2R-HXY7F-M7FG4-T8M9R-G8TBM
+DQYFV-WPDP3-93JR2-GBQ8M-P9CCY
+K7JCX-QW4WM-X6G37-MHT36-3H3JT
+GW7JP-HM4X8-CTCCH-MW8RH-9FGHW
+WBT7G-RVBQQ-73443-Y6XGT-8KY3D
+JTYC3-VMJM9-GFGQG-Q6YGP-9TKMM
+V7M7D-B8KTK-KDTM6-4K62B-M8Y6Q
+MDR4W-RCDC3-RGXPY-KJDYR-J94HJ
+W9WHB-FPGVB-JYG8V-QPFY3-644F3
+GHMDV-3CBR3-94769-KTM3B-Y8G7W
+KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
+                    char[] ig = Util.Array('-', ' ', '\n');
+                    HashSet<char> c = new HashSet<char>();
+                    foreach (char p in h)
+                    {
+                        if (!ig.Contains(p))
+                            c.Add(p);
+                    }
+                    t.ColorWrite("$a{0}", string.Join("", c.OrderBy(u => (int)u).ToArray().Select(o => o.ToString()).ToArray()));
+                    return null;
+                },
+            }.Save(C, new string[] { "wkch" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Switches = Util.Array("y"),
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    t.WriteLine(a.GetSw("y"));
+                    foreach (string k in a.Parsed.Skip(1).StringArray())
+                    {
+                        t.WriteLine("{0}", string.Join(", ", Util.Eq(k)));
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "test" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    foreach (string s in Registry.ClassesRoot.GetSubKeyNames().Where(o => o.StartsWith(".")))
+                    {
+                        t.WriteLine(s);
+                        new FileInfo(Path.Combine(Environment.CurrentDirectory, s)).Create().Close();
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "no" }, __debug__);
+            #endregion
+            #region TS Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string s = "";
+                    Action<string, object> add = (e, o) =>
+                    {
+                        s += string.Format(e.ToString(), o.ToString()) + "\n";
+                    };
+                    add("Stream is Null: {0}", Equals(t.stream, null));
+                    add("StreamWriter is Null: {0}", Equals(t.r, null));
+                    add("Buffer is: {0}", Equals(t.buffer, null));
+                    add("Hide is: {0}", Equals(t.hide, null));
+                    t.WriteLine("TerminalController is working");
+                    MessageBox.Show(s, m.Name);
+                    return null;
+                },
+            }.Save(C, new string[] { "ts" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string[] str = Registry.ClassesRoot.GetSubKeyNames().Where(o => !o.Contains(".")).ToArray();
+                    foreach (string s in str)
+                    {
+                        try
+                        {
+                            RegistryKey cl = Registry.ClassesRoot.OpenSubKey(s + "\\shell\\Open\\command");
+                            string v = cl.GetValue("").ToString();
+                            if (v.Contains("%1") && v.IndexOf("%1") < 2)
+                            {
+                                t.WriteLine("{0} = {1}", s, v);
+                            }
+                        }
+                        catch (Exception) { }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "exe" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Parameters = Util.Array("icon", "desc", "args"),
+                Help = new CommandHelp
+                {
+                    Description = "Creates a shortcut file",
+                    Usage = Util.Array("{NAME} [shortcut] [destination]"),
+                    Param = new Dictionary<string, string> {
+                        { "icon", "Icon" },
+                        { "desc", "Description" },
+                        { "args", "Arguments" }
+                    },
+                },
+                Main = (Argumenter a) =>
+                {
+                    FileInfo f = null;
+                    FileInfo F = null;
+                    bool fil = true;
+                    try
+                    {
+                        f = Funcs.Fi(a.Get(1));
+                        if (!f.Exists) f.Create().Close();
+                    } catch(Exception)
+                    {
+                        t.ColorWrite("$cInvalid file");
+                        return null;
+                    }
+                    try
+                    {
+                        F = Funcs.Fi(a.Get(2));
+                        if (!f.Exists) F.Create().Close();
+                    } catch(Exception) { fil = false; }
+
+                    WshShell sh = new WshShell();
+                    IWshShortcut lnk = (IWshShortcut)sh.CreateShortcut(f.FullName);
+
+                    if (a.GetPr("icon") != string.Empty) lnk.IconLocation = a.GetPr("icon");
+                    if (a.GetPr("desc") != string.Empty) lnk.Description = a.GetPr("desc");
+                    if (a.GetPr("args") != string.Empty) lnk.Arguments = a.GetPr("args");
+
+                    if(fil)
+                        lnk.TargetPath = F.FullName;
+                    else
+                        lnk.TargetPath = a.Get(2);
+                    lnk.Save();
+                    return null;
+                },
+            }.Save(C, new string[] { "lnk" }, __debug__);
+            #endregion
             __debug__ = false;
 #endif
+            #region Self Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string r = new FileInfo(Environment.GetCommandLineArgs()[0]).FullName;
+                    if (a.ExpectsOutput) return r;
+                    t.ColorWrite("$a{0}", r);
+                    return null;
+                },
+            }.Save(C, new string[] { "self" }, __debug__);
+            #endregion
+            #region NI Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Creates a new instance of Vulner",
+                    Examples = Util.Array("{NAME}")
+                },
+                Main = (Argumenter a) =>
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = m.FileName,
+                        Verb = Funcs.IsAdmin() ? "runas" : ""
+                    });
+                    return null;
+                },
+            }.Save(C, new string[] { "ni" }, __debug__);
+            #endregion
             #region Fake Command
             new Command
             {
@@ -118,12 +502,12 @@ namespace Vulner
                 {
                     Description = "Populates a folder with fake files",
                     Usage = new string[] {
-                        "{NAME} [Subfolder count]"
-                    },
+                                    "{NAME} [Subfolder count]"
+                                },
                     Examples = new string[] {
-                        "{NAME}",
-                        "{NAME} 4",
-                    }
+                                    "{NAME}",
+                                    "{NAME} 4",
+                                }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -136,9 +520,9 @@ namespace Vulner
 
                     string[] Frmt = new string[]
                     {
-                        "txt", "pptx", "docx", "exe", "bat", "exe", "msi", "vbs", "bat",  "doc", "png", "jpg", "jpeg",
-                        "gif", "bmp",  "dll",  "sys", "bat", "msc", "ico", "js",  "html", "php", "hta", "css", "mp3",
-                        "wav", "mp4",  "avi",  "mkv", "svg"
+                                    "txt", "pptx", "docx", "exe", "bat", "exe", "msi", "vbs", "bat",  "doc", "png", "jpg", "jpeg",
+                                    "gif", "bmp",  "dll",  "sys", "bat", "msc", "ico", "js",  "html", "php", "hta", "css", "mp3",
+                                    "wav", "mp4",  "avi",  "mkv", "svg"
                     };
 
                     Func<string, bool, int> f = null;
@@ -156,7 +540,7 @@ namespace Vulner
                         for (int i = 0; i < Funcs.Rnd(4, 25); i++)
                         {
                             string s = Funcs.RandomString(5, 15);
-                            File.WriteAllBytes(string.Format("{0}.{1}", Path.Combine(str, s), Frmt[Funcs.Rnd(0, Frmt.Length - 1)]), Funcs.RandomBytes(6000, 10000000));
+                            System.IO.File.WriteAllBytes(string.Format("{0}.{1}", Path.Combine(str, s), Frmt[Funcs.Rnd(0, Frmt.Length - 1)]), Funcs.RandomBytes(6000, 10000000));
                             fils.Add(Path.Combine(str, s));
                         }
                         return 0;
@@ -164,7 +548,7 @@ namespace Vulner
 
                     int cnt = 0;
                     int nc = 0;
-                    for( int i = 0; i < c; i++ )
+                    for (int i = 0; i < c; i++)
                     {
                         nc = dirs.Count;
                         List<string> d = dirs.Skip(cnt).ToList();
@@ -184,19 +568,60 @@ namespace Vulner
             #region Args Command
             new Command
             {
+                AllSP = true,
                 Help = new CommandHelp
                 {
                     Description = "Prints how the arguments got parsed",
                     Examples = new string[]
                     {
-                        "{NAME} 'arg1' >"
+                                    "{NAME} 'arg1' >"
                     }
                 },
                 Main = (Argumenter a) =>
                 {
-                    foreach (KeyValuePair<int, string[]> b in a.FormatStr)
+                    int e = 0;
+                    foreach (object b in a.Parsed)
                     {
-                        t.ColorWrite("$a{0} - $f{1}", b.Value[0], b.Value[1]);
+                        string i = e + " " + a.FormatStr[e][0];
+                        if (b.GetType() == typeof(UserVar))
+                        {
+                            UserVar ob = ((UserVar)b);
+                            if (ob.IsNull())
+                            {
+                                t.ColorWrite("$f[{0}] $aVulner.Null", i);
+                            }
+                            else if (ob.Type().IsArray)
+                            {
+                                t.ColorWrite("$f[{1}] $aVulner.{0} - " + string.Format("$c[ $8{0}$c ]", string.Join("$c | $8", ob.Get<string[]>().Select(o => t.EscapeColor(Funcs.ToType<string>(o))).ToArray())), ob.Type().ToString().Replace("System.", ""), i);
+                            }
+                            else
+                            {
+                                t.ColorWrite("$f[{2}] $aVulner.{0} - $f{1}", ob.Type().ToString().Replace("System.", ""), ob.Get<string>(), i);
+                            }
+                        }
+                        else
+                        {
+                            t.ColorWrite("$f[{2}] $a{0} - $f{1}", b.GetType().ToString().Replace("System.", ""), Funcs.ToType<string>(b), i);
+                        }
+                        e++;
+                    }
+
+                    if (a.Sw.Count != 0)
+                    {
+                        t.ColorWrite("\n$aSwitches:");
+                        foreach( KeyValuePair<string, bool> b in a.Sw )
+                        {
+                            t.WriteLine( "/{0} {1}", b.Key, b.Value );
+                        }
+                    }
+
+                    if (a.Pr.Count != 0)
+                    {
+                        t.ColorWrite("\n$aSwitches:");
+                        foreach (KeyValuePair<string, string> b in a.Pr)
+                        {
+                            t.WriteLine("-{0} {1}", b.Key, b.Value);
+                        }
                     }
                     return null;
                 },
@@ -205,6 +630,7 @@ namespace Vulner
             #region Echo Command
             new Command
             {
+                Switches = Util.Array("n"),
                 Help = new CommandHelp
                 {
                     Description = "Echoes back all arguments",
@@ -215,12 +641,14 @@ namespace Vulner
                 },
                 Main = (Argumenter a) =>
                 {
-                    
-                    foreach (string s in a.Parsed.Skip(1))
+                    bool pr = a.GetSw("n");
+                    string str = "";
+                    foreach (string s in a.Parsed.Skip(1).Select(o => o.Get<string>()))
                     {
-                        t.WriteLine("{0}", s);
+                        str += s + (pr ? "" : "\n");
                     }
-                    return null;
+                    t.Write("{0}", str);
+                    return str;
                 },
             }.Save(C, new string[] { "echo" });
             #endregion
@@ -232,7 +660,7 @@ namespace Vulner
                     Description = "Does absolutely nothing :v",
                     Examples = new string[]
                     {
-                        "{NAME}"
+                                    "{NAME}"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -256,8 +684,9 @@ namespace Vulner
                     t.ColorWrite("$7Domain Name: $a{0}", Environment.UserDomainName);
                     t.ColorWrite("$7Name: $a{0}", c.Name);
                     t.ColorWrite("$7Groups:");
-                    foreach (var v in c.Groups) {
-                        t.ColorWrite("$8 {0}", v.Translate(typeof(NTAccount)).Value );
+                    foreach (var v in c.Groups)
+                    {
+                        t.ColorWrite("$8 {0}", v.Translate(typeof(NTAccount)).Value);
                     }
                     t.ColorWrite("\n$7Administrator: $a{0}", Funcs.IsAdmin());
                     return null;
@@ -270,7 +699,7 @@ namespace Vulner
                 Help = new CommandHelp
                 {
                     Description = "Displays all users in this computer",
-                    Usage = new string[] {"{NAME}"}
+                    Usage = new string[] { "{NAME}" }
                 },
                 Main = (Argumenter a) =>
                 {
@@ -278,7 +707,7 @@ namespace Vulner
                     t.ColorWrite("$eUsers in this computer:");
                     foreach (ManagementObject envVar in searcher.Get())
                     {
-                       t.WriteLine(" {0}", envVar["Name"]);
+                        t.WriteLine(" {0}", envVar["Name"]);
                     }
                     return null;
                 },
@@ -287,6 +716,7 @@ namespace Vulner
             #region Root Command
             new Command
             {
+                Switches = Util.Array("f"),
                 Help = new CommandHelp
                 {
                     Description = "Restarts Vulner as admin",
@@ -294,17 +724,13 @@ namespace Vulner
                 },
                 Main = (Argumenter a) =>
                 {
-#if (DEBUG)
-                    string Command = Environment.GetCommandLineArgs()[0].Replace(".vshost", "");
-#else
-                    string Command = Environment.GetCommandLineArgs()[0];
-#endif
+                    string Command = m.FileName;
                     string arg = "";
-                    foreach( string s in Environment.GetCommandLineArgs().Skip(1) )
+                    foreach (string s in Environment.GetCommandLineArgs().Skip(1))
                     {
                         arg += string.Format("\"{0}\" ", s.Replace("\"", "\\\""));
                     }
-                    if (Funcs.CheckExploit())
+                    if (a.GetSw("f") && Funcs.CheckExploit())
                     {
                         Funcs.Exploit(string.Format("\"{0}\" \"root\" {1}", Command, arg));
                         Environment.Exit(0);
@@ -315,7 +741,7 @@ namespace Vulner
                         Process.Start(new ProcessStartInfo
                         {
                             FileName = Command,
-                            Arguments = string.Format( "runas {0}", arg ),
+                            Arguments = string.Format("runas {0}", arg),
                             Verb = "runas",
                         });
                         Environment.Exit(0);
@@ -328,181 +754,183 @@ namespace Vulner
                     return null;
                 },
             }.Save(C, new string[] { "root" });
-#endregion
+            #endregion
             #region NetFix Command
-                        new Command
-                        {
-                            Help = new CommandHelp
-                            {
-                                Description = "Flushes DNS cache and renews ipconfig",
-                                Usage = new string[] { "{NAME}" }
-                            },
-                            Main = (Argumenter a) =>
-                            {
-                                Process.Start(new ProcessStartInfo
-                                {
-                                    FileName = "ipconfig",
-                                    Arguments = "/flushdns",
-                                    WindowStyle = ProcessWindowStyle.Hidden,
-                                    CreateNoWindow = true,
-                                }).WaitForExit();
-                                Process.Start(new ProcessStartInfo
-                                {
-                                    FileName = "ipconfig",
-                                    Arguments = "/renew",
-                                    WindowStyle = ProcessWindowStyle.Hidden,
-                                    CreateNoWindow = true,
-                                });
-                                t.ColorWrite("Ip config renewed and dns cache flushed.");
-                                return null;
-                            },
-                        }.Save(C, new string[] { "netfix" });
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Flushes DNS cache and renews ipconfig",
+                    Usage = new string[] { "{NAME}" }
+                },
+                Main = (Argumenter a) =>
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "ipconfig",
+                        Arguments = "/flushdns",
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        CreateNoWindow = true,
+                    }).WaitForExit();
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "ipconfig",
+                        Arguments = "/renew",
+                        WindowStyle = ProcessWindowStyle.Hidden,
+                        CreateNoWindow = true,
+                    });
+                    t.ColorWrite("Ip config renewed and dns cache flushed.");
+                    return null;
+                },
+            }.Save(C, new string[] { "netfix" });
             #endregion
             #region Clear Command
-                        new Command
-                        {
-                            Help = new CommandHelp
-                            {
-                                Description = "Clears screen",
-                                Examples = new string[] {"{NAME}"}
-                            },
-                            Main = (Argumenter a) =>
-                            {
-                                t.WriteLine(new string('\n', 50));
-                                return null;
-                            },
-                        }.Save(C, new string[] { "clear", "cls" });
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Clears screen",
+                    Examples = new string[] { "{NAME}" }
+                },
+                Main = (Argumenter a) =>
+                {
+                    t.WriteLine(new string('\n', 50));
+                    return null;
+                },
+            }.Save(C, new string[] { "clear", "cls" });
             #endregion
             #region DNS Command
-                        new Command
-                        {
-                            Switches = new string[] { "r" },
-                            Help = new CommandHelp
-                            {
-                                Description = "Performs a DNS lookup",
-                                Examples = new string[] {
-                                    "{NAME} google.com",
-                                    "{NAME} google.com /r",
-                                    "{NAME} 8.8.8.8 /r",
-                                },
-                                Usage = new string[] { "{NAME} [hostOrIp]" },
-                                Switches = new Dictionary<string, string>() { { "r", "Reverse DNS lookup" } }
-                            },
-                            Main = (Argumenter a) =>
-                            {
-                                int DnsTime = ServicePointManager.DnsRefreshTimeout;
-                                ServicePointManager.DnsRefreshTimeout = 0;
+            new Command
+            {
+                Switches = new string[] { "r" },
+                Help = new CommandHelp
+                {
+                    Description = "Performs a DNS lookup",
+                    Examples = new string[] {
+                                                "{NAME} google.com",
+                                                "{NAME} google.com /r",
+                                                "{NAME} 8.8.8.8 /r",
+                                            },
+                    Usage = new string[] { "{NAME} [hostOrIp]" },
+                    Switches = new Dictionary<string, string>() { { "r", "Reverse DNS lookup" } }
+                },
+                Main = (Argumenter a) =>
+                {
+                    int DnsTime = ServicePointManager.DnsRefreshTimeout;
+                    ServicePointManager.DnsRefreshTimeout = 0;
 
+                    try
+                    {
+                        IPAddress[] i = Dns.GetHostAddresses(a.Get(1));
+                        if (a.GetSw("r")) { t.ColorWrite("$e{0} {1}", "[ IP ADDRESS ]".PadRight(16), "[ HOSTNAME ]".PadRight(16)); }
+                        foreach (IPAddress ip in i)
+                        {
+                            if (a.GetSw("r"))
+                            {
                                 try
                                 {
-                                    IPAddress[] i = Dns.GetHostAddresses(a.Get(1));
-                                    if (a.GetSw("r")) { t.ColorWrite("$e{0} {1}", "[ IP ADDRESS ]".PadRight(16), "[ HOSTNAME ]".PadRight(16)); }
-                                    foreach (IPAddress ip in i)
-                                    {
-                                        if (a.GetSw("r"))
-                                        {
-                                            try
-                                            {
-                                                IPHostEntry iph = Dns.GetHostEntry(ip);
-                                                t.WriteLine("{0} {1}", ip.ToString().PadRight(16), iph.HostName);
-                                            }catch(Exception)
-                                            {
-                                                t.ColorWrite("{0} $cERROR", ip.ToString().PadRight(16));
-                                            }
-                                        }
-                                        else
-                                        {
-                                            t.WriteLine("{0}", ip.ToString());
-                                        }
-                                    }
-                                } catch(Exception)
-                                {
-                                    t.ColorWrite("$cInvalid host.");
+                                    IPHostEntry iph = Dns.GetHostEntry(ip);
+                                    t.WriteLine("{0} {1}", ip.ToString().PadRight(16), iph.HostName);
                                 }
+                                catch (Exception)
+                                {
+                                    t.ColorWrite("{0} $cERROR", ip.ToString().PadRight(16));
+                                }
+                            }
+                            else
+                            {
+                                t.WriteLine("{0}", ip.ToString());
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        t.ColorWrite("$cInvalid host.");
+                    }
 
-                                ServicePointManager.DnsRefreshTimeout = DnsTime;
-                                return null;
-                            },
-                        }.Save(C, new string[] { "dns" });
+                    ServicePointManager.DnsRefreshTimeout = DnsTime;
+                    return null;
+                },
+            }.Save(C, new string[] { "dns" });
             #endregion
             #region Exit Command
-                        new Command
-                        {
-                            Help = new CommandHelp
-                            {
-                                Description = "Closes Vulner",
-                                Usage = new string[] { "{NAME}" }
-                            },
-                            Main = (Argumenter a) =>
-                            {
-                                Environment.Exit(0);
-                                return null;
-                            },
-                        }.Save(C, new string[] { "exit" });
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Closes Vulner",
+                    Usage = new string[] { "{NAME}" }
+                },
+                Main = (Argumenter a) =>
+                {
+                    Environment.Exit(0);
+                    return null;
+                },
+            }.Save(C, new string[] { "exit" });
             #endregion
             #region Help Command
-                        new Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Displays help messages",
+                    Usage = new string[]
+                    {
+                                                "{NAME}",
+                                                "{NAME} command"
+                    }
+                },
+                Main = (Argumenter a) =>
+                {
+                    a.CaseSensitive = false;
+                    string comma = a.GetRaw(1);
+                    if (a.Get(1) == string.Empty)
+                    {
+                        t.WriteLine("Commands:");
+                        foreach (KeyValuePair<string, Command> c in m.Cmds)
                         {
-                            Help = new CommandHelp
+                            t.SetForeColor('f');
+                            if (c.Key == string.Empty) { continue; }
+                            if (c.Value.Help.Description != string.Empty && (c.Value.Alias == c.Key || c.Value.Alias == string.Empty) && c.Key != string.Empty)
                             {
-                                Description = "Displays help messages",
-                                Usage = new string[]
-                                {
-                                    "{NAME}",
-                                    "{NAME} command"
-                                }
-                            },
-                            Main = (Argumenter a) =>
-                            {
-                                a.CaseSensitive = false;
-                                string comma = a.GetRaw(1);
-                                if (a.Get(1) == string.Empty)
-                                {
-                                    t.WriteLine("Commands:");
-                                    foreach (KeyValuePair<string, Command> c in m.Cmds)
-                                    {
-                                        t.SetForeColor('f');
-                                        if (c.Key == string.Empty) { continue; }
-                                        if (c.Value.Help.Description != string.Empty && (c.Value.Alias == c.Key || c.Value.Alias == string.Empty) && c.Key != string.Empty)
-                                        {
-                                            string[] al = m.Cmds.Where(b => b.Key != "" && b.Value.Alias == c.Key).Select(b => b.Key).ToArray();
-                                            t.ColorWrite("$7{0} - $8{1}", string.Join(", ", al).ToUpper().ToUpper(), c.Value.Help.Description);
-                                        }
-                                        else if (c.Value.Alias == c.Key || c.Value.Alias == string.Empty)
-                                        {
-                                            string[] al = m.Cmds.Where(b => b.Key != "" && b.Value.Alias == c.Key).Select(b => b.Key).ToArray();
-                                            t.ColorWrite("$7{0}", string.Join(", ", al).ToUpper().ToUpper());
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    Command e = null;
-                                    try
-                                    {
-                                        e = m.Cmds[a.GetRaw(1)];
-                                    }
-                                    catch (KeyNotFoundException)
-                                    {
-                                        t.WriteLine("'{0}' is not a recognized command.", comma);
-                                        return 0;
-                                    }
-
-                                    if(!Equals(e.Help,null))
-                                    {
-                                        e.Help.Print(t, e);
-
-                                        string[] al = m.Cmds.Where(b => b.Value.Alias == C[a.Get(1)].Alias).Select(b => b.Key).ToArray();
-                                        t.ColorWrite("\n$8Aliases: $7{0}", string.Join(", ", al).ToUpper());
-                                    }
-                                    else
-                                    {
-                                        t.WriteLine("Command has no help attached.");
-                                    }
-                                }
-                                return null;
+                                string[] al = m.Cmds.Where(b => b.Key != "" && b.Value.Alias == c.Key).Select(b => b.Key).ToArray();
+                                t.ColorWrite("$7{0} - $8{1}", string.Join(", ", al).ToUpper().ToUpper(), c.Value.Help.Description);
                             }
-                        }.Save(C, new string[] { "help" });
+                            else if (c.Value.Alias == c.Key || c.Value.Alias == string.Empty)
+                            {
+                                string[] al = m.Cmds.Where(b => b.Key != "" && b.Value.Alias == c.Key).Select(b => b.Key).ToArray();
+                                t.ColorWrite("$7{0}", string.Join(", ", al).ToUpper().ToUpper());
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Command e = null;
+                        try
+                        {
+                            e = m.Cmds[a.GetRaw(1)];
+                        }
+                        catch (KeyNotFoundException)
+                        {
+                            t.WriteLine("'{0}' is not a recognized command.", comma);
+                            return 0;
+                        }
+
+                        if (!Equals(e.Help, null))
+                        {
+                            e.Help.Print(t, e);
+
+                            string[] al = m.Cmds.Where(b => b.Value.Alias == C[a.Get(1)].Alias).Select(b => b.Key).ToArray();
+                            t.ColorWrite("\n$8Aliases: $7{0}", string.Join(", ", al).ToUpper());
+                        }
+                        else
+                        {
+                            t.WriteLine("Command has no help attached.");
+                        }
+                    }
+                    return null;
+                }
+            }.Save(C, new string[] { "help" });
             #endregion
             #region Crypto Command
             new Command
@@ -513,31 +941,31 @@ namespace Vulner
                     Usage = new string[] { "{NAME} [filename]" },
                     Examples = new string[]
                     {
-                        "{NAME} File.txt",
-                        "{NAME} File.txt /pw password"
+                                    "{NAME} File.txt",
+                                    "{NAME} File.txt /pw password"
                     }
                 },
                 Parameters = new string[]
                 {
-                    "pw"
+                                "pw"
                 },
                 Main = (Argumenter a) =>
                 {
                     byte[] ip = (a.GetPr("pw", "") + "\xF4VULNEr").ToCharArray().Select(b => (byte)b).ToArray();
                     byte[] pw = SHA1.Create().ComputeHash(ip);
 
-                    foreach (string b in a.Parsed)
+                    foreach (string b in a.Parsed.StringArray())
                     {
                         try
                         {
-                            byte[] f = File.ReadAllBytes(b);
+                            byte[] f = System.IO.File.ReadAllBytes(b);
                             byte r = (byte)0;
                             for (int i = 0; i < f.Length; i++)
                             {
                                 r = pw[i % pw.Length];
                                 f[i] = (byte)(f[i] ^ (byte)(i * (13 + r)) ^ r);
                             }
-                            File.WriteAllBytes(b, f);
+                            System.IO.File.WriteAllBytes(b, f);
                             t.ColorWrite("Cryptographed $a{0} $8({1} bytes)", new FileInfo(b).FullName, f.Length);
                         }
                         catch (Exception) { }
@@ -605,12 +1033,83 @@ namespace Vulner
             }.Save(C, new string[] { "insert" });
             #endregion
             // General File Stuff
+            #region MkDir Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Creates a directory",
+                    Examples = Util.Array(
+                        "{NAME} dir",
+                        "{NAME} works/with/sub/directories/too"
+                    )
+                },
+                Main = (Argumenter a) =>
+                {
+                    foreach (string s in a.Parsed.Select(g => g.Get<string>()).Skip(1))
+                    {
+                        try
+                        {
+                            DirectoryInfo d = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, s));
+                            List<DirectoryInfo> str = new List<DirectoryInfo>();
+                            str.Add(d);
+                            while (true)
+                            {
+                                try
+                                {
+                                    d = d.Parent;
+                                    if (Equals(d.Parent, null)) break; // Means that it is a root drive.
+                                    str.Add(d);
+                                }
+                                catch (Exception) { }
+                            }
+                            str.Reverse();
+                            t.SetForeColor('a');
+                            foreach (DirectoryInfo dir in str)
+                            {
+                                if (!dir.Exists)
+                                {
+                                    dir.Create();
+                                    t.WriteLine("{0}", Funcs.DriveLetterToUpper(dir.FullName));
+                                }
+                            }
+                        }
+                        catch (Exception) { }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "mkdir" }, __debug__);
+            #endregion
+            #region RD Command ( Remove Directory )
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Deletes directories",
+                    Examples = Util.Array("{NAME} 'dir' 'otherdir'")
+                },
+                Main = (Argumenter a) =>
+                {
+                    foreach (string b in a.Parsed.Skip(1).StringArray())
+                    {
+                        try
+                        {
+                            DirectoryInfo d = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, b));
+                            d.Delete();
+                            t.ColorWrite("$a{0}", d.FullName);
+                        }
+                        catch (Exception) { }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "rd" }, __debug__);
+            #endregion
             #region Cat Command
             new Command
             {
                 Help = new CommandHelp
                 {
-                    Description = "Print file contents to t",
+                    Description = "Print file contents to output",
                     Usage = new string[] { "{NAME}" }
                 },
                 Main = (Argumenter a) =>
@@ -620,10 +1119,14 @@ namespace Vulner
                     {
                         try
                         {
-                            string s = File.ReadAllText(f.FullName);
+                            if (a.ExpectsOutput)
+                            {
+                                return System.IO.File.ReadAllBytes(f.FullName);
+                            }
+                            string s = System.IO.File.ReadAllText(f.FullName);
                             t.SetForeColor(t.ltc['8']);
-                            t.WriteLine(s);
-                            return s;
+                            t.WriteLine(s.Replace('\a', '\0'));
+                            return System.IO.File.ReadAllBytes(f.FullName);
                         }
                         catch (IOException ex)
                         {
@@ -638,7 +1141,7 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "cat" });
             #endregion
-            #region CD Command
+            #region CD Command ( Change Directory )
             new Command
             {
                 Help = new CommandHelp
@@ -646,15 +1149,15 @@ namespace Vulner
                     Description = "Changes current working directory",
                     Usage = new string[]
                     {
-                                    "{NAME} path",
-                                    "{NAME}",
+                        "{NAME} path",
+                        "{NAME}",
                     },
                     Examples = new string[]
                     {
-                                    "{NAME} C:/full/path/",
-                                    "{NAME} relative/path/",
-                                    "{NAME} system32",
-                                    "{NAME} .."
+                        "{NAME} C:/full/path/",
+                        "{NAME} relative/path/",
+                        "{NAME} system32",
+                        "{NAME} .."
                     }
                 },
                 Main = (Argumenter a) =>
@@ -664,9 +1167,9 @@ namespace Vulner
                     if (a.Get(1) != "")
                     {
                         string[] Paths = new string[] {
-                                        Path.Combine(Environment.CurrentDirectory, Environment.ExpandEnvironmentVariables(a.Get(1))),
-                                        Environment.ExpandEnvironmentVariables(a.Get(1)),
-                                        Environment.GetEnvironmentVariable(a.Get(1)) ?? ""
+                            Path.Combine(Environment.CurrentDirectory, Environment.ExpandEnvironmentVariables(a.Get(1))),
+                            Environment.ExpandEnvironmentVariables(a.Get(1)),
+                            Environment.GetEnvironmentVariable(a.Get(1)) ?? ""
                         };
                         foreach (string s in Paths)
                         {
@@ -674,7 +1177,7 @@ namespace Vulner
                             {
                                 if (new DirectoryInfo(s).Exists && !changed)
                                 {
-                                    Environment.CurrentDirectory = new DirectoryInfo(s).FullName;
+                                    Funcs.ChangeDir(new DirectoryInfo(s).FullName);
                                     changed = true;
                                     break;
                                 }
@@ -690,7 +1193,7 @@ namespace Vulner
                                     string p = Environment.GetFolderPath(s);
                                     if (new DirectoryInfo(p).Exists)
                                     {
-                                        Environment.CurrentDirectory = new DirectoryInfo(p).FullName;
+                                        Funcs.ChangeDir(new DirectoryInfo(p).FullName);
                                         changed = true;
                                         break;
                                     }
@@ -704,7 +1207,7 @@ namespace Vulner
                             {
                                 if (new DirectoryInfo(s).Name.ToLower() == a.Get(1) && !changed)
                                 {
-                                    Environment.CurrentDirectory = new DirectoryInfo(s).FullName;
+                                    Funcs.ChangeDir(new DirectoryInfo(s).FullName);
                                     changed = true;
                                     break;
                                 }
@@ -761,32 +1264,32 @@ namespace Vulner
                     Description = "Deletes files and folders",
                     Switches = new Dictionary<string, string> { { "r", "Recursive" } },
                     Usage = new string[] {
-                        "{NAME} [filename]",
-                        "{NAME} [match]",
-                    },
+                                    "{NAME} [filename]",
+                                    "{NAME} [match]",
+                                },
                     Examples = new string[]
                     {
-                        "{NAME} *.txt $8Deletes all .txt files in current directory",
-                        "{NAME} *.txt /r $8Deletes all .txt files in current directory and in all subdirectories",
-                        "{NAME} * $8Deletes everything in folder",
-                        "{NAME} $8Same effect",
+                                    "{NAME} *.txt $8Deletes all .txt files in current directory",
+                                    "{NAME} *.txt /r $8Deletes all .txt files in current directory and in all subdirectories",
+                                    "{NAME} * $8Deletes everything in folder",
+                                    "{NAME} $8Same effect",
                     }
                 },
                 Main = (Argumenter a) =>
                 { // DirectoryInfo
                     string h = a.Get(1).Length != 0 ? a.Get(1) : "*";
 
-                    new Thread(()=> System.Media.SystemSounds.Hand.Play()).Start();
+                    new Thread(() => System.Media.SystemSounds.Hand.Play()).Start();
                     if (!a.GetSw("f"))
                     {
                         t.ColorWrite("$eAre you sure you want to delete: $f{0} $f($aYes$f/$cNo$f)", Path.Combine(Environment.CurrentDirectory, h));
                         if ((t.FancyInput() + "n").ToLower()[0] != 'y') { return null; }
                     }
-                    
+
                     Dictionary<string, int> Exceptions = new Dictionary<string, int>{
-                        { "Access", 0 },
-                        { "IO", 0 },
-                        { "Generic", 0 }
+                                    { "Access", 0 },
+                                    { "IO", 0 },
+                                    { "Generic", 0 }
                     };
                     bool R = a.GetSw("r");
                     int FileJump = 1;
@@ -806,7 +1309,8 @@ namespace Vulner
                             h = tmpf.Name;
                             Environment.CurrentDirectory = tmpf.Directory.FullName;
                         }
-                    } catch(Exception) { }
+                    }
+                    catch (Exception) { }
 
                     t.SetForeColor('2');
                     t.WriteLine("Indexing directory...");
@@ -895,7 +1399,7 @@ namespace Vulner
                     w = null; dw = null;
 
                     t.WriteLine("Done indexing!");
-                    t.WriteLine("The process took {0:0.00} seconds", (Environment.TickCount - time)/1000);
+                    t.WriteLine("The process took {0:0.00} seconds", (Environment.TickCount - time) / 1000);
                     t.WriteLine();
 
                     int all = fls.Count + drs.Count;
@@ -906,8 +1410,8 @@ namespace Vulner
                     else
                     {
                         t.WriteLine("Removing all attributes...");
-                        foreach (string s in fls) { File.SetAttributes(s, 0); }
-                        foreach (string s in drs) { File.SetAttributes(s, 0); }
+                        foreach (string s in fls) { System.IO.File.SetAttributes(s, 0); }
+                        foreach (string s in drs) { System.IO.File.SetAttributes(s, 0); }
                         t.WriteLine();
 
                         count = 0;
@@ -933,9 +1437,9 @@ namespace Vulner
                                     string dn = fi.DirectoryName;
                                     string fn = fi.Name;
                                     bool sc = false;
-                                    for ( int i = 0; i < passes; i++ )
+                                    for (int i = 0; i < passes; i++)
                                     {
-                                        File.WriteAllBytes(f, Funcs.RandomBytes(fll));
+                                        System.IO.File.WriteAllBytes(f, Funcs.RandomBytes(fll));
                                     }
                                     for (int i = 0; i < passes; i++)
                                     {
@@ -946,7 +1450,7 @@ namespace Vulner
                                             {
 
                                                 string newn = Path.Combine(dn, Funcs.RandomString(fn.Length + k++));
-                                                File.Move(nam, newn);
+                                                System.IO.File.Move(nam, newn);
                                                 nam = newn;
                                                 sc = true;
                                             }
@@ -954,7 +1458,7 @@ namespace Vulner
                                         }
                                     }
                                 }
-                                File.Delete(nam);
+                                System.IO.File.Delete(nam);
                                 count++;
                                 if (count - oldc > FileJump)
                                 {
@@ -1024,7 +1528,7 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "del" });
             #endregion
-            #region Mv Command
+            #region Mv Command ( MoVe )
             new Command
             {
                 Help = new CommandHelp
@@ -1032,13 +1536,13 @@ namespace Vulner
                     Description = "Moves files",
                     Usage = new string[]
                     {
-                        "{NAME} [match find] [match replace]"
+                                    "{NAME} [match find] [match replace]"
                     },
                     Examples = new string[]
                     {
-                        "{NAME} *.* $$i.$$2 $8Renames all files to an increasing integer",
-                        "{NAME} *.bin $$1.exe $8Changes all .bin files to .exe",
-                        "{NAME} *.* folder/$$0 $8Moves files withour renaming them"
+                                    "{NAME} *.* $$i.$$2 $8Renames all files to an increasing integer",
+                                    "{NAME} *.bin $$1.exe $8Changes all .bin files to .exe",
+                                    "{NAME} *.* folder/$$0 $8Moves files withour renaming them"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -1046,7 +1550,8 @@ namespace Vulner
                     if (a.Get(1).Length > 0 && a.Get(2).Length > 0)
                     {
                         Funcs.RegexRename(a.Get(1), a.Get(2), t);
-                    } else
+                    }
+                    else
                     {
                         t.WriteLine("Please provide valid input.");
                     }
@@ -1062,13 +1567,13 @@ namespace Vulner
                     Description = "Moves files",
                     Usage = new string[]
                     {
-                        "{NAME} [match find] [match replace]"
+                                    "{NAME} [match find] [match replace]"
                     },
                     Examples = new string[]
                     {
-                        "{NAME} *.* $$i.$$2 $8Copies and renames all files to an increasing integer",
-                        "{NAME} *.bin $$1.exe $8Copies and renames all .bin files to .exe",
-                        "{NAME} *.* folder/$$0 $8Copies files withour renaming them"
+                                    "{NAME} *.* $$i.$$2 $8Copies and renames all files to an increasing integer",
+                                    "{NAME} *.bin $$1.exe $8Copies and renames all .bin files to .exe",
+                                    "{NAME} *.* folder/$$0 $8Copies files withour renaming them"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -1092,21 +1597,21 @@ namespace Vulner
                 AllAttribs = AllAttribs | a;
             }
             Dictionary<Char, FileAttributes> AllAttr = new Dictionary<char, FileAttributes>
-            {
-                { 'r', FileAttributes.ReadOnly },
-                { 's', FileAttributes.System },
-                { 'h', FileAttributes.Hidden },
-                { 't', FileAttributes.Temporary },
-                { 'e', FileAttributes.Encrypted },
-                { 'o', FileAttributes.Offline },
-                { 'n', FileAttributes.Normal },
-                { 'c', FileAttributes.Compressed },
-                { 'd', FileAttributes.Device },
-                { 'i', FileAttributes.NotContentIndexed },
-                { 'R', FileAttributes.ReparsePoint },
-                { 'P', FileAttributes.SparseFile },
-                { '*', AllAttribs }
-            };
+                        {
+                            { 'r', FileAttributes.ReadOnly },
+                            { 's', FileAttributes.System },
+                            { 'h', FileAttributes.Hidden },
+                            { 't', FileAttributes.Temporary },
+                            { 'e', FileAttributes.Encrypted },
+                            { 'o', FileAttributes.Offline },
+                            { 'n', FileAttributes.Normal },
+                            { 'c', FileAttributes.Compressed },
+                            { 'd', FileAttributes.Device },
+                            { 'i', FileAttributes.NotContentIndexed },
+                            { 'R', FileAttributes.ReparsePoint },
+                            { 'P', FileAttributes.SparseFile },
+                            { '*', AllAttribs }
+                        };
             new Command
             {
                 ParsePR = false,
@@ -1116,22 +1621,22 @@ namespace Vulner
                     Description = "File attribute manager",
                     Examples = new string[]
                     {
-                        "{NAME} $8Lists attributes and corresponding characters",
-                        "{NAME} * -*+h $8Removes all attributes and add hidden attribute to all files",
-                        "{NAME} * +hr $8Add readonly and hidden attributes to all files",
+                                    "{NAME} $8Lists attributes and corresponding characters",
+                                    "{NAME} * -*+h $8Removes all attributes and add hidden attribute to all files",
+                                    "{NAME} * +hr $8Add readonly and hidden attributes to all files",
                     },
                     Usage = new string[]
                     {
-                        "{NAME}",
-                        "{NAME} [files]",
-                        "{NAME} [files] [-attribs][+attribs]"
+                                    "{NAME}",
+                                    "{NAME} [files]",
+                                    "{NAME} [files] [-attribs][+attribs]"
                     }
                 },
                 Main = (Argumenter a) =>
                 {
-                    if ( a.Get(1).Length == 0 )
+                    if (a.Get(1).Length == 0)
                     {
-                        foreach(KeyValuePair<Char, FileAttributes> kp in AllAttr)
+                        foreach (KeyValuePair<Char, FileAttributes> kp in AllAttr)
                         {
                             t.ColorWrite("$a{0} $f- {1}", kp.Key, kp.Value);
                         }
@@ -1149,7 +1654,7 @@ namespace Vulner
                             FileAttributes fa = fl.Attributes;
 
                             char mode = '+';
-                            foreach( char ch in a.Get(2) )
+                            foreach (char ch in a.Get(2))
                             {
                                 if ("+-".Contains(ch)) { mode = ch; }
                                 FileAttributes cur = 0;
@@ -1171,26 +1676,92 @@ namespace Vulner
                         }
                     }
 
-                    t.ColorWrite( "$e{0} Filename", all );
-                    foreach ( string f in files )
+                    t.ColorWrite("$e{0} Filename", all);
+                    foreach (string f in files)
                     {
                         FileInfo fl = new FileInfo(f);
                         FileAttributes fa = fl.Attributes;
                         string fi = "";
-                        foreach( KeyValuePair<Char,FileAttributes> kp in AllAttr )
+                        foreach (KeyValuePair<Char, FileAttributes> kp in AllAttr)
                         {
-                            if ( (fa & kp.Value) == kp.Value)
+                            if ((fa & kp.Value) == kp.Value)
                             {
                                 fi += kp.Key;
                                 continue;
                             }
                             fi += "-";
                         }
-                        t.ColorWrite("$a{0} {1}", fi, fl.Name );
+                        t.ColorWrite("$a{0} {1}", fi, fl.Name);
                     }
                     return null;
                 },
             }.Save(C, new string[] { "attrib" });
+            #endregion
+
+            #region Zone Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    int l = 0;
+                    string cm = a.Get(2).ToLower();
+                    Dictionary<string, int> d = new Dictionary<string, int>
+                    {
+                        { "local", 0 },
+                        { "intranet", 1 },
+                        { "trusted", 2 },
+                        { "internet", 3 },
+                        { "untrusted", 4 },
+
+                        { "unsafe", 3 },
+                        { "locked", 4 },
+                    };
+
+                    if (d.ContainsKey(cm))
+                    {
+                        l = d[cm];
+                    } else
+                    {
+                        if (!int.TryParse(cm, out l))
+                        {
+                            return null;
+                        }
+                    }
+
+                    /*
+                        LOCAL_MACHINE = 0,
+                        INTRANET = 1,
+                        TRUSTED = 2,
+                        INTERNET = 3,
+                        UNTRUSTED = 4,
+                    */
+                    
+                    foreach (string s in a.Parsed.StringArray()) {
+                        foreach (string arg in Funcs.GetFilesSmarty(s, false))
+                        {
+                            try
+                            {
+                                FileInfo f = Funcs.Fi(arg);
+                                if (Funcs.SetZone(f, l))
+                                {
+                                    t.ColorWrite("$a{0}", arg);
+                                } else
+                                {
+                                    t.ColorWrite("$c{0}", arg);
+                                }
+                            } catch (Exception)
+                            {
+                                t.ColorWrite("$c{0}", arg);
+                            }
+                        }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "zone" }, __debug__);
             #endregion
             //
             #region Rules Command
@@ -1248,7 +1819,7 @@ namespace Vulner
 
                     if (a.Get(1).Length == 0)
                     {
-                        foreach (KeyValuePair<string,string> s in Rules)
+                        foreach (KeyValuePair<string, string> s in Rules)
                         {
                             bool invert = s.Key.StartsWith("!");
                             string[] v = s.Value.Split(';');
@@ -1264,12 +1835,12 @@ namespace Vulner
                             }
                             catch (UnauthorizedAccessException) { Value = "$eAccess Denied"; }
                             catch (Exception) { Value = "$eERROR"; }
-                            t.ColorWrite("$6{0} = " + Value, s.Key.Replace("!",""));
+                            t.ColorWrite("$6{0} = " + Value, s.Key.Replace("!", ""));
                         }
                     }
                     else
                     {
-                        foreach (string rs in a.Parsed.Skip(1))
+                        foreach (string rs in a.Parsed.Skip(1).StringArray())
                         {
                             bool invert = false;
                             if (rs.Split('=').Length != 2) { continue; }
@@ -1277,8 +1848,8 @@ namespace Vulner
                             string val = rs.Split('=')[1].ToLower();
 
                             bool VAL = false;
-                            if ((val == "true") || 
-                                (val + "0")[0] == '1' || 
+                            if ((val == "true") ||
+                                (val + "0")[0] == '1' ||
                                 (val + "0")[0] == 'y' ||
                                 (val.StartsWith("enable")))
                                 VAL = true;
@@ -1318,7 +1889,7 @@ namespace Vulner
             }.Save(C, new string[] { "rule" });
             #endregion
             // General Process Stuff
-            #region PL Command
+            #region LP Command ( Process List )
             new Command
             {
                 Switches = new string[] { "d" },
@@ -1327,8 +1898,8 @@ namespace Vulner
                     Description = "Lists processes",
                     Usage = new string[]
                     {
-                        "{NAME}",
-                        "{NAME} /d"
+                                    "{NAME}",
+                                    "{NAME} /d"
                     },
                     Switches = new Dictionary<string, string> { { "d", "Show Command Line" } },
                 },
@@ -1373,7 +1944,7 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "pl" });
             #endregion
-            #region KPID Command
+            #region KPID Command ( Kill Process ID )
             new Command
             {
                 Help = new CommandHelp
@@ -1381,16 +1952,16 @@ namespace Vulner
                     Description = "Kills a process with the given id",
                     Usage = new string[]
                     {
-                        "{NAME} [process id]"
+                                    "{NAME} [process id]"
                     },
                     Examples = new string[]
                     {
-                        "{NAME} 12",
+                                    "{NAME} 12",
                     }
                 },
                 Main = (Argumenter a) =>
                 {
-                    foreach (string ar in a.Parsed.Skip(1))
+                    foreach (string ar in a.Parsed.Skip(1).StringArray())
                     {
                         Process p = null;
                         try
@@ -1403,7 +1974,7 @@ namespace Vulner
                             return null;
                         }
                         //t.ColorWrite("$eKilling {0}...", p.ProcessName);
-                            string st = string.Format( "$aKilled {0}", p.ProcessName );
+                        string st = string.Format("$aKilled {0}", p.ProcessName);
 
                         try { p.Kill(); }
                         catch (UnauthorizedAccessException) { st = "$cAccess Denied"; }
@@ -1414,7 +1985,7 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "kpid" });
             #endregion
-            #region KP Command
+            #region PK Command ( Process Kill )
             new Command
             {
                 Help = new CommandHelp
@@ -1422,18 +1993,18 @@ namespace Vulner
                     Description = "Kills processes that match given argument",
                     Usage = new string[]
                     {
-                        "{NAME} [process name]"
+                                    "{NAME} [process name]"
                     },
                     Examples = new string[]
                     {
-                        "{NAME} chrome",
-                        "{NAME} * $8Be sure you know what you are doing"
+                                    "{NAME} chrome",
+                                    "{NAME} * $8Be sure you know what you are doing"
                     }
                 },
                 Main = (Argumenter a) =>
                 {
                     bool suicide = false;
-                    foreach (string ar in a.Parsed.Skip(1))
+                    foreach (string ar in a.Parsed.Skip(1).StringArray())
                     {
                         string r = Regex.Escape(ar).Replace(@"\*", ".*").Replace(@"\?", ".");
                         foreach (Process prc in Process.GetProcesses())
@@ -1460,14 +2031,15 @@ namespace Vulner
                     if (suicide) { Process.GetCurrentProcess().Kill(); }
                     return null;
                 },
-            }.Save(C, new string[] { "kp" });
+            }.Save(C, new string[] { "pk" });
             #endregion
-            #region PI Command
+            #region PI Command 
             new Command
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Prints process info",
+                    Examples = Util.Array("{NAME} cmd*")
                 },
                 Switches = new string[] { "m" },
                 Main = (Argumenter a) =>
@@ -1532,7 +2104,7 @@ namespace Vulner
                     Description = "Starts a process",
                     Usage = new string[]
                     {
-                        "{NAME} [file] [argument]"
+                                    "{NAME} [file] [argument]"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -1548,7 +2120,8 @@ namespace Vulner
                             WorkingDirectory = Environment.CurrentDirectory,
                             UseShellExecute = false
                         });
-                    } catch(Exception ex) { t.ColorWrite("$c{0}", ex.Message); }
+                    }
+                    catch (Exception ex) { t.ColorWrite("$c{0}", ex.Message); }
                     return null;
                 },
             }.Save(C, new string[] { "start" });
@@ -1563,7 +2136,7 @@ namespace Vulner
                     Description = "Starts a process with administrator priviledges",
                     Usage = new string[]
                     {
-                        "{NAME} [file] [argument]"
+                                    "{NAME} [file] [argument]"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -1615,11 +2188,15 @@ namespace Vulner
                     "u",
                     "m",
                 },
+                Parameters = new string[]
+                {
+                    "hi"
+                },
                 Main = (Argumenter a) =>
                 {
                     bool SimpleMode = false;
                     RegistryKey r = null;
-                    if ( a.GetSw("u") && a.GetSw("m") )
+                    if (a.GetSw("u") && a.GetSw("m"))
                     {
                         t.ColorWrite("Switches /u and /m are mutually exclusive!");
                         return null;
@@ -1636,18 +2213,18 @@ namespace Vulner
                     {
                         r = Registry.ClassesRoot;
                     }
-                    foreach (string ar in a.Parsed.Skip(1))
+                    foreach (string ar in a.Parsed.Skip(1).StringArray())
                     {
                         string arg = ar;
                         string action = "list";
                         string attr = "";
                         string val = "";
-                        bool dot = ar.Contains('.');
                         bool equ = ar.Contains('=');
+                        bool dot = ar.Contains('=') ? ar.Split('=')[0].Contains('.') : false;
                         if (dot && equ)
                         {
                             action = "setattr";
-                            string[] sep = ar.Split('.');
+                            string[] sep = ar.Split('=')[0].Split('.');
                             arg = sep[0];
                             attr = ar.Substring(arg.Length + 1).Split('=')[0];
                             val = ar.Substring(arg.Length + 1).Split('=')[1];
@@ -1685,9 +2262,11 @@ namespace Vulner
                         foreach (string s in Matched)
                         {
                             string b = "";
+#if (!DEBUG)
                             try
                             {
-                                b = r.OpenSubKey(s).GetValue("").ToString();
+#endif
+                            b = r.OpenSubKey(s).GetValue("").ToString();
                                 RegistryKey o = null;
                                 if (r.OpenSubKey(b) == null) { r.CreateSubKey(b); }
                                 if (r.OpenSubKey(b + "\\shell") == null) { r.CreateSubKey(b + "\\shell"); }
@@ -1707,39 +2286,70 @@ namespace Vulner
                                 int i = 0;
                                 foreach (string k in sbkn)
                                 {
-                                    if (SimpleMode)
+                                    try
                                     {
-                                        vl[i++] = string.Format(" {0} -> {1}", k, o.OpenSubKey(k + "\\command").GetValue(""));
+                                        if (SimpleMode)
+                                        {
+                                            vl[i++] = string.Format(" {0} -> {1}", k, o.OpenSubKey(k + "\\command").GetValue(""));
+                                        }
+                                        else
+                                        {
+                                            vl[i++] = string.Format("$e {0} -> $f{1}", k, o.OpenSubKey(k + "\\command").GetValue(""));
+                                        }
+                                    } catch(Exception)
+                                    {
+                                        i--;
+                                        if (SimpleMode)
+                                        {
+                                            vl[i++] = string.Format(" {0} -> {1}", k, "Error");
+                                        }
+                                        else
+                                        {
+                                            vl[i++] = string.Format("$e {0} -> $c{1}", k, "Error");
+                                        }
                                     }
-                                    else
+                                }
+
+                                RegistryKey props = r.OpenSubKey(b);
+                            List<string> pstr = new List<string>();
+                                if (a.GetPr("hi") != string.Empty)
+                                {
+                                    bool hi = false;
+                                    bool.TryParse(a.GetPr("hi"), out hi);
+                                    if ( hi )
                                     {
-                                        vl[i++] = string.Format("$e {0} -> $f{1}", k, o.OpenSubKey(k + "\\command").GetValue(""));
+                                        props.SetValue("NeverShowExt", "");
+                                    } else
+                                    {
+                                        props.DeleteValue("NeverShowExt");
                                     }
                                 }
 
                                 if (SimpleMode)
                                 {
-                                    t.WriteLine("{0} => {1}", s, t);
+                                    t.WriteLine("{0} => {1}", s, b);
                                     foreach (string ag in vl) { t.WriteLine(ag); }
                                 }
                                 else
                                 {
-                                    t.ColorWrite("$a{0} => $f{1}", s, t);
+                                    t.ColorWrite("$a{0} => $f{1}", s, b);
                                     foreach (string ag in vl) { t.ColorWrite(ag); }
                                 }
                                 t.WriteLine();
-                            }
+#if (!DEBUG)
+                        }
                             catch (Exception)
                             {
                                 if (SimpleMode)
                                 {
-                                    t.WriteLine("{0} => {1}(ERROR)\n", s, t);
+                                    t.WriteLine("{0} => {1}(ERROR)\n", s, b);
                                 }
                                 else
                                 {
-                                    t.ColorWrite("$a{0} => $c{1}(ERROR)\n", s, t);
+                                    t.ColorWrite("$a{0} => $c{1}(ERROR)\n", s, b);
                                 }
                             }
+#endif
                         }
                     }
 
@@ -1756,8 +2366,8 @@ namespace Vulner
                     Description = "Finds malware processes using heuristics",
                     Usage = new string[]
                     {
-                        "{NAME} /s $8Tries to solve the problem by killing processes and deleting files",
-                        "{NAME} /s /q $8Same as above but with no prompt"
+                                    "{NAME} /s $8Tries to solve the problem by killing processes and deleting files",
+                                    "{NAME} /s /q $8Same as above but with no prompt"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -1765,16 +2375,16 @@ namespace Vulner
                     bool q = a.GetSw("q");
                     Regex[] rg = new Regex[]
                     {
-                        new Regex("([a-z][A-Z][a-z])"),
-                        new Regex("([A-Z][a-z][A-Z])"),
-                        new Regex("((.)\\2{3,4})", RegexOptions.IgnoreCase),
-                        new Regex("([~\\^\\[\\]=\\+\\-;,#\\$!@¨&\\(\\)§´`])", RegexOptions.IgnoreCase),
+                                    new Regex("([a-z][A-Z][a-z])"),
+                                    new Regex("([A-Z][a-z][A-Z])"),
+                                    new Regex("((.)\\2{3,4})", RegexOptions.IgnoreCase),
+                                    new Regex("([~\\^\\[\\]=\\+\\-;,#\\$!@¨&\\(\\)§´`])", RegexOptions.IgnoreCase),
                     };
                     Regex scrp = new Regex("^[wc]script$", RegexOptions.IgnoreCase);
                     HashSet<string> Folders = new HashSet<string>();
                     HashSet<int> ids = new HashSet<int>();
                     HashSet<string> fls = new HashSet<string>();
-                    foreach ( Process p in Process.GetProcesses() )
+                    foreach (Process p in Process.GetProcesses())
                     {
                         int dr = 0; // Detection rate
                         List<string> rs = new List<string>(); // Reasons
@@ -1791,15 +2401,15 @@ namespace Vulner
 
                         int cm = 0;
                         //List<string> ab = new List<string>();
-                        foreach ( Regex r in rg )
+                        foreach (Regex r in rg)
                         {
                             //ab.Add(string.Format( "({0})", string.Join( "; ", mt.Groups.Cast<Group>().Select(t=>t.Value).ToArray())) );
-                            foreach ( Match mt in r.Matches(fil.Name))
+                            foreach (Match mt in r.Matches(fil.Name))
                             {
                                 cm++;
                             }
                         }
-                        if ( cm >= 6 )
+                        if (cm >= 6)
                         {
                             rs.Add("Erratic file name.");
                             dr += cm * 2;
@@ -1814,7 +2424,8 @@ namespace Vulner
                                 {
                                     string str = Funcs.GetCommandline(p);
                                     Match scn = Regex.Match(str, "\"([^\"]+)\"[^\"]*$");
-                                    if (scn.Success) {
+                                    if (scn.Success)
+                                    {
                                         fls.Add(scn.Groups[1].Value);
                                         if (hta)
                                         {
@@ -1832,7 +2443,7 @@ namespace Vulner
                                 {
                                 }
                             }
-                            if ( (fil.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
+                            if ((fil.Attributes & FileAttributes.Hidden) == FileAttributes.Hidden)
                             {
                                 rs.Add("File is hidden.");
                                 dr += 20;
@@ -1842,7 +2453,7 @@ namespace Vulner
                                 rs.Add("Parent folder is hidden.");
                                 dr += 20;
                             }
-                            if ( fl.ToLower().Contains( Environment.ExpandEnvironmentVariables("%windir%").ToLower()) )
+                            if (fl.ToLower().Contains(Environment.ExpandEnvironmentVariables("%windir%").ToLower()))
                             {
                                 if (pm.FileVersionInfo.CompanyName != "Microsoft Corporation")
                                 {
@@ -1861,11 +2472,11 @@ namespace Vulner
                             rs.Add("Running from Temp.");
                             dr += 20;
                         }
-                        if ( dr >= 20 )
+                        if (dr >= 20)
                         {
                             ids.Add(p.Id);
                             t.ColorWrite("[{2} | {0}] $c({1})", p.ProcessName, dr, p.Id);
-                            foreach( string r in rs )
+                            foreach (string r in rs)
                             {
                                 t.ColorWrite("$e {0}", r);
                             }
@@ -1883,7 +2494,7 @@ namespace Vulner
                         {
                             foreach (string s in fls)
                             {
-                                Commands.Add(string.Format("del \"{0}\" /f", s.Replace("\\","/")));
+                                Commands.Add(string.Format("del \"{0}\" /f", s.Replace("\\", "/")));
                             }
                         }
                         if (!q)
@@ -1934,9 +2545,9 @@ namespace Vulner
                         t.ColorWrite("$cRunning on VSHOST.");
                         return null;
                     }
-                    string self = Environment.GetCommandLineArgs()[0];
+                    string self = m.FileName;
                     string tmp = Environment.ExpandEnvironmentVariables(string.Format("%temp%/{0}.exe", Funcs.RandomString(10, 20)));
-                    File.Copy(self, tmp);
+                    System.IO.File.Copy(self, tmp);
                     Process.Start(tmp, string.Format("update \"{0}\"", self));
                     Process.GetCurrentProcess().Kill();
                     return null;
@@ -1953,14 +2564,14 @@ namespace Vulner
                     LongDesc = "Makes it look normal but hard to type and compare it",
                     Usage = new string[]
                     {
-                        "{NAME} [arg]",
-                        "{NAME} [args] [args] [args]",
+                                    "{NAME} [arg]",
+                                    "{NAME} [args] [args] [args]",
                     }
                 },
                 Main = (Argumenter a) =>
                 {
                     char[] ch = "​|‌|‍|‎|‏|‪|‬|‭|⁡|⁢|⁣|⁪|⁫|⁬|⁮|⁯".Split('|').Select(b => b[0]).ToArray();
-                    foreach (string s in a.Parsed.Skip(1))
+                    foreach (string s in a.Parsed.Skip(1).StringArray())
                     {
                         string r = "";
                         foreach (char c in s)
@@ -1980,12 +2591,13 @@ namespace Vulner
                 Help = new CommandHelp
                 {
                     Description = "Adds 'zalgo' characters in between given arguments",
-                    LongDesc = "(Reference sheet: $bhttps://eeemo.net/$e)"
+                    LongDesc = "(Reference sheet: $bhttps://eeemo.net/$e)",
+                    Examples = Util.Array("{NAME} 'text' > out.txt")
                 },
                 Main = (Argumenter a) =>
                 {
                     char[] ch = new char[] { (char)0x030D, (char)0x030E, (char)0x0304, (char)0x0305, (char)0x033F, (char)0x0311, (char)0x0306, (char)0x0310, (char)0x0352, (char)0x0357, (char)0x0351, (char)0x0307, (char)0x0308, (char)0x030A, (char)0x0342, (char)0x0343, (char)0x0344, (char)0x034A, (char)0x034B, (char)0x034C, (char)0x0303, (char)0x0302, (char)0x030C, (char)0x0350, (char)0x0300, (char)0x0301, (char)0x030B, (char)0x030F, (char)0x0312, (char)0x0313, (char)0x0314, (char)0x033D, (char)0x0309, (char)0x0363, (char)0x0364, (char)0x0365, (char)0x0366, (char)0x0367, (char)0x0368, (char)0x0369, (char)0x036A, (char)0x036B, (char)0x036C, (char)0x036D, (char)0x036E, (char)0x036F, (char)0x033E, (char)0x035B, (char)0x0346, (char)0x031A, (char)0x0315, (char)0x031B, (char)0x0340, (char)0x0341, (char)0x0358, (char)0x0321, (char)0x0322, (char)0x0327, (char)0x0328, (char)0x0334, (char)0x0335, (char)0x0336, (char)0x034F, (char)0x035C, (char)0x035D, (char)0x035E, (char)0x035F, (char)0x0360, (char)0x0362, (char)0x0338, (char)0x0337, (char)0x0361, (char)0x0489, (char)0x0316, (char)0x0317, (char)0x0318, (char)0x0319, (char)0x031C, (char)0x031D, (char)0x031E, (char)0x031F, (char)0x0320, (char)0x0324, (char)0x0325, (char)0x0326, (char)0x0329, (char)0x032A, (char)0x032B, (char)0x032C, (char)0x032D, (char)0x032E, (char)0x032F, (char)0x0330, (char)0x0331, (char)0x0332, (char)0x0333, (char)0x0339, (char)0x033A, (char)0x033B, (char)0x033C, (char)0x0345, (char)0x0347, (char)0x0348, (char)0x0349, (char)0x034D, (char)0x034E, (char)0x0353, (char)0x0354, (char)0x0355, (char)0x0356, (char)0x0359, (char)0x035A, (char)0x0323 };
-                    foreach (string s in a.Parsed.Skip(1))
+                    foreach (string s in a.Parsed.Skip(1).StringArray())
                     {
                         string r = "";
                         foreach (char c in s)
@@ -2011,8 +2623,8 @@ namespace Vulner
                     Description = "Prints and modifies windows hosts",
                     Usage = new string[]
                     {
-                        "{NAME}",
-                        "{NAME} localhost=127.0.0.1 otherhost.com=0.0.0.0"
+                                    "{NAME}",
+                                    "{NAME} localhost=127.0.0.1 otherhost.com=0.0.0.0"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -2021,15 +2633,15 @@ namespace Vulner
                     bool write = false;
                     try
                     {
-                        File.OpenWrite(hosts).Close();
+                        System.IO.File.OpenWrite(hosts).Close();
                         write = true;
                     }
-                    catch(Exception) { } // Unauthorized!
-                    if (!File.Exists(hosts))
+                    catch (Exception) { } // Unauthorized!
+                    if (!System.IO.File.Exists(hosts))
                     {
                         if (write)
                         {
-                            File.WriteAllBytes(hosts, new byte[0]);
+                            System.IO.File.WriteAllBytes(hosts, new byte[0]);
                         }
                         else
                         {
@@ -2040,21 +2652,23 @@ namespace Vulner
                     }
 
                     Dictionary<string, string> n = new Dictionary<string, string>();
-                    if ( write )
+                    if (write)
                     {
-                        foreach( string st in a.Parsed.Skip(1) )
+                        foreach (string st in a.Parsed.Skip(1).StringArray())
                         {
                             string[] b = null;
                             if ((b = st.Split('=')).Length != 2) continue;
-                            if ( Regex.IsMatch(b[1], @"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}") || string.IsNullOrEmpty(b[1]) )
+                            if (Regex.IsMatch(b[1], @"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}") || string.IsNullOrEmpty(b[1]))
                             {
                                 n[b[0]] = b[1];
-                            } else
+                            }
+                            else
                             {
-                                t.ColorWrite("$cInvalid IP Address: $f{0}", b[1] );
+                                t.ColorWrite("$cInvalid IP Address: $f{0}", b[1]);
                             }
                         }
-                    } else if (a.Parsed.Length > 1)
+                    }
+                    else if (a.Parsed.Length > 1)
                     {
                         t.ColorWrite("$cWriting to hosts requires root");
                         return null;
@@ -2063,7 +2677,7 @@ namespace Vulner
                     Dictionary<string, string> h = new Dictionary<string, string>();
                     Action ReadHosts = () =>
                     {
-                        foreach (string s in File.ReadAllLines(hosts))
+                        foreach (string s in System.IO.File.ReadAllLines(hosts))
                         {
                             string str = s.Trim();
                             string[] b = null;
@@ -2079,7 +2693,7 @@ namespace Vulner
                     List<string> change = new List<string>();
                     if (write && n.Count != 0)
                     {
-                        foreach(KeyValuePair<string,string> k in n)
+                        foreach (KeyValuePair<string, string> k in n)
                         {
                             if (string.IsNullOrEmpty(k.Value))
                             {
@@ -2097,7 +2711,7 @@ namespace Vulner
                         {
                             res += string.Format("{0} {1}\n", k.Value, k.Key);
                         }
-                        File.WriteAllText(hosts, res);
+                        System.IO.File.WriteAllText(hosts, res);
                     }
 
                     if (change.Count == 0)
@@ -2106,14 +2720,15 @@ namespace Vulner
                         {
                             t.ColorWrite("$e{0} = $f{1}", k.Key, k.Value);
                         }
-                    } else
+                    }
+                    else
                     {
                         foreach (string k in change)
                         {
                             t.ColorWrite(k);
                         }
                     }
-                    
+
                     return null;
                 },
             }.Save(C, new string[] { "hosts" }, __debug__);
@@ -2121,6 +2736,7 @@ namespace Vulner
             #region Install Command
             new Command
             {
+                Switches = Util.Array("a"),
                 Help = new CommandHelp
                 {
                     Description = "Installs Vulner",
@@ -2135,10 +2751,18 @@ namespace Vulner
                     string path = Environment.ExpandEnvironmentVariables("%windir%\\Vulner.exe");
                     try
                     {
-                        if (File.Exists(path)) new FileInfo(path).Delete();
-                        new FileInfo(Environment.GetCommandLineArgs()[0].Replace(".vshost", "")).CopyTo(path);
-                        m.RunCommand("assoc 'fal=Vulner' 'fal.Open=Vulner.exe \"%1\" %*'");
-                        t.ColorWrite("$aVulner copied to Windows directory!");
+                        FileInfo f = new FileInfo(path);
+                        if (f.Exists) f.Delete();
+                        new FileInfo(m.FileName).CopyTo(path);
+
+                        m.RunCommand("assoc 'fal=Vulner' 'fal.Open=Vulner.exe \"%1\" %*' ");
+                        m.RunCommand("reg HKCR/Vulner/DefaultIcon/=%SystemRoot%\\Vulner.exe,1");
+                        m.RunCommand("reg HKCU/Console/%SystemRoot%_Vulner.exe/QuickEdit=1");
+                        if (!a.GetSw("a"))
+                        {
+                            Process.Start(f.FullName);
+                            Environment.Exit(0);
+                        }
                     }
                     catch (Exception e)
                     {
@@ -2156,13 +2780,13 @@ namespace Vulner
                     Description = "Prints paths in PATH variable",
                     Usage = new string[]
                     {
-                        "{NAME}"
+                                    "{NAME}"
                     }
                 },
                 Main = (Argumenter a) =>
                 {
                     string p = Environment.GetEnvironmentVariable("PATH");
-                    foreach( string s in p.Split(';') )
+                    foreach (string s in p.Split(';'))
                     {
                         t.ColorWrite("$a{0}", s);
                     }
@@ -2178,13 +2802,13 @@ namespace Vulner
                     Description = "Changes console window size",
                     LongDesc = "Values get clamped to h=80, w=25 and largest window sizes based on font and \nscreen resolution, so it will never be too small to read.",
                     Usage = new string[] {
-                        "{NAME} [w] [h]",
-                        "{NAME} [w]",
-                        "{NAME} 0 [h]",
-                    },
+                                    "{NAME} [w] [h]",
+                                    "{NAME} [w]",
+                                    "{NAME} 0 [h]",
+                                },
                     Examples = new string[]
                     {
-                        "{NAME} 200 40"
+                                    "{NAME} 200 40"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -2214,11 +2838,11 @@ namespace Vulner
                     Description = "Finds files in common system directories",
                     Usage = new string[]
                     {
-                        "{NAME} [file]"
+                                    "{NAME} [file]"
                     },
                     Examples = new string[]
                     {
-                        "{NAME} cmd"
+                                    "{NAME} cmd"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -2285,12 +2909,12 @@ namespace Vulner
                     Description = "Runs all arguments as commands without output",
                     Examples = new string[]
                     {
-                        "{NAME} \"dns google.com > dns.txt\""
+                                    "{NAME} \"dns google.com > dns.txt\""
                     }
                 },
                 Main = (Argumenter a) =>
                 {
-                    foreach( string c in a.Parsed.Skip(1) )
+                    foreach (string c in a.Parsed.Skip(1).StringArray())
                     {
                         t.hide = true;
                         m.RunCommand(c);
@@ -2302,39 +2926,39 @@ namespace Vulner
             #endregion
             #region MsgBox Command
             Dictionary<string, MessageBoxIcon> ms = new Dictionary<string, MessageBoxIcon>()
-            {
-                { "", MessageBoxIcon.None },
-                { "none", MessageBoxIcon.None },
+                        {
+                            { "", MessageBoxIcon.None },
+                            { "none", MessageBoxIcon.None },
 
-                { "x", MessageBoxIcon.Error },
-                { "*", MessageBoxIcon.Asterisk },
-                { "!", MessageBoxIcon.Exclamation },
-                { "?", MessageBoxIcon.Question },
+                            { "x", MessageBoxIcon.Error },
+                            { "*", MessageBoxIcon.Asterisk },
+                            { "!", MessageBoxIcon.Exclamation },
+                            { "?", MessageBoxIcon.Question },
 
-                { "info", MessageBoxIcon.Information },
-                { "hand", MessageBoxIcon.Hand },
-                { "stop", MessageBoxIcon.Stop },
-                { "warn", MessageBoxIcon.Warning },
-            };
+                            { "info", MessageBoxIcon.Information },
+                            { "hand", MessageBoxIcon.Hand },
+                            { "stop", MessageBoxIcon.Stop },
+                            { "warn", MessageBoxIcon.Warning },
+                        };
             new Command
             {
                 Help = new CommandHelp
                 {
                     Description = "Shows a message box",
                     LongDesc = @"Icon list:
-"""" = None
-""none"" = None
-""x"" = Error
-""*"" = Asterisk
-""!"" = Exclamation
-""?"" = Question
-""info"" = Information
-""hand"" = Hand
-""stop"" = Stop
-""warn"" = Warning",
+            """" = None
+            ""none"" = None
+            ""x"" = Error
+            ""*"" = Asterisk
+            ""!"" = Exclamation
+            ""?"" = Question
+            ""info"" = Information
+            ""hand"" = Hand
+            ""stop"" = Stop
+            ""warn"" = Warning",
                     Usage = new string[]
                     {
-                        "{NAME} [text] [title] [icon]"
+                                    "{NAME} [text] [title] [icon]"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -2342,7 +2966,7 @@ namespace Vulner
                     if (!ms.ContainsKey(a.Get(3))) { return null; }
                     string title = a.Get(2);
                     MessageBoxIcon mbb = ms[a.Get(3)];
-                    if (title.Length == 0) { title = "Vulner"; }
+                    if (title.Length == 0) { title = m.Name; }
                     MessageBox.Show(a.Get(1), title, MessageBoxButtons.OK, mbb);
                     return null;
                 },
@@ -2357,7 +2981,7 @@ namespace Vulner
                     LongDesc = "$c(REALLY BUGGY FOR THE MOMENT)",
                     Usage = new string[]
                     {
-                        "{NAME} ping.exe google.com"
+                                    "{NAME} ping.exe google.com"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -2373,28 +2997,14 @@ namespace Vulner
                         WindowStyle = ProcessWindowStyle.Hidden,
                         CreateNoWindow = true
                     });
-                    Thread th = new Thread(()=>
+                    p.OutputDataReceived += (o, e) =>
                     {
-                        while (true)
-                        {
-                            foreach (ProcessThread thread in p.Threads)
-                            {
-                                if (thread.ThreadState == System.Diagnostics.ThreadState.Wait)
-                                {
-                                    p.StandardInput.Write(t.ReadKey());
-                                    p.StandardInput.Flush();
-                                }
-                            }
-                        }
-                    });
-                    th.Start();
+                        t.Write(e.Data);
+                    };
                     while (!p.HasExited)
                     {
-                        p.StandardOutput.BaseStream.Flush();
-                        t.Write("{0}", p.StandardOutput.ReadToEnd());
                         Thread.Sleep(50);
                     }
-                    th.Abort();
                     t.Write("{0}", p.StandardOutput.ReadToEnd());
                     t.SetForeColor('c');
                     t.Write("{0}", p.StandardError.ReadToEnd());
@@ -2410,7 +3020,7 @@ namespace Vulner
                     Description = "Waits first argument in milliseconds",
                     Usage = new string[]
                     {
-                        "{NAME} [ms]"
+                                    "{NAME} [ms]"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -2427,23 +3037,38 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Does a hexdump of the first argument",
+                    Examples = Util.Array("{NAME} 'test string'")
                 },
                 Switches = new string[] { "f" },
                 Main = (Argumenter a) =>
                 {
+                    char f = '8';
+                    t.SetForeColor(f);
                     Dictionary<char, char> repl = new Dictionary<char, char>()
-                    { 
-
+                    {
+                        { '\t', '↔' },
+                        { '\n', '↕' },
+                        { '\r', '¶' }
                     };
                     Regex rg = new Regex("[\x20-\x7E\x80-\xFE]", RegexOptions.IgnoreCase);
-                    byte[] b = a.Get(1).Select(u => (byte)u).ToArray();
+                    byte[] b = null;
+                    UserVar u = a.Parsed[1];
+                    if (u.Type() == typeof(byte[]))
+                    {
+                        b = u.Get<byte[]>();
+                    }
+                    else
+                    {
+                        b = u.Get<string>().Select(o => (byte)o).ToArray();
+                    }
                     if (a.GetSw("f"))
                     {
                         try
                         {
-                            b = File.ReadAllBytes(Path.Combine(Environment.CurrentDirectory, a.Get(1)));
-                        } catch(Exception)
+                            b = System.IO.File.ReadAllBytes(Path.Combine(Environment.CurrentDirectory, a.Get(1)));
+                        }
+                        catch (Exception)
                         {
                             t.ColorWrite("$cFile not found.");
                             return null;
@@ -2454,12 +3079,13 @@ namespace Vulner
                     int l = 16;
                     t.WriteLine();
                     t.Write("".PadRight(8 + 3));
-                    for( int i = 0; i < 16; i++ )
+                    for (int i = 0; i < 16; i++)
                     {
                         t.Write("{0} ", i.ToString("X2"));
                     }
-                    while ( p < b.Length )
+                    while (p < b.Length)
                     {
+                        t.SetForeColor(f);
                         t.WriteLine();
                         t.Write("  {0} ", p.ToString("X8"));
                         int c = 0;
@@ -2475,13 +3101,15 @@ namespace Vulner
                             if (p + i >= b.Length) { break; }
                             char ch = (char)b[p + i];
 
+                            t.SetForeColor(f);
                             if (repl.ContainsKey(ch))
                             {
                                 ch = repl[ch];
+                                t.SetForeColor('f');
                             }
                             else
                             {
-                                if ( !rg.IsMatch(ch.ToString()) )
+                                if (!rg.IsMatch(ch.ToString()))
                                 {
                                     ch = '.';
                                 }
@@ -2498,14 +3126,18 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "hexdump" }, __debug__);
             #endregion
-            #region Fi Command
+            #region Fi Command ( File Info )
             new Command
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Gets file information",
+                    Examples = Util.Array(
+                        "fi file.exe",
+                        "fi file.exe -m '^[a-z]+\\.[a-z]{3}' $8Uses regex to find strings inside the file"
+                    )
                 },
-                Parameters = new string[] { "m" },
+                Parameters = new string[] { "m", "s" },
                 Main = (Argumenter a) =>
                 {
                     string f = a.Get(1);
@@ -2521,27 +3153,34 @@ namespace Vulner
                                 if ((ftemp = new FileInfo(Path.Combine(s, f))).Exists) { fi = ftemp; }
                             }
                         }
-                    } catch(IOException) { t.ColorWrite("$cFile not found.") ; return null; }
-                    if( Equals(fi, null) )
+                    }
+                    catch (IOException) { t.ColorWrite("$cFile not found."); return null; }
+                    if (Equals(fi, null))
                     {
                         t.ColorWrite("$cFile not found.");
                         return null;
-                    } else
+                    }
+                    else
                     {
-                        if ( a.GetPr("m") != string.Empty )
+                        if (a.GetPr("m") != string.Empty)
                         {
                             Regex r = null;
                             try
                             {
                                 r = new Regex(string.Format("({0})", a.GetPr("m")), RegexOptions.IgnoreCase);
-                            } catch(Exception)
+                            }
+                            catch (Exception)
                             {
                                 t.ColorWrite("$cInvalid regex");
                                 return null;
                             }
-                            string ft = File.ReadAllText(fi.FullName);
+                            string ft = System.IO.File.ReadAllText(fi.FullName);
                             Dictionary<string, object[]> h = new Dictionary<string, object[]>();
-                            foreach (Match v in Regex.Matches(ft, "([\x20-\x7E\x80-\xFE]{5,99999})"))
+                            int span = 0;
+                            int.TryParse(a.GetPr("s"), out span);
+                            MatchCollection all = Regex.Matches(ft, "([\x20-\x7E\x80-\xFE]{5,99999})");
+                            int vi = 0;
+                            foreach (Match v in all)
                             {
                                 string match = v.Groups[1].Value;
                                 Match ma = null;
@@ -2552,18 +3191,36 @@ namespace Vulner
                                     int i = g.Index;
                                     int l = g.Length;
 
-                                    string pre = match.Substring(0, i).Replace("$","$$");
+                                    string pre = match.Substring(0, i).Replace("$", "$$");
                                     string mid = match.Substring(i, l).Replace("$", "$$");
                                     string pos = match.Substring(i + l, match.Length - (i + l)).Replace("$", "$$");
 
-                                    h[pre + mid + pos] = new object[] { pre, mid, pos };
-                                    //t.WriteLine(pre + mid + pos);
+                                    if (span != 0)
+                                    {
+                                        t.WriteLine();
+                                        for (int k = 0; k < span; k++)
+                                        {
+                                            try
+                                            {
+                                                t.ColorWrite("$8{0}", all[vi - span + k].Value);
+                                            } catch(ArgumentOutOfRangeException) { }
+                                        }
+                                    }
+                                    t.ColorWrite("$f{0}$a{1}$f{2}", pre, mid, pos);
+
+                                    if (span != 0)
+                                    {
+                                        for (int k = 0; k < span; k++)
+                                        {
+                                            try
+                                            {
+                                                t.ColorWrite("$8{0}", all[vi + k + 1].Value);
+                                            }
+                                            catch (ArgumentOutOfRangeException) { }
+                                        }
+                                    }
                                 }
-                            }
-                            foreach ( KeyValuePair<string,object[]> st in h)
-                            {
-                                object[] o = st.Value;
-                                t.ColorWrite("$f{0}$a{1}$f{2}", o[0], o[1], o[2]);
+                                vi++;
                             }
                             return null;
                         }
@@ -2601,7 +3258,8 @@ namespace Vulner
                                     }
                                 }
                             }
-                        } catch(Exception) { }
+                        }
+                        catch (Exception) { }
                     }
                     return null;
                 },
@@ -2612,7 +3270,8 @@ namespace Vulner
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Gets a character list from a regex",
+                    Examples = Util.Array("{NAME} a-zA-Z0-9")
                 },
                 Main = (Argumenter a) =>
                 {
@@ -2627,9 +3286,9 @@ namespace Vulner
                         return null;
                     }
                     string s = "";
-                    for( int i = 0; i < 0xFF; i++ )
+                    for (int i = 0; i < 0xFF; i++)
                     {
-                        if (r.IsMatch( ((char)i).ToString() ))
+                        if (r.IsMatch(((char)i).ToString()))
                         {
                             s += (char)i;
                         }
@@ -2639,19 +3298,128 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "chars" }, __debug__);
             #endregion
-            // Strings
-            #region Example Command
+            // Registry
+            #region Reg Command ( REGistry )
+            Dictionary<string, RegistryKey> rk = new Dictionary<string, RegistryKey>
+            {
+                { "HKCU", Registry.CurrentUser },
+                { "HKLM", Registry.LocalMachine },
+                { "HKCR", Registry.ClassesRoot },
+                { "HKCC", Registry.CurrentConfig },
+                { "HKU", Registry.Users },
+            };
             new Command
             {
                 Help = new CommandHelp
                 {
-
+                    Description = "Modifies the Windows registry",
+                    LongDesc = "\n".Join(rk.Select(o => string.Format("{0} - {1}", o.Key, o.Value)).ToArray()),
+                    Examples = Util.Array("{NAME} 'HKCU/Example/Key/Value=1'")
+                },
+                Main = (Argumenter a) =>
+                {
+                    foreach (string s in a.VarArgs())
+                    {
+                        try
+                        {
+                            bool wm = s.Split('=').Length > 1;
+                            string kn = "";
+                            string k = s.Substring(0, s.IndexOf('='));
+                            string v = s.Substring(k.Length + 1);
+                            string[] ks = k.Replace('\\', '/').Split('/');
+                            RegistryKey r = null;
+                            int i = 0;
+                            foreach (string p in ks)
+                            {
+                                if (++i == 1)
+                                {
+                                    if (!rk.ContainsKey(p.ToUpper())) break;
+                                    r = rk[p.ToUpper()];
+                                }
+                                else if (i != ks.Length)
+                                {
+                                    if (wm && !r.GetSubKeyNames().Contains(p, StringComparer.InvariantCultureIgnoreCase))
+                                    {
+                                        r.CreateSubKey(p);
+                                    }
+                                    r = r.OpenSubKey(p, wm);
+                                }
+                                else
+                                {
+                                    kn = p;
+                                }
+                            }
+                            if (wm)
+                            {
+                                try
+                                {
+                                    int p = int.Parse(v);
+                                    r.SetValue(kn, p, RegistryValueKind.DWord);
+                                }
+                                catch (Exception)
+                                {
+                                    r.SetValue(kn, v);
+                                }
+                            }
+                            t.ColorWrite("$e{0}/$a{1}$f = $8({2}) $f{3}", r.Name.Replace('\\', '/'), kn, r.GetValueKind(kn), r.GetValue(kn));
+                        }
+                        catch (Exception) { t.ColorWrite("$cError"); }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "reg" }, __debug__);
+            #endregion
+            // Strings
+            #region B64 Commands
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Encodes Base64 string",
+                    Examples = Util.Array("{NAME} [String]")
+                },
+                Main = (Argumenter a) =>
+                {
+                    byte[] s = Encoding.UTF8.GetBytes(a.Get(1));
+                    string str = Convert.ToBase64String(s);
+                    t.WriteLine(str);
+                    return str;
+                },
+            }.Save(C, new string[] { "btoa", "b64e" }, __debug__);
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Decodes Base64 string",
+                    Examples = Util.Array("{NAME} [Base64]")
+                },
+                Main = (Argumenter a) =>
+                {
+                    string str = "";
+                    try
+                    {
+                        byte[] s = Convert.FromBase64String(a.Get(1));
+                        str = Encoding.UTF8.GetString(s);
+                    }
+                    catch (Exception) { }
+                    t.WriteLine(str);
+                    return str;
+                },
+            }.Save(C, new string[] { "atob", "b64d" }, __debug__);
+            #endregion
+            #region Explode Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Explodes arguments after the first one using the first one as a separator",
+                    Examples = Util.Array("{NAME} ',' 'string 1,string 2,string 3' 'string 4'")
                 },
                 Main = (Argumenter a) =>
                 {
                     string[] sep = new string[] { a.Get(1) };
                     List<string> re = new List<string>();
-                    foreach( string b in a.Parsed.Skip(1) )
+                    foreach (string b in a.Parsed.Skip(1).StringArray())
                     {
                         re.Concat(b.Split(sep, StringSplitOptions.None));
                     }
@@ -2659,7 +3427,217 @@ namespace Vulner
                 },
             }.Save(C, new string[] { "Explode" }, __debug__);
             #endregion
-            #region Example Command
+            #region WGet Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Downloads data from url",
+                    Examples = Util.Array(
+                        "{NAME} 'https://www.google.com/' 'index.html'",
+                        "{NAME} 'http://example.com/file.exe'"
+                    )
+                },
+                Main = (Argumenter a) =>
+                {
+                    FileStream fl = null;
+                    FileInfo fi = null;
+                    Action close = () =>
+                    {
+                        try
+                        {
+                            fl.Close();
+                            fl.Dispose();
+                            fi.Delete();
+                        }
+                        catch (Exception) { }
+                    };
+                    WebClient w = new WebClient();
+                    string uri = a.Get(1);
+                    if (!uri.ToLower().StartsWith("http")) uri = "http://" + uri;
+                    Uri url = null;
+                    try
+                    {
+                        url = new Uri(uri);
+                    }
+                    catch (Exception)
+                    {
+                        t.ColorWrite("$cInvalid URL.");
+                        return null;
+                    }
+                    string file = a.Get(2).Length != 0 ? a.Get(2) : Path.GetFileName((url.LocalPath));
+                    try
+                    {
+                        fi = new FileInfo(Path.Combine(Environment.CurrentDirectory, file));
+                        fl = fi.OpenWrite();
+                        fl.SetLength(0);
+                    }
+                    catch (Exception)
+                    {
+                        t.ColorWrite("$cFile couldn't be opened.");
+                        close.Invoke();
+                        return null;
+                    }
+                    if (!url.IsWellFormedOriginalString())
+                    {
+                        t.ColorWrite("$cInvalid URI.");
+                        close.Invoke();
+                        return null;
+                    }
+                    try
+                    {
+                        w.DownloadString(string.Format("{0}://{1}:{2}/",
+                            Regex.Match(uri, "^([a-z]+):", RegexOptions.IgnoreCase).Groups[1],
+                            url.Host,
+                            url.Port)
+                        );
+                    }
+                    catch (Exception)
+                    {
+                        t.ColorWrite("$cLooks like host is offline.");
+                        close.Invoke();
+                        return null;
+                    }
+                    t.ColorWrite("$eConnecting to: $f{0}", url.AbsoluteUri);
+                    t.ColorWrite("$eOutput set to: $f{0}", file);
+
+                    t.SetForeColor('f');
+                    t.Write("Progress: ");
+                    t.Write("{0}", "[");
+                    int cwid = 50;
+                    Writable cw = t.GetWritable(cwid);
+                    t.WriteLine("{0}", "] ".PadLeft(cwid + 2));
+                    bool finished = false;
+                    bool wait = false;
+                    Console.CursorVisible = false;
+                    bool success = false;
+                    w.DownloadProgressChanged += (o, e) =>
+                    {
+                        if (wait) { return; }
+                        wait = true;
+                        string pr = "";
+                        double d = (double)cwid * ((double)e.ProgressPercentage * 0.01);
+                        for (int i = 0; i < (int)Math.Max(Math.Floor(d) - 1, 0); i++)
+                        {
+                            pr += "=";
+                        }
+                        pr += '>';
+                        pr = pr.PadRight(cwid, '-');
+                        t.SetForeColor('e');
+                        cw.Write(pr);
+
+                        wait = false;
+                    };
+                    w.DownloadDataCompleted += (o, e) =>
+                    {
+                        while (wait) Thread.Sleep(5);
+                        byte[] r = null;
+                        try
+                        {
+                            r = e.Result;
+                        }
+                        catch (Exception)
+                        {
+                            t.ColorWrite("$cDownload failed.");
+                            close.Invoke();
+                            finished = true;
+                            return;
+                        }
+                        t.ColorWrite("$aDownload finished!");
+                        cw.Write("".PadLeft(cwid, '='));
+                        finished = true;
+                        success = true;
+                        fl.Write(r, 0, r.Length);
+                        fl.Flush();
+                    };
+                    w.DownloadDataAsync(url);
+                    while (true)
+                    {
+                        Thread.Sleep(100);
+                        if (finished) { break; }
+                    }
+                    fl.Close();
+                    fl.Dispose();
+                    fl = null;
+                    Console.CursorVisible = true;
+                    if (success) return fi.FullName;
+                    return null;
+                },
+            }.Save(C, new string[] { "wget" }, __debug__);
+            #endregion
+            #region Dr Command ( DRives )
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Gets information about drives",
+                    Examples = Util.Array("{NAME}")
+                },
+                Main = (Argumenter a) =>
+                {
+                    DriveInfo[] dr = DriveInfo.GetDrives();
+                    foreach (DriveInfo d in dr)
+                    {
+                        t.ColorWrite("$e{0} => " + (d.IsReady ? "$aReady" : "$cNot Ready"), d.Name);
+                        if (d.IsReady)
+                        {
+                            t.ColorWrite(" $f{0} = $a{1}", "Directory", d.RootDirectory);
+                            t.ColorWrite(" $f{0} = $a{1}", "Label", d.VolumeLabel);
+                            t.ColorWrite(" $f{0} = $a{1}", "Format", d.DriveFormat);
+                            t.ColorWrite(" $f{0} = $a{1}", "Type", d.DriveType);
+                        }
+                        t.WriteLine();
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "dr" }, __debug__);
+            #endregion
+            #region Key Command
+            Dictionary<char, string> chars = new Dictionary<char, string> {
+                { 'H', "2346789BCDFGHJKMPQRTVWXY" },
+                { '0', "0123456789" },
+                { 'A', "ABCDEF" },
+                { 'a', "ABCDEFabcdef" },
+                { 'X', "0123456789ABCDEF" },
+                { 'x', "0123456789ABCDEFabcdef" },
+                { 'B', "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" },
+                { 'b', "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" },
+                { '!', "ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõöøùúûüý" },
+                { '@', "☺☻♥♦♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼" }
+            };
+            new Command
+            {
+
+                Help = new CommandHelp
+                {
+                    Description = "Creates a random key/uuid using the given format",
+                    LongDesc = "\n".Join(chars.Select(o => string.Format("{0} - {1}", o.Key, o.Value)).ToArray()),
+                    Examples = Util.Array(
+                        "{NAME} XXXX-XXXX-XXXX $8-- Generic Key",
+                        "{NAME} XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX $8-- UUID",
+                        "{NAME} HHHHH-HHHHH-HHHHH-HHHHH-HHHHH $8-- Windows XP Key"
+                    )
+                },
+                Main = (Argumenter a) =>
+                {
+                    string k = a.Get(1) == "" ? "XXXX-XXXX-XXXX" : a.Get(1);
+                    for (int i = 0; i < 10; i++)
+                    {
+                        string s = new string(k.Select(b =>
+                        {
+                            if (chars.ContainsKey(b))
+                            {
+                                return chars[b][Funcs.Rnd(0, chars[b].Length)];
+                            }
+                            return b;
+                        }).ToArray());
+                        t.ColorWrite("$a{0}", s);
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "key" }, __debug__);
+            #endregion
+            #region QuickEdit Command
             new Command
             {
                 Help = new CommandHelp
@@ -2668,15 +3646,134 @@ namespace Vulner
                 },
                 Main = (Argumenter a) =>
                 {
-                    byte[] b = new byte[256];
-                    for(int i = 0; i < 255; i++)
-                    {
-                        b[i] = (byte)i;
-                    }
-                    return b;
+                    RegistryKey r = Registry.CurrentUser.OpenSubKey("Console", true);
+                    string s = m.FileName.Replace(Util.Array("\\", "/", " "), "_");
+
+                    if (!r.GetSubKeyNames().Contains(s))
+                        r.CreateSubKey(s);
+
+                    r.SetValue("QuickEdit", 1, RegistryValueKind.DWord);
+                    Process.Start(m.FileName);
+                    Environment.Exit(0);
+                    return null;
                 },
-            }.Save(C, new string[] { "bytes" }, __debug__);
+            }.Save(C, new string[] { "quickedit" }, __debug__);
             #endregion
+            #region RunClear Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    RegistryKey r = Registry.CurrentUser.OpenSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU", true);
+                    string az = "abcdefghijklmnopqrstuvwxyz";
+                    List<char> keys = new List<char>();
+                    foreach (string s in r.GetValueNames())
+                    {
+                        if (az.Contains(s))
+                        {
+                            keys.Add(s[0]);
+                        }
+                    }
+                    foreach (char c in keys)
+                    {
+                        r.DeleteValue(c.ToString());
+                    }
+                    t.ColorWrite("$aRun cleared!");
+                    return null;
+                },
+            }.Save(C, new string[] { "runclear" }, __debug__);
+            #endregion
+            #region RS Command ( Random String )
+            Dictionary<char, string> chr = new Dictionary<char, string> {
+                { '0', "0123456789" },
+                { 'A', "ABCDEF" },
+                { 'a', "ABCDEFabcdef" },
+                { 'X', "0123456789ABCDEF" },
+                { 'x', "0123456789ABCDEFabcdef" },
+                { 'B', "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" },
+                { 'b', "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" },
+            };
+            new Command
+            {
+                Parameters = Util.Array("a"),
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string alp = "";
+                    try
+                    {
+                        alp = chr[Util.Or(a.GetPr("a"), "b", true)[0]];
+                    } catch(Exception) { return ""; }
+                    int a_ = 0;
+                    int b_ = 0;
+                    bool min = int.TryParse(a.Get(1), out a_);
+                    bool max = int.TryParse(a.Get(2), out b_);
+                    string s = "";
+                    if (min && max)
+                    {
+                        s = Funcs.RandomString(alp, a_, b_);
+                    } else if (min)
+                    {
+                        s = Funcs.RandomString(alp, a_);
+                    }
+                    t.WriteLine("{0}", s);
+                    return s;
+                },
+            }.Save(C, new string[] { "rs" }, __debug__);
+            #endregion
+            #region DF Command ( Dummy File )
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string filn = a.Get(1);
+                    int len = -1;
+                    if ( filn.Length > 0 && int.TryParse(a.Get(2), out len) && len >= 0)
+                    {
+                        FileInfo f = new FileInfo(Path.Combine(Environment.CurrentDirectory, filn));
+                        if (f.Exists) f.Delete();
+                        FileStream s = f.Create();
+
+                        byte[] bt = Funcs.RandomBytes(len);
+                        s.Write(bt, 0, bt.Length);
+
+                        s.Flush();
+                        s.Close();
+                        s.Dispose();
+                        s = null;
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "df" }, __debug__);
+            #endregion
+            #region CAR Command ( Cmd Auto Run )
+            new Command
+            {
+                Switches = Util.Array("s"),
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string k = (a.GetSw("s") ? "HKLM" : "HKCU") + "\\Software\\Microsoft\\Command Processor\\AutoRun";
+                    m.RunCommand(string.Format("reg '{0}={1}' > nul", k, a.Get(1).Replace("'", "&'")));
+                    return null;
+                },
+            }.Save(C, new string[] { "car" }, __debug__);
+            #endregion
+            
 
             return C;
         }
