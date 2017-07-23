@@ -14,6 +14,7 @@ namespace Vulner
         public bool Debug = false;
         public bool AllSP = false;
         public Func<Argumenter, object> Main { get ; set; }
+        public Action Exit { get; set; }
         public CommandHelp Help = null;
         public string[] Parameters = new string[0];
         public string[] Switches = new string[0];

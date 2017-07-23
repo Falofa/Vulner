@@ -458,6 +458,314 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
             }.Save(C, new string[] { "lnk" }, __debug__);
             #endregion
+            #region Indent Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    FileInfo f = new FileInfo(a.Get(1));
+                    FileInfo o = new FileInfo(Path.Combine(f.Directory.FullName, f.Name.Substring(0, f.Name.Length - f.Extension.Length) + "_indented" + f.Extension));
+                    string[] s = System.IO.File.ReadAllLines(f.FullName)
+                        .Select(b => b.Trim())
+                        .Where(b => b != string.Empty)
+                        .ToArray();
+                    List<string> r = new List<string>();
+                    bool header = true;
+                    int indent = 0;
+
+                    foreach( string str in s )
+                    {
+                        if (str.StartsWith("@") && header)
+                        {
+                            r.Add(str);
+                            continue;
+                        } else if (header)
+                        {
+                            r.Add("");
+                            header = false;
+                        }
+                        string res = "";
+                        res += "".PadLeft(indent, '\t');
+                        int i = -1;
+                        Action nl = () =>
+                        {
+                            res += '\n' + "".PadLeft(indent, '\t');
+                        };
+                        Func<char, bool> IsNext = (c) =>
+                        {
+                            try
+                            {
+                                return str[i + 1] == c;
+                            }
+                            catch (Exception) { }
+                            return false;
+                        };
+                        Func<char, bool> Islast = (c) =>
+                        {
+                            try
+                            {
+                                return str[i - 1] == c;
+                            }
+                            catch (Exception) { }
+                            return false;
+                        };
+                        bool skpo = false;
+                        foreach( char c in str )
+                        {
+                            i++;
+                            if (skpo) { skpo = false; continue; }
+                            if (c == '{')
+                            {
+                                nl();
+                                res += c;
+                                indent += 1;
+                                if (!IsNext('\n'))
+                                {
+                                    nl();
+                                }
+                            }
+                            else if (c == '}')
+                            {
+                                indent -= 1;
+                                nl();
+                                res += c;
+                                if (!IsNext('\n'))
+                                {
+                                    nl();
+                                }
+                            }
+                            else if (c == '(' && IsNext(')'))
+                            {
+                                res += c;
+                            }
+                            else if (c == '(')
+                            {
+                                res += c + " ";
+                            }
+                            else if (c == ')')
+                            {
+                                res += " " + c;
+                            }
+                            else if ("><=".Contains(c))
+                            {
+                                if (IsNext('='))
+                                {
+                                    res += string.Format(" {0}= ", c);
+                                    skpo = true; continue;
+                                }
+                                res += string.Format(" {0} ", c);
+                            }
+                            else if ("/^*+-%~$".Contains(c) && (!IsNext(c) && !Islast(c)))
+                            {
+                                res += string.Format(" {0} ", c);
+                            }
+                            else if (",".Contains(c))
+                            {
+                                res += string.Format("{0} ", c);
+                            }
+                            else
+                            {
+                                res += c;
+                            }
+                        }
+
+                        r = r.Concat(res.Split('\n')).ToList();
+                    }
+
+                    List<string> Final = new List<string>();
+                    bool nln = false;
+                    int k = -1;
+                    Func<char, bool> Next = (c) =>
+                    {
+                        try
+                        {
+                            return r[k + 1].Trim()[0] == c;
+                        }
+                        catch (Exception) { }
+                        return false;
+                    };
+                    foreach ( string str in r )
+                    {
+                        k++;
+                        string trim = str.Trim('\t');
+                        if ( (trim == string.Empty || trim == "{") && !nln )
+                        {
+                            nln = true;
+                            Final.Add(str);
+                            continue;
+                        }
+                        if (trim == string.Empty && nln)
+                        {
+                            continue;
+                        }
+                        Final.Add(str
+                            .Replace("  ", " ")
+                            .Replace("( )", "()")
+                        );
+                        nln = false;
+                    }
+
+                    System.IO.File.WriteAllLines(o.FullName, Final.ToArray());
+                    return null;
+                },
+            }.Save(C, new string[] { "indent" }, __debug__);
+            #endregion
+            #region Obf Command
+            string[] Obf_Ignore = new string[]
+            {
+                "if",
+                "elseif",
+                "else",
+                "for",
+                "foreach",
+                "function",
+                "while"
+            };
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string alp = "ABCDEFGHIJKLMNOP";
+                    string blp = "ABCDEFGHIJKLMNOPabcdefghijklmnop_";
+
+                    FileInfo f = new FileInfo(a.Get(1));
+                    FileInfo o = new FileInfo(Path.Combine(f.Directory.FullName, f.Name.Substring(0, f.Name.Length - f.Extension.Length) + "_indented" + f.Extension));
+                    
+                    string s = System.IO.File.ReadAllText(f.FullName);
+
+                    Dictionary<string, string> dc = new Dictionary<string, string>();
+
+                    foreach( Match mt in Regex.Matches(s, "[^\\(a-zA-Z0-9:][^,a-zA-Z0-9:][,\r\n]?\\s*([a-z][a-zA-Z]+)\\s*\\([^\\)]+\\)[^:]"))
+                    {
+                        string vl = mt.Groups[1].Value;
+                        if (Obf_Ignore.Contains(vl.ToLower())) continue;
+                        dc[vl] = alp[Funcs.Rnd(0, alp.Length)] + Funcs.RandomString(blp, 12);
+                    }
+                    List<string> rp = new List<string>();
+                    List<string> sv = new List<string>();
+                    string fname = "f" + Funcs.RandomString(12);
+                    foreach (KeyValuePair<string, string> k in dc)
+                    {
+                        s = new Regex(string.Format("{0}\\(", Regex.Escape(k.Key))).Replace(s, string.Format( " {0}(", k.Value ));
+                        t.WriteLine("{0} = {1}", k.Key, k.Value);
+                        rp.Add(k.Value);
+                        sv.Add(k.Key);
+                    }
+                    t.WriteLine();
+
+                    string bf = string.Format("function {0}({1})", fname, string.Join(", ", rp.Select(b=>b+":string").ToArray())) + "{";
+                    string[] r = s.Split('\n')
+                        .Select(b => b.Trim())
+                        .Where(b => b != string.Empty && !b.StartsWith("#"))
+                        .ToArray();
+                    Dictionary<string, string> Vars = new Dictionary<string, string>();
+                    foreach( string str in r )
+                    {
+                        if (str.StartsWith("@persist "))
+                        {
+                            foreach (Match mt in Regex.Matches(str, "\\s([A-Z][^\\s]+)"))
+                            {
+                                Vars[mt.Groups[1].Value] = alp[Funcs.Rnd(0, alp.Length)] + Funcs.RandomString(blp, 12);
+                                t.WriteLine("{0} = {1}", mt.Groups[1].Value, Vars[mt.Groups[1].Value]);
+                            }
+                        }
+                        else
+                        {
+                            Match ma = Regex.Match(str, "([A-Z][^=\\s])[\\s]*=");
+                            if ( ma.Success )
+                            {
+                                Vars[ma.Groups[1].Value] = alp[Funcs.Rnd(0, alp.Length)] + Funcs.RandomString(blp, 12);
+                                t.WriteLine("{0} = {1}", ma.Groups[1].Value, Vars[ma.Groups[1].Value]);
+                            }
+                        }
+                    }
+                    List<string> nr = new List<string>();
+                    
+                    foreach( string str in r )
+                    {
+                        string result = str;
+                        foreach( KeyValuePair<string, string> k in Vars )
+                        {
+                            result = new Regex(string.Format("([^a-zA-Z0-9\"])({0})([^a-zA-Z0-9\"])", Regex.Escape(k.Key.Trim()))).Replace(result, string.Format("$1{0}$3", k.Value));
+                            result = new Regex(string.Format("^({0})([^a-zA-Z0-9\"])", Regex.Escape(k.Key.Trim()))).Replace(result, string.Format("{0}$2", k.Value));
+                            result = new Regex(string.Format("([^a-zA-Z0-9\"])({0})$", Regex.Escape(k.Key.Trim()))).Replace(result, string.Format("$1{0}", k.Value));
+                        }
+                        nr.Add(result.Replace("! ", "!"));
+                    }
+
+                    List<string> res = new List<string>();
+
+                    bool header = true;
+                    foreach( string str in nr )
+                    {
+                        if (!str.StartsWith("@") && header)
+                        {
+                            res.Add(bf);
+                            header = false;
+                        }
+                        res.Add(str);
+                    }
+                    if (header)
+                    {
+                        res.Add(bf);
+                    }
+                    res.Add("}");
+                    res.Add(string.Format("{1}({0})",
+                        string.Join( ", ", sv.Select(b => string.Format("\"{0}\"", b)).ToArray() ),
+                        fname
+                    ));
+
+                    System.IO.File.WriteAllLines(o.FullName, res.ToArray());
+                    return null;
+                },
+            }.Save(C, new string[] { "obf" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string[] to = a.Get(1).Split('-');
+                    int l = int.Parse(a.Get(2));
+                    int pad = int.Parse(a.Get(3));
+                    if (to.Length != 2) return null;
+                    int f = int.Parse(Regex.Match(to[0], "([0-9]+)").Groups[1].Value);
+                    int s = int.Parse(Regex.Match(to[1], "([0-9]+)").Groups[1].Value);
+                    string v = new Regex("[0-9]+").Replace(to[0], "{0}");
+
+                    Func<int, string> form = ((i) =>
+                    {
+                        return string.Format(v, (i).ToString().PadLeft(pad, '0'));
+                    });
+                    int k = 0;
+                    for (int i = f; i < s + 1; i++)
+                    {
+                        try
+                        {
+                            System.IO.File.Move(form(i), form(l + k));
+                            t.WriteLine("{0} => {1}", form(i), form(l + k));
+                            k++;
+                        } catch(Exception)
+                        {
+                            t.WriteLine("{0} => ", form(i));
+                        }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "rnmb" }, __debug__);
+            #endregion
             __debug__ = false;
 #endif
             #region Self Command
@@ -2977,40 +3285,26 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
             {
                 Help = new CommandHelp
                 {
-                    Description = "Runs a file and prints output in real time",
-                    LongDesc = "$c(REALLY BUGGY FOR THE MOMENT)",
+                    Description = "Runs cmd and runs desired command",
                     Usage = new string[]
                     {
-                                    "{NAME} ping.exe google.com"
+                        "{NAME} ping.exe google.com"
                     }
                 },
                 Main = (Argumenter a) =>
                 {
+                    string c = a.RawCmd.Length == 3 ? "" : a.RawCmd.Substring(5);
                     Process p = Process.Start(new ProcessStartInfo
                     {
-                        FileName = a.Get(1),
-                        Arguments = a.Get(2),
-                        UseShellExecute = false,
-                        RedirectStandardError = true,
-                        RedirectStandardInput = true,
-                        RedirectStandardOutput = true,
-                        WindowStyle = ProcessWindowStyle.Hidden,
-                        CreateNoWindow = true
+                        FileName = Environment.ExpandEnvironmentVariables( "%SystemRoot%/system32/cmd.exe" ),
+                        Arguments = string.Format("/k {0}", c),
+                        WorkingDirectory = Environment.CurrentDirectory,
                     });
-                    p.OutputDataReceived += (o, e) =>
-                    {
-                        t.Write(e.Data);
-                    };
-                    while (!p.HasExited)
-                    {
-                        Thread.Sleep(50);
-                    }
-                    t.Write("{0}", p.StandardOutput.ReadToEnd());
-                    t.SetForeColor('c');
-                    t.Write("{0}", p.StandardError.ReadToEnd());
+                    p.WaitForExit();
+                    t.WriteLine("{0}", p.ExitCode);
                     return null;
                 },
-            }.Save(C, new string[] { "call" }, __debug__);
+            }.Save(C, new string[] { "cmd" }, __debug__);
             #endregion
             #region Wait Command
             new Command

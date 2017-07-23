@@ -189,6 +189,7 @@ namespace Vulner
                 t.hide = false;
             }
             Return = null;
+            Command cmd = null;
             Thread ct = new Thread(() =>
             {
                 Argumenter a = new Argumenter(interp, true);
@@ -210,6 +211,7 @@ namespace Vulner
                         t.ColorWrite("$cInvalid command.");
                         return;
                     }
+                    cmd = c;
                 }
                 catch (Exception)
                 {
@@ -255,6 +257,7 @@ namespace Vulner
             ct.Start();
             while(ct.IsAlive)
             {
+                Thread.Sleep(100);
                 if (killthread)
                 {
                     for (int i = 0; i < 500; i++)
@@ -262,8 +265,8 @@ namespace Vulner
                         ct.Abort();
                         if (!ct.IsAlive) { break; }
                     }
+                    cmd.Exit.Invoke();
                 }
-                Thread.Sleep(100);
             }
             return false;
         }
