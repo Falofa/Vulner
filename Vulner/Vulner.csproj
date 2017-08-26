@@ -13,7 +13,7 @@
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -33,7 +33,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>Vulner.Program</StartupObject>
-	<ResolveComReferenceToolPath>C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin</ResolveComReferenceToolPath>
+    <ResolveComReferenceToolPath>C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin</ResolveComReferenceToolPath>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>
@@ -43,8 +43,8 @@
     <Win32Resource>C:\Users\Falofa\Documents\Visual Studio 2015\Projects\Vulner\Vulner\rc.RES</Win32Resource>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Kennedy.ManagedHooks">
-      <HintPath>F:\SystemHooks\Stable Reference\Kennedy.ManagedHooks.dll</HintPath>
+    <Reference Include="NCalc">
+      <HintPath>F:\teste\NCalc.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -55,6 +55,10 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WMPLib">
+      <HintPath>F:\WMPLib.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Argumenter.cs" />

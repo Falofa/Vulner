@@ -7,6 +7,8 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using System.Threading;
+using System.Security;
+using System.Security.Permissions;
 
 namespace Vulner
 {
@@ -15,6 +17,7 @@ namespace Vulner
         public String Name = null;
         public String FileName = null;
         public DirectoryInfo VulnerFolder = null;
+        public Argumenter CurrentArgumenter = null;
 
         public Dictionary<string, Command> Cmds = new Dictionary<string,Command>();
         public TerminalController t = null;
@@ -140,6 +143,7 @@ namespace Vulner
                 if ((e.SpecialKey & ConsoleSpecialKey.ControlC) == ConsoleSpecialKey.ControlC)
                 {
                     killthread = true;
+                    CurrentArgumenter.Quit = true;
                 }
                 e.Cancel = true;
             };
@@ -162,6 +166,7 @@ namespace Vulner
         {
             while (true)
             {
+                Console.CursorVisible = true;
                 if ( Console.CursorLeft != 0 ) { Console.WriteLine(); }
                 t.SetForeColor('f');
                 Console.Write("> ");
@@ -178,6 +183,7 @@ namespace Vulner
         }
         public object Return = null;
         public UserVar Ret = null;
+        [SecurityPermissionAttribute(SecurityAction.Demand, ControlThread = true)]
         public bool RunCommand(string interp, bool ExpectsOutput = false)
         {
             if (Hide)
@@ -193,6 +199,7 @@ namespace Vulner
             Thread ct = new Thread(() =>
             {
                 Argumenter a = new Argumenter(interp, true);
+                CurrentArgumenter = a;
                 a.SetM(this);
                 if (a.GetRaw(0).Trim().Length == 0)
                 {
@@ -240,6 +247,10 @@ namespace Vulner
                                 Trace(e);
                             }
 #endif
+                        if (!Equals(cmd.Exit, null))
+                        {
+                            cmd.Exit.Invoke();
+                        }
                         if (Return == null)
                             Ret = new UserVar(new Null());
                         else
@@ -265,7 +276,10 @@ namespace Vulner
                         ct.Abort();
                         if (!ct.IsAlive) { break; }
                     }
-                    cmd.Exit.Invoke();
+                    if (!Equals(cmd.Exit, null))
+                    {
+                        cmd.Exit.Invoke();
+                    }
                 }
             }
             return false;

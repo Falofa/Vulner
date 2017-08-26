@@ -23,6 +23,17 @@ namespace Vulner
         {
             return Main.Invoke(Arg);
         }
+        public void Think()
+        {
+            if (Parameters.Length == 0)
+            {
+                ParsePR = false;
+            }
+            if (Switches.Length == 0)
+            {
+                ParseSW = false;
+            }
+        }
     }
     class CommandHelp
     {

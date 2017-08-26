@@ -96,6 +96,14 @@ namespace Vulner
             return s;
         }
     }
+    class HSH_Connection
+    {
+        public int ID = 0;
+        public System.Net.Sockets.Socket Socket = null;
+        public string Data = "";
+        public bool Drop = false;
+        public bool Signed = false;
+    }
     public class Util
     {
         public static T[] Array<T>(params T[] a)

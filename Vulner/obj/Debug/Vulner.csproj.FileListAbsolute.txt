@@ -3,10 +3,10 @@ c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Debug\Vu
 c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Debug\Vulner.csprojResolveAssemblyReference.cache
 c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Debug\Vulner.exe
 c:\users\falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Debug\Vulner.pdb
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Debug\Kennedy.ManagedHooks.dll
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Debug\Kennedy.ManagedHooks.xml
 C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Debug\Vulner.Properties.Resources.resources
 C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Debug\Vulner.csproj.GenerateResource.Cache
 C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Debug\Interop.IWshRuntimeLibrary.dll
 C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Debug\Interop.IWshRuntimeLibrary.dll
 C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Debug\Vulner.csproj.ResolveComReference.cache
+C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Debug\WMPLib.dll
+C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Debug\NCalc.dll

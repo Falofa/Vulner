@@ -28,6 +28,7 @@ namespace Vulner
         public bool CaseSensitive = true;
         public bool ExpectsOutput = false;
         public bool AllSP = false;
+        public bool Quit = false;
         public Dictionary<char, char> EscapeCh = new Dictionary<char, char> {
             { 'n', '\n' },
             { 'r', '\r' },
@@ -447,6 +448,29 @@ namespace Vulner
             {
                 return false;
             }
+        }
+    }
+    static class ArgumenterExtension
+    {
+        /*
+         * Converts argument to integer or return default value
+         */
+        public static int Int( this Argumenter a, int i, int d = 0 )
+        {
+            try
+            {
+                return int.Parse(a.Get(i));
+            } catch(Exception) { }
+            return d;
+        }
+        /*
+         * Get everything that comes after the command
+         */
+        public static string RawString(this Argumenter a, bool lower = false )
+        {
+            string s = a.Cmd.Substring(a.Get(0).Length + 1).Trim();
+            if (lower) return s.ToLower();
+            return s;
         }
     }
 }

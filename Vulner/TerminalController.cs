@@ -253,6 +253,8 @@ namespace Vulner
             return s;
         }
 
+        public void NL() { this.WriteLine(); }
+
         public string ReadLine()
         {
             return Console.ReadLine();
@@ -271,6 +273,16 @@ namespace Vulner
         public string EscapeColor( string s )
         {
             return s.Replace("$", "$$");
+        }
+
+        public Writable QuickWritable(string display, int len, char c1, char c2)
+        {
+            SetForeColor(c1);
+            Write("{0}", display);
+            SetForeColor(c2);
+            Writable w = GetWritable(len);
+            WriteLine();
+            return w;
         }
     }
     class Writable {

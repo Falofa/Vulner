@@ -15,11 +15,87 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Drawing;
 using Microsoft.Win32.SafeHandles;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Vulner
 {
     class Funcs
     {
+        static public string MakeWord( int min = 1, int max = 4 )
+        {
+            string[] Ignore = new string[] { "con", "prn", "aux", "nul" };
+            if (min > max || min < 0) { return ""; } 
+            string c = "bcdfgjklmnpqrstvw"; //consonants
+            string v = "aeiou"; // vowels
+            string[] t = new string[] {
+                "sp", "ck", "lf", "lk", "lp", "mp", "lt", "nd", "ng", "nk", "nt", "sh", "sk", "pt", "ch", "st", "ng", "er", "tch", "ll", "l", "t", "s"
+            }; // endings
+            string r = "";
+            for (int i = 0; i < Funcs.Rnd(min, max); i++)
+            {
+                r += string.Format("{0}{1}", PickRnd(c), PickRnd(v));
+            }
+            if ( r.Length == 2 || Rnd(0, 100) < 50 )
+            {
+                r += PickRnd(t);
+            }
+            if (Ignore.Contains(r)) return MakeWord(min, max);
+            return r;
+        }
+        static public char PickRnd( string s )
+        {
+            return s[Funcs.Rnd(0, s.Length)];
+        }
+        static public T PickRnd<T>(T[] s)
+        {
+            return s[Funcs.Rnd(0, s.Length)];
+        }
+        static public string Signature(string Host, string Client)
+        {
+            string s = string.Format("{0}-{1}/{2}", Host, Client, "VULNER");
+            return CalculateSHA1(s, Encoding.Unicode);
+        }
+        static public IPAddress LanIP()
+        {
+            return Dns.GetHostEntry(Dns.GetHostName()).AddressList.Where(o => o.AddressFamily == AddressFamily.InterNetwork).First();
+        }
+
+        public static string CalculateSHA1(string text, Encoding enc)
+        {
+            try
+            {
+                byte[] buffer = enc.GetBytes(text);
+                System.Security.Cryptography.SHA1CryptoServiceProvider cryptoTransformSHA1 = new System.Security.Cryptography.SHA1CryptoServiceProvider();
+                string hash = BitConverter.ToString(cryptoTransformSHA1.ComputeHash(buffer)).Replace("-", "");
+                return hash;
+            }
+            catch (Exception x)
+            {
+                throw new Exception(x.Message);
+            }
+        }
+
+        [DllImport("user32.dll")]
+        static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+
+        static public void VolumeUp()
+        {
+            keybd_event((byte)Keys.VolumeUp, 0, 0, 0);
+        }
+        static public void VolumeDown()
+        {
+            keybd_event((byte)Keys.VolumeDown, 0, 0, 0);
+        }
+        static public void VolumeFull()
+        {
+            for (int i = 0; i < 500; i++) VolumeUp();
+        }
+        static public void VolumeMute()
+        {
+            for (int i = 0; i < 500; i++) VolumeDown();
+        }
+
         [DllImport("kernel32.dll")]
         public static extern int GetCurrentThreadId();
 
@@ -172,6 +248,12 @@ namespace Vulner
             RandomNumberGenerator.Create().GetBytes(bts);
             return bts;
         }
+        public static byte[] RandomBytesL(long min, long max)
+        {
+            byte[] bts = new byte[RndL(min, max)];
+            RandomNumberGenerator.Create().GetBytes(bts);
+            return bts;
+        }
         public static byte[] RandomBytes(long c)
         {
             byte[] bts = new byte[c];
@@ -180,9 +262,16 @@ namespace Vulner
         }
         public static int Rnd(int min = 0, int max = 100000)
         {
+            byte[] bt = new byte[32];
+            RandomNumberGenerator.Create().GetBytes(bt);
+            int a = Math.Abs(BitConverter.ToInt32(bt, 0));
+            return a % (max - min) + min;
+        }
+        public static long RndL(long min = 0, long max = 100000)
+        {
             byte[] bt = new byte[500];
             RandomNumberGenerator.Create().GetBytes(bt);
-            int a = bt.Sum<byte>(t => t);
+            long a = Math.Abs(BitConverter.ToInt64(bt, 0));
             return a % (max - min) + min;
         }
         public static FileInfo ProcessFile(Process p)
