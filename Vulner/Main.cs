@@ -24,6 +24,8 @@ namespace Vulner
         public Int32 tid = 0;
         public static Boolean Hide = false;
         public static Boolean killthread = false;
+        int FirstKey = 0;
+        int LastKey = 0;
         public void HideOutput()
         {
             Hide = true;
@@ -140,14 +142,25 @@ namespace Vulner
 
             ConsoleCancelEventHandler ce = (o, e) =>
             {
+                if ((Environment.TickCount - LastKey) > 500)
+                {
+                    FirstKey = Environment.TickCount;
+                }
+                LastKey = Environment.TickCount;
                 if ((e.SpecialKey & ConsoleSpecialKey.ControlC) == ConsoleSpecialKey.ControlC)
                 {
                     killthread = true;
-                    CurrentArgumenter.Quit = true;
+                    if (CurrentArgumenter != null)
+                        CurrentArgumenter.Quit = true;
                 }
                 e.Cancel = true;
             };
             Console.CancelKeyPress += ce;
+
+            if (Environment.GetCommandLineArgs().Contains("emergency"))
+            {
+                Funcs.Emergency(te, this, true);
+            }
         }
 
         public void Error(string s)
@@ -164,10 +177,18 @@ namespace Vulner
 
         public void Run()
         {
+            FirstKey = Environment.TickCount;
+            LastKey = Environment.TickCount;
             while (true)
             {
                 Console.CursorVisible = true;
                 if ( Console.CursorLeft != 0 ) { Console.WriteLine(); }
+                if ( LastKey > FirstKey + 2000)
+                {
+                    t.SetForeColor('c');
+                    Console.WriteLine("\nEmergency mode triggered!");
+                    Funcs.Emergency(t, this);
+                }
                 t.SetForeColor('f');
                 Console.Write("> ");
                 string s = t.ReadLine();
@@ -184,8 +205,12 @@ namespace Vulner
         public object Return = null;
         public UserVar Ret = null;
         [SecurityPermissionAttribute(SecurityAction.Demand, ControlThread = true)]
-        public bool RunCommand(string interp, bool ExpectsOutput = false)
+        public bool RunCommand(string interp, bool ExpectsOutput = false, bool pretty = false)
         {
+            if (pretty)
+            {
+                t.ColorWrite("$f> {0}", interp);
+            }
             if (Hide)
             {
                 t.hide = true;

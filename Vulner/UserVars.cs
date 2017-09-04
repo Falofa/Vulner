@@ -38,6 +38,7 @@ namespace Vulner
     {
         Object Value = null;
         Type ValueType = null;
+        public Object Val() { return Value; }
         public UserVar(Object o)
         {
             if (Equals(o, null))

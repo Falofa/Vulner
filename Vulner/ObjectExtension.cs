@@ -10,11 +10,19 @@ namespace Vulner
     {
         public static IEnumerable<T> Each<T>(this T[] o, Action<T> f)
         {
-            return o.Select(g => { f(g); return g; });
+            foreach( T v in o )
+            {
+                f.Invoke(v);
+            }
+            return o;
         }
         public static IEnumerable<T> Each<T>(this IEnumerable<T> o, Action<T> f)
         {
-            return o.Select(g => { f(g); return g; });
+            foreach (T v in o)
+            {
+                f.Invoke(v);
+            }
+            return o;
         }
         public static string Format(this string s, params object[] o)
         {

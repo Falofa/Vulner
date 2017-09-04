@@ -242,6 +242,35 @@ namespace Vulner
             return new String(bts.Select(t => a[t % a.Length]).ToArray());
         }
 
+        public static string SizeToStr( double len )
+        {
+            string[] sizes = { "B", "KB", "MB", "GB", "TB", "PB" };
+            int order = 0;
+            while (len >= 1024 && order < sizes.Length - 1)
+            {
+                order++;
+                len = len / 1024;
+            }
+            
+            return String.Format("{0:0.##} {1}", len, sizes[order]);
+        }
+        public static FileInfo TempFile()
+        {
+            string p = Path.Combine(Environment.GetEnvironmentVariable("temp"), RandomString(8, 12) + ".tmp");
+            return new FileInfo(p);
+        }
+        public static string GetRelativePath(string filespec, string folder)
+        {
+            Uri pathUri = new Uri(filespec);
+            // Folders must end in a slash
+            if (!folder.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                folder += Path.DirectorySeparatorChar;
+            }
+            Uri folderUri = new Uri(folder);
+            return Uri.UnescapeDataString(folderUri.MakeRelativeUri(pathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
+        }
+
         public static byte[] RandomBytes(int min, int max)
         {
             byte[] bts = new byte[Rnd(min, max)];
@@ -801,6 +830,99 @@ namespace Vulner
                 return true;
             } catch(Exception) { }
             return false;
+        }
+
+        public static void Emergency( TerminalController t, Main m, bool restart = false )
+        {
+            if (!restart)
+            Console.Beep(400, 500);
+            if (!IsAdmin())
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = m.FileName,
+                        Arguments = string.Format("emergency"),
+                        Verb = "runas",
+                    });
+                    Environment.Exit(0);
+                    return;
+                }
+                catch (Exception) { }
+                t.ColorWrite("$eTrying to run without administrator rights..."); 
+            }
+            t.ColorWrite("$cDropping connection...");
+            Process.Start(new ProcessStartInfo { FileName = "ipconfig", Arguments = "/flushdns" }).WaitForExit();
+            Process.Start(new ProcessStartInfo { FileName = "ipconfig", Arguments = "/release" }).WaitForExit();
+            Process[] pr = Process.GetProcesses();
+            t.ColorWrite("$cScanning memory...");
+            HashSet<Process> tk = new HashSet<Process>();
+            string AppData = new DirectoryInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "..")).FullName;
+            t.SetForeColor('f');
+            Process self = Process.GetCurrentProcess();
+            Regex[] rg = new Regex[]
+            {
+                new Regex(@"^.script$"),
+                new Regex(@"^cmd$"),
+                new Regex(@"^powershell$"),
+                new Regex(@"^mshta$")
+            };
+            foreach ( Process p in pr )
+            {
+                if (p == self) continue;
+                try
+                {
+                    FileVersionInfo fv = p.MainModule.FileVersionInfo;
+                    FileInfo f = new FileInfo(fv.FileName);
+                    DirectoryInfo d = f.Directory;
+                    if (fv.FileName.StartsWith("c:\\windows\\", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        if (fv.CompanyName != "Microsoft Corporation")
+                        {
+                            tk.Add(p);
+                            continue;
+                        }
+                    }
+                    if (fv.FileName.StartsWith( AppData, StringComparison.CurrentCultureIgnoreCase) )
+                    {
+                        tk.Add(p);
+                        continue;
+                    }
+                    if ((f.Attributes & FileAttributes.Hidden) != 0 ||
+                        (d.Attributes & FileAttributes.Hidden) != 0)
+                    {
+                        tk.Add(p);
+                        continue;
+                    }
+                }
+                catch (Exception) { }
+                foreach( Regex r in rg )
+                {
+                    if (r.IsMatch(p.ProcessName))
+                    {
+                        tk.Add(p);
+                        continue;
+                    }
+                }
+            }
+            t.ColorWrite("$cKilling processes...");
+            foreach( Process p in tk )
+            {
+                try
+                {
+                    p.Kill();
+                    t.ColorWrite("$e {0}", p.ProcessName);
+                } catch(Exception)
+                {
+                    t.ColorWrite("$c {0}", p.ProcessName);
+                }
+            }
+            t.ColorWrite("$cFixing common problems...");
+            m.RunCommand("rule cmd=1 regedit=1 taskmgr=1 run=1", false, true);
+            m.RunCommand("rule cmd=1 regedit=1 taskmgr=1 run=1 /s", false, true);
+            m.RunCommand("start taskmgr", false, true);
+            m.RunCommand("netfix", false, true);
         }
     }
 }

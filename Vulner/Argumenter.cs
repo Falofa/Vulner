@@ -463,12 +463,21 @@ namespace Vulner
             } catch(Exception) { }
             return d;
         }
+        public static int Int(this Argumenter a, string i, int d = 0)
+        {
+            try
+            {
+                return int.Parse(a.GetPr(i));
+            }
+            catch (Exception) { }
+            return d;
+        }
         /*
          * Get everything that comes after the command
          */
         public static string RawString(this Argumenter a, bool lower = false )
         {
-            string s = a.Cmd.Substring(a.Get(0).Length + 1).Trim();
+            string s = a.Cmd.Substring(a.Get(0).Length).Trim();
             if (lower) return s.ToLower();
             return s;
         }

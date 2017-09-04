@@ -253,6 +253,19 @@ namespace Vulner
             return s;
         }
 
+        public void Error( string s )
+        {
+            ColorWrite("$c{0}", s);
+        }
+        public void Alert(string s)
+        {
+            ColorWrite("$e{0}", s);
+        }
+        public void Success(string s)
+        {
+            ColorWrite("$a{0}", s);
+        }
+
         public void NL() { this.WriteLine(); }
 
         public string ReadLine()

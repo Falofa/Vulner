@@ -326,25 +326,6 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
             #region Example Command
             new Command
             {
-                Switches = Util.Array("y"),
-                Help = new CommandHelp
-                {
-
-                },
-                Main = (Argumenter a) =>
-                {
-                    t.WriteLine(a.GetSw("y"));
-                    foreach (string k in a.Parsed.Skip(1).StringArray())
-                    {
-                        t.WriteLine("{0}", string.Join(", ", Util.Eq(k)));
-                    }
-                    return null;
-                },
-            }.Save(C, new string[] { "test" }, __debug__);
-            #endregion
-            #region Example Command
-            new Command
-            {
                 Help = new CommandHelp
                 {
 
@@ -410,58 +391,6 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     return null;
                 },
             }.Save(C, new string[] { "exe" }, __debug__);
-            #endregion
-            #region Example Command
-            new Command
-            {
-                Parameters = Util.Array("icon", "desc", "args"),
-                Help = new CommandHelp
-                {
-                    Description = "Creates a shortcut file",
-                    Usage = Util.Array("{NAME} [shortcut] [destination]"),
-                    Param = new Dictionary<string, string> {
-                        { "icon", "Icon" },
-                        { "desc", "Description" },
-                        { "args", "Arguments" }
-                    },
-                },
-                Main = (Argumenter a) =>
-                {
-                    FileInfo f = null;
-                    FileInfo F = null;
-                    bool fil = true;
-                    try
-                    {
-                        f = Funcs.Fi(a.Get(1));
-                        if (!f.Exists) f.Create().Close();
-                    }
-                    catch (Exception)
-                    {
-                        t.ColorWrite("$cInvalid file");
-                        return null;
-                    }
-                    try
-                    {
-                        F = Funcs.Fi(a.Get(2));
-                        if (!f.Exists) F.Create().Close();
-                    }
-                    catch (Exception) { fil = false; }
-
-                    WshShell sh = new WshShell();
-                    IWshShortcut lnk = (IWshShortcut)sh.CreateShortcut(f.FullName);
-
-                    if (a.GetPr("icon") != string.Empty) lnk.IconLocation = a.GetPr("icon");
-                    if (a.GetPr("desc") != string.Empty) lnk.Description = a.GetPr("desc");
-                    if (a.GetPr("args") != string.Empty) lnk.Arguments = a.GetPr("args");
-
-                    if (fil)
-                        lnk.TargetPath = F.FullName;
-                    else
-                        lnk.TargetPath = a.Get(2);
-                    lnk.Save();
-                    return null;
-                },
-            }.Save(C, new string[] { "lnk" }, __debug__);
             #endregion
             #region Indent Command
             new Command
@@ -799,6 +728,67 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     return null;
                 },
             }.Save(C, new string[] { "wall" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string s = @"F:\pdf\aluguel.php";//a.Get(1);
+                    FileInfo f = new FileInfo(s);
+                    string d = System.IO.File.ReadAllText(f.FullName);
+                    int time = Environment.TickCount;
+                    Dictionary<string, int> count = new Dictionary<string, int>();
+                    for ( int i = 10; i < 30; i++ )
+                    {
+                        for( int k = 0; k < d.Length-i; k+=i )
+                        {
+                            string o = d.Substring(k, i);
+                            for (int v = 0; v < d.Length - i; v+=i)
+                            {
+                                string c = d.Substring(v, i);
+                                if (c == o)
+                                {
+                                    if (!count.ContainsKey(c)) count[c] = 0;
+                                    count[c]++;
+                                }
+                            }
+                        }
+                    }
+                    t.WriteLine("Done in {0}ms", Environment.TickCount - time);
+                    int total = 0;
+
+                    count = count.Where(b => b.Value > 4).ToDictionary(x => x.Key, x => x.Value);
+                    foreach ( KeyValuePair<string,int> c in count )
+                    {
+                        total += c.Key.Length * c.Value;
+                    }
+                    t.WriteLine("Bytes detected: {0}", total);
+                    t.WriteLine("Total: {0}", d.Length);
+
+                    string h = "";
+                    int l = 1;
+
+                    d = d.Replace("\x12", "\x12\x12");
+
+                    foreach (KeyValuePair<string, int> c in count)
+                    {
+                        if (d.Contains(c.Key))
+                        {
+                            h += c.Key + "\n";
+                            d = d.Replace(c.Key, "\x12" + ((char)l++));
+                        }
+                    }
+                    h += "\n\n";
+                    h += d;
+                    System.IO.File.WriteAllText("F:/pdf/test.txt", h);
+                    return null;
+                },
+            }.Save(C, new string[] { "pt" }, __debug__);
             #endregion
             //
             __debug__ = false;
@@ -1241,12 +1231,59 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
                 Main = (Argumenter a) =>
                 {
-                    int time = 0;
-                    int.TryParse(a.Get(1), out time);
+                    int time = a.Int(1, 0);
                     Thread.Sleep(time);
                     return null;
                 },
             }.Save(C, new string[] { "wait" }, __debug__);
+            #endregion
+            #region Each Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    //try
+                    //{
+                        UserVar v = a.Parsed[1];
+                        string[] vars = ((object[])v.Val()).Select(o=>o.ToString()).ToArray();
+                        string c = a.Get(2);
+                        foreach( string s in vars )
+                        {
+                            t.KillBuffer();
+                        t.hide = true;
+                            m.RunCommand(string.Format(c, s), false);
+                        }
+                    //}
+                    //catch (Exception) { }
+                    return null;
+                },
+            }.Save(C, new string[] { "each" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Examples = Util.Array("{NAME} 'command %i%' 1 10")
+                },
+                Main = (Argumenter a) =>
+                {
+                    int i = a.Int(2, 0);
+                    int u = a.Int(3, 10);
+                    int f = a.Int(4, 1);
+                    for ( ; i < u; i+= f )
+                    {
+                        Environment.SetEnvironmentVariable("i", i.ToString(), EnvironmentVariableTarget.Process);
+                        m.RunCommand(a.Get(1));
+                    }
+                    Environment.SetEnvironmentVariable("i", null, EnvironmentVariableTarget.Process);
+                    return null;
+                },
+            }.Save(C, new string[] { "for" }, __debug__);
             #endregion
             #endregion
 
@@ -1640,8 +1677,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         w.Write(string.Format("{0}/{1} ({2:0.00}%)", count, all, (double)((double)count / (double)all) * 100.0));
                         t.WriteLine();
 
-                        int passes = 0;
-                        int.TryParse(a.GetPr("p"), out passes);
+                        int passes = a.Int("p", 0);
 
                         FileJump = 0;
                         foreach (string f in fls)
@@ -2154,8 +2190,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                             }
                             string ft = System.IO.File.ReadAllText(fi.FullName);
                             Dictionary<string, object[]> h = new Dictionary<string, object[]>();
-                            int span = 0;
-                            int.TryParse(a.GetPr("s"), out span);
+                            int span = a.Int("s", 0);
                             MatchCollection all = Regex.Matches(ft, "([\x20-\x7E\x80-\xFE]{5,99999})");
                             int vi = 0;
                             foreach (Match v in all)
@@ -2360,8 +2395,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
                 Main = (Argumenter a) =>
                 {
-                    int c = 0;
-                    int.TryParse(a.Get(1), out c);
+                    int c = a.Int(1, 0);
                     if (c <= 0) { c = 2; }
 
                     List<string> dirs = new List<string>() { "" };
@@ -2628,6 +2662,174 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
             }.Save(C, new string[] { "calc" }, __debug__);
             #endregion
+            #region DSize Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    Console.CursorVisible = false;
+                    Writable w = t.QuickWritable("Scanning: ", 30, 'a', 'e');
+                    Writable b = t.QuickWritable("Size: ", 30, 'a', 'e');
+                    long Size = 0;
+                    int Err = 0;
+                    DirectoryInfo D = null;
+                    Action<DirectoryInfo> Calc = null;
+                    int Upd = Environment.TickCount;
+                    Calc = (DirectoryInfo d) =>
+                    {
+                        if (Environment.TickCount > Upd)
+                        {
+                            w.Write(Funcs.GetRelativePath(d.FullName, D.FullName));
+                            b.Write(Funcs.SizeToStr(Size));
+                            Upd = Environment.TickCount + 500;
+                        }
+                        try
+                        {
+                            Size += d.GetFiles().Select(f => f.Length).Sum();
+                            foreach (DirectoryInfo di in d.GetDirectories()) Calc.Invoke(di);
+                        } catch(Exception)
+                        {
+                            Err += 1;
+                        }
+                    };
+                    D = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, a.RawString()));
+                    if (!D.Exists)
+                    {
+                        t.Error("Invalid directory");
+                        return null;
+                    }
+                    Calc(D);
+                    w.Write("Done!");
+                    b.Write(Funcs.SizeToStr(Size));
+                    Console.CursorVisible = true;
+                    return null;
+                },
+            }.Save(C, new string[] { "dsize" }, __debug__);
+            #endregion
+            #region LNK Command
+            new Command
+            {
+                Parameters = Util.Array("icon", "desc", "args"),
+                Help = new CommandHelp
+                {
+                    Description = "Creates a shortcut file",
+                    Usage = Util.Array("{NAME} [shortcut] [destination]"),
+                    Param = new Dictionary<string, string> {
+                        { "icon", "Icon" },
+                        { "desc", "Description" },
+                        { "args", "Arguments" }
+                    },
+                },
+                Main = (Argumenter a) =>
+                {
+                    FileInfo f = null;
+                    FileInfo F = null;
+                    bool fil = true;
+                    try
+                    {
+                        f = Funcs.Fi(a.Get(1));
+                        if (!f.Exists) f.Create().Close();
+                    }
+                    catch (Exception)
+                    {
+                        t.ColorWrite("$cInvalid file");
+                        return null;
+                    }
+                    try
+                    {
+                        F = Funcs.Fi(a.Get(2));
+                        if (!f.Exists) F.Create().Close();
+                    }
+                    catch (Exception) { fil = false; }
+
+                    WshShell sh = new WshShell();
+                    IWshShortcut lnk = (IWshShortcut)sh.CreateShortcut(f.FullName);
+
+                    if (a.GetPr("icon") != string.Empty) lnk.IconLocation = a.GetPr("icon");
+                    if (a.GetPr("desc") != string.Empty) lnk.Description = a.GetPr("desc");
+                    if (a.GetPr("args") != string.Empty) lnk.Arguments = a.GetPr("args");
+
+                    if (fil)
+                        lnk.TargetPath = F.FullName;
+                    else
+                        lnk.TargetPath = a.Get(2);
+                    lnk.Save();
+                    return null;
+                },
+            }.Save(C, new string[] { "lnk" }, __debug__);
+            #endregion
+            #region RM Command ( Remove Metadata )
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Removes file metadata",
+                    Usage = Util.Array("{NAME} [file...]"),
+                },
+                Main = (Argumenter a) =>
+                {
+                    string[] args = a.VarArgs();
+                    foreach (string s in args)
+                    {
+                        FileInfo f = null;
+                        FileInfo tf = Funcs.TempFile();
+                        Stream st = null;
+                        Stream nf = null;
+                        try
+                        {
+                            f = new FileInfo(Path.Combine(Environment.CurrentDirectory, s));
+                            f.CopyTo(tf.FullName);
+                            f.Attributes = 0;
+                            f.Delete();
+                            st = tf.OpenRead();
+                            byte[] buffer = new byte[1024];
+                            int r = 1024;
+                            int o = 0;
+                            nf = f.Create();
+                            while (r != 0)
+                            {
+                                try
+                                {
+                                    r = st.Read(buffer, 0, buffer.Length);
+                                    nf.Write(buffer, 0, buffer.Length);
+                                }
+                                catch (Exception)
+                                {
+                                    r = st.Read(buffer, 0, (int)(st.Length - o));
+                                    nf.Write(buffer, 0, buffer.Length);
+                                }
+                                o += r;
+                            }
+                            t.ColorWrite("$aRemoved metadata from: $f{0}", f.Name);
+                        }
+                        catch (Exception) { }
+                        if (st != null) st.Close();
+                        if (nf != null) nf.Close();
+                        if (tf.Exists) tf.Delete();
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "rm" }, __debug__);
+            #endregion
+            #region Emergency Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Does an emergency checkup",
+                    Usage = Util.Array("{NAME}")
+                },
+                Main = (Argumenter a) =>
+                {
+                    Funcs.Emergency(t, m, true);
+                    return null;
+                },
+            }.Save(C, new string[] { "em" }, __debug__);
+            #endregion
             #endregion
 
             #region Process Commands
@@ -2759,7 +2961,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     Examples = new string[]
                     {
                                         "{NAME} chrome",
-                                        "{NAME} * $8Be sure you know what you are doing"
+                                        "{NAME} * $8Likely to cause a BSOD"
                     }
                 },
                 Main = (Argumenter a) =>
@@ -3876,6 +4078,45 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
                 Main = (Argumenter a) =>
                 {
+                    NetworkInterfaceType[] eth = new NetworkInterfaceType[] {
+                        NetworkInterfaceType.Ethernet,
+                        NetworkInterfaceType.Ethernet3Megabit,
+                        NetworkInterfaceType.FastEthernetFx,
+                        NetworkInterfaceType.FastEthernetT,
+                        NetworkInterfaceType.GigabitEthernet
+                    };
+                    NetworkInterface ni = NetworkInterface.GetAllNetworkInterfaces().Where(n => eth.Contains(n.NetworkInterfaceType)).First();
+                    if (ni == null)
+                    {
+                        t.ColorWrite("$cNetwork interface not found!");
+                        return null;
+                    }
+                    IPInterfaceProperties p = ni.GetIPProperties();
+                    IPAddressCollection ipa = p.DnsAddresses;
+                    t.ColorWrite("$eChecking connection...");
+                    string[] ips = Util.Array("google.com", "youtube.com", "gmail.com");
+                    int sc = 0;
+                    Ping png = new Ping();
+                    foreach (string ip in ips)
+                    {
+                        try
+                        {
+                            IPAddress ipad = Dns.GetHostEntry(ip).AddressList.First();
+                            PingReply pr = png.Send(ipad);
+                            if (pr.Status == IPStatus.Success)
+                                sc++;
+                        }
+                        catch (Exception) { }
+                    }
+                    if (sc == 0)
+                    {
+                        t.ColorWrite("$eEthernet is down!");
+                    } else
+                    {
+                        t.ColorWrite("$eEthernet is up!");
+                        return null;
+                    }
+                    //IPInterfaceProperties ipi = new IPInterfaceProperties();//.DnsAddresses
                     Process.Start(new ProcessStartInfo
                     {
                         FileName = "ipconfig",
@@ -3890,7 +4131,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         WindowStyle = ProcessWindowStyle.Hidden,
                         CreateNoWindow = true,
                     });
-                    t.ColorWrite("Ip config renewed and dns cache flushed.");
+                    t.ColorWrite("$eIp config renewed and dns cache flushed.");
                     return null;
                 },
             }.Save(C, new string[] { "netfix" });
@@ -3904,21 +4145,19 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 {
                     Description = "Stresses local network",
                     Param = new Dictionary<string, string> { { "t", "Thread count" } },
-                    Usage = Util.Array("{NAME} -t 10")
+                    Usage = Util.Array("{NAME} -t 10", "{NAME} [host] [port] -t 10")
                 },
                 Main = (Argumenter a) =>
                 {
                     int th = 5;
                     if (a.IsSetPr("t"))
                     {
-                        int tmp = 0;
-                        int.TryParse(a.GetPr("t"), out tmp);
+                        int tmp = a.Int("t", 0);
                         if (tmp > 0)
                             th = tmp;
                     }
                     IPAddress ip = Dns.GetHostAddresses(a.Get(1)).First();
-                    int port = 0;
-                    int.TryParse(Util.Or(a.Get(2), "-1", true), out port);
+                    int port = a.Int(2, -1);
                     int nmb = 0;
                     int drp = 0;
                     Action Stress = () =>
@@ -3947,7 +4186,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     {
                         c.Write(nmb);
                         b.Write(drp);
-                        Thread.Sleep(50);
+                        Thread.Sleep(200);
                     }
                     return null;
                 },
@@ -4058,7 +4297,23 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                             for (int i = 0; i < Q.Count; i++)
                             {
                                 string s = Q.Dequeue();
-                                t.WriteLine("{0}", s);
+                                writeWait = true;
+                                try
+                                {
+                                    IPHostEntry ih = Dns.GetHostEntry(s);
+                                    if (ih.HostName == s)
+                                    {
+                                        t.WriteLine("{0}", s);
+                                    }
+                                    else
+                                    {
+                                        t.WriteLine("{0} {1}", s, ih.HostName);
+                                    }
+                                } catch(Exception)
+                                {
+                                    t.WriteLine("{0}", s);
+                                }
+                                writeWait = false;
                                 foreach (KeyValuePair<int, string> port in Ports)
                                 {
                                     prt = port.Key;
