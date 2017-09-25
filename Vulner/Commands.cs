@@ -27,8 +27,31 @@ namespace Vulner
 {
     class Commands
     {
+        public TerminalController t = null;
+        public Main m = null;
+        public object Error(string s, params string[] a)
+        {
+            string v = s;
+            if (!v.EndsWith(".")) v += '.';
+            t.ColorWrite("$c{0}", string.Format(v, a));
+            return null;
+        }
+        public object Error(Exception e)
+        {
+            return Error("{0}\n{1}", e.Message, e.StackTrace);
+        }
         public Dictionary<string, Command> Get(Main m, TerminalController t)
         {
+            this.t = t;
+            this.m = m;
+            /*
+            Func<string, object> Error = (s) =>
+            {
+                string v = s;
+                if (!v.EndsWith(".")) v += '.';
+                t.ColorWrite("$c{0}", v);
+                return null;
+            };*/
             Dictionary<string, Command> C = new Dictionary<string, Command>();
 
             /*
@@ -743,12 +766,12 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     string d = System.IO.File.ReadAllText(f.FullName);
                     int time = Environment.TickCount;
                     Dictionary<string, int> count = new Dictionary<string, int>();
-                    for ( int i = 10; i < 30; i++ )
+                    for (int i = 10; i < 30; i++)
                     {
-                        for( int k = 0; k < d.Length-i; k+=i )
+                        for (int k = 0; k < d.Length - i; k += i)
                         {
                             string o = d.Substring(k, i);
-                            for (int v = 0; v < d.Length - i; v+=i)
+                            for (int v = 0; v < d.Length - i; v += i)
                             {
                                 string c = d.Substring(v, i);
                                 if (c == o)
@@ -763,7 +786,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     int total = 0;
 
                     count = count.Where(b => b.Value > 4).ToDictionary(x => x.Key, x => x.Value);
-                    foreach ( KeyValuePair<string,int> c in count )
+                    foreach (KeyValuePair<string, int> c in count)
                     {
                         total += c.Key.Length * c.Value;
                     }
@@ -790,11 +813,178 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
             }.Save(C, new string[] { "pt" }, __debug__);
             #endregion
-            //
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    int c = 1000;
+                    string[] s = new string[c];
+                    int i = 0;
+                    int len = 0;
+                    for (int v = 0; v < c; v++)
+                    {
+                        int k = v;
+                        s[k] = "";
+                        //int k = a.Int(1);
+                        List<int> l = new List<int>();
+                        while (!l.Contains(k))
+                        {
+                            l.Add(k);
+                            string str = HumanFriendlyInteger.IntegerToWritten(k);
+                            k = str.Length * 45;
+                            s[v] += string.Format("{0} = {1}\n", str, k);
+                        }
+                        if (s[v].Split('\n').Length > len)
+                        {
+                            len = s[v].Split('\n').Length;
+                            i = v;
+                        }
+                    }
+                    t.SetForeColor('e');
+                    t.WriteLine(s[i]);
+                    return null;
+                },
+            }.Save(C, new string[] { "nbs" }, __debug__);
+            #endregion
+            #region DM Command (Data Mashing)
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    foreach (string s in Funcs.GetFilesSmarty(a.Get(1), false) )
+                    {
+                        FileInfo f = new FileInfo( Path.Combine( Environment.CurrentDirectory, s ) );
+                        if (!f.Exists) continue;
+                        byte[] bt = System.IO.File.ReadAllBytes(f.FullName);
+                        List<byte> bb = new List<byte>();
+                        int skip = 0;
+                        int l = bt.Length;
+                        int g = 0;
+                        for ( int i = 0; i < bt.Length; i++ )
+                        {
+                            skip--;
+                            byte cur = bt[i];
+                            if (Funcs.Rnd(0, 500) < 10 && i > (l / 50) && skip < -( l / 10 ))
+                            {
+                                skip = (int)(l * 0.001);
+                                g++;
+                            }
+                            if (skip > 0) {
+                                bb.Add((byte)Funcs.Rnd(0, 256));
+                                continue;
+                            }
+                            /*
+                            if (Funcs.Rnd(0, 500) < 25 && skip < -(l / 10) && i > (l / 50))
+                            {
+                                Funcs.RandomBytes(5, 50).Each(o => bb.Add(o));
+                                continue;
+                            }*/
+                            bb.Add(cur);
+                        }
+                        t.WriteLine("Groups: {0}", g);
+                        System.IO.File.WriteAllBytes(f.FullName, bb.ToArray());
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "dm" }, __debug__);
+            #endregion
+            #region RM Command ( Remove Metadata )
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Removes file metadata",
+                    Usage = Util.Array("{NAME} [file...]"),
+                },
+                Main = (Argumenter a) =>
+                {
+                    string[] args = a.VarArgs();
+                    foreach (string s in args)
+                    {
+                        FileInfo f = null;
+                        FileInfo tf = Funcs.TempFile();
+                        Stream st = null;
+                        Stream nf = null;
+                        try
+                        {
+                            f = new FileInfo(Path.Combine(Environment.CurrentDirectory, s));
+                            f.CopyTo(tf.FullName);
+                            f.Attributes = 0;
+                            f.Delete();
+                            st = tf.OpenRead();
+                            byte[] buffer = new byte[1024];
+                            int r = 1024;
+                            int o = 0;
+                            nf = f.Create();
+                            while (r != 0)
+                            {
+                                try
+                                {
+                                    r = st.Read(buffer, 0, buffer.Length);
+                                    nf.Write(buffer, 0, buffer.Length);
+                                }
+                                catch (Exception)
+                                {
+                                    r = st.Read(buffer, 0, (int)(st.Length - o));
+                                    nf.Write(buffer, 0, buffer.Length);
+                                }
+                                o += r;
+                            }
+                            t.ColorWrite("$aRemoved metadata from: $f{0}", f.Name);
+                        }
+                        catch (Exception) { }
+                        if (st != null) st.Close();
+                        if (nf != null) nf.Close();
+                        if (tf.Exists) tf.Delete();
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "rm" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string s = a.RawString().Replace(" ", "    ");
+                    s = Regex.Replace(s, "([a-z])", ":regional_indicator_$1: ", RegexOptions.IgnoreCase).ToLower();
+                    t.WriteLine(s);
+                    return s;
+                },
+            }.Save(C, new string[] { "bl" }, __debug__);
+            #endregion
             __debug__ = false;
 #endif
 
             #region Vulner Commands
+            #region Ver Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Prints current version",
+                    Usage = Util.Array("{NAME}")
+                },
+                Main = (Argumenter a) =>
+                {
+                    t.ColorWrite("$fCurrent version: $a{0}", m.Version);
+                    return null;
+                },
+            }.Save(C, new string[] { "ver", "version" }, __debug__);
+            #endregion
             #region Args Command
             new Command
             {
@@ -1248,34 +1438,36 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 {
                     //try
                     //{
-                        UserVar v = a.Parsed[1];
-                        string[] vars = ((object[])v.Val()).Select(o=>o.ToString()).ToArray();
-                        string c = a.Get(2);
-                        foreach( string s in vars )
-                        {
-                            t.KillBuffer();
+                    UserVar v = a.Parsed[1];
+                    string[] vars = ((object[])v.Val()).Select(o => o.ToString()).ToArray();
+                    string c = a.Get(2);
+                    foreach (string s in vars)
+                    {
+                        t.KillBuffer();
                         t.hide = true;
-                            m.RunCommand(string.Format(c, s), false);
-                        }
+                        m.RunCommand(string.Format(c, s), false);
+                    }
                     //}
                     //catch (Exception) { }
                     return null;
                 },
             }.Save(C, new string[] { "each" }, __debug__);
             #endregion
-            #region Example Command
+            #region For Command
             new Command
             {
                 Help = new CommandHelp
                 {
-                    Examples = Util.Array("{NAME} 'command %i%' 1 10")
+                    Description = "Does a for loop",
+                    Examples = Util.Array("{NAME} 'command %i%' 1 10"),
+                    Usage = Util.Array("{NAME} [command] [start=0] [end=10] [jump=1]")
                 },
                 Main = (Argumenter a) =>
                 {
                     int i = a.Int(2, 0);
                     int u = a.Int(3, 10);
                     int f = a.Int(4, 1);
-                    for ( ; i < u; i+= f )
+                    for (; i < u; i += f)
                     {
                         Environment.SetEnvironmentVariable("i", i.ToString(), EnvironmentVariableTarget.Process);
                         m.RunCommand(a.Get(1));
@@ -1284,6 +1476,51 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     return null;
                 },
             }.Save(C, new string[] { "for" }, __debug__);
+            #endregion
+            #region CB Command (ClipBoard)
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Gets or sets the clipboard text",
+                    Usage = Util.Array("{NAME} [text]"),
+                },
+                Main = (Argumenter a) =>
+                {
+                    if (a.Get(1) != string.Empty)
+                    {
+                        Clipboard.SetText(a.Get(1));
+                    }
+                    t.ColorWrite("$a{0}", Clipboard.GetText());
+                    return Clipboard.GetText();
+                },
+            }.Save(C, new string[] { "cb" }, __debug__);
+            #endregion
+            #region QShutdown Command ( Quick Shutdown )
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    Process[] pr = Process.GetProcesses();
+                    int pid = Process.GetCurrentProcess().Id;
+                    foreach (Process p in pr)
+                    {
+                        if (p.Id == pid) { continue; }
+                        try
+                        {
+                            if (p.MainModule.FileName.ToLower().Contains("windows")) { continue; }
+                            p.Kill();
+                        }
+                        catch (Exception) { }
+                    }
+                    Process.Start("shutdown", "-s -t 0");
+                    return null;
+                },
+            }.Save(C, new string[] { "qshutdown" }, __debug__);
             #endregion
             #endregion
 
@@ -1314,7 +1551,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                                 {
                                     d = d.Parent;
                                     if (Equals(d.Parent, null)) break; // Means that it is a root drive.
-                                        str.Add(d);
+                                    str.Add(d);
                                 }
                                 catch (Exception) { }
                             }
@@ -1385,14 +1622,13 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         }
                         catch (IOException ex)
                         {
-                            t.ColorWrite("$cAn error has ocourred!\n{0}", ex.Message);
+                            return Error("An error has ocourred.\n{0}", ex.Message);
                         }
                     }
                     else
                     {
-                        t.ColorWrite("$cFile not found!");
+                        return Error("File not found.");
                     }
-                    return null;
                 },
             }.Save(C, new string[] { "cat" });
             #endregion
@@ -1472,7 +1708,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         }
                         if (!changed)
                         {
-                            t.ColorWrite("$cDirectory not found!");
+                            return Error("Directory not found!");
                         }
                     }
                     t.ColorWrite("$fWorking directory: $a{0}", Environment.CurrentDirectory);
@@ -1533,7 +1769,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
                 Main = (Argumenter a) =>
                 { // DirectoryInfo
-                        string h = a.Get(1).Length != 0 ? a.Get(1) : "*";
+                    string h = a.Get(1).Length != 0 ? a.Get(1) : "*";
 
                     new Thread(() => System.Media.SystemSounds.Hand.Play()).Start();
                     if (!a.GetSw("f"))
@@ -1648,7 +1884,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         return 0;
                     };
                     Recursive(Dirs); // All indexing is done here
-                        Environment.CurrentDirectory = new DirectoryInfo(CurDir).Root.FullName;
+                    Environment.CurrentDirectory = new DirectoryInfo(CurDir).Root.FullName;
                     w.Write(count);
                     dw.Write(dcount);
 
@@ -1728,7 +1964,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         }
                         w.Write(count);
                         foreach (string f in drs.Reverse()) // Subdirectories first
-                            {
+                        {
                             try
                             {
                                 string nam = f;
@@ -1771,7 +2007,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
 
                         if (Exceptions["IO"] > 0 || Exceptions["Access"] > 0 || Exceptions["Generic"] > 0)
                         {
-                            t.ColorWrite("$cErrors during the process:");
+                            t.ColorWrite("Errors during the process:");
                             if (Exceptions["IO"] > 0) { t.ColorWrite("$c File system: {0}", Exceptions["IO"]); }
                             if (Exceptions["Access"] > 0) { t.ColorWrite("$c Unauthorized access: {0}", Exceptions["Access"]); }
                             if (Exceptions["Generic"] > 0) { t.ColorWrite("$c Generic: {0}", Exceptions["Generic"]); }
@@ -1981,7 +2217,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
 ""trusted""
 ""internet"" ""unsafe""
 ""untrusted"" ""locked""",
-                    Usage = Util.Array( "{NAME} [file match] [zone]" ),
+                    Usage = Util.Array("{NAME} [file match] [zone]"),
 
                 },
                 Main = (Argumenter a) =>
@@ -2012,13 +2248,13 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         }
                     }
 
-                        /*
-                            LOCAL_MACHINE = 0,
-                            INTRANET = 1,
-                            TRUSTED = 2,
-                            INTERNET = 3,
-                            UNTRUSTED = 4,
-                        */
+                    /*
+                        LOCAL_MACHINE = 0,
+                        INTRANET = 1,
+                        TRUSTED = 2,
+                        INTERNET = 3,
+                        UNTRUSTED = 4,
+                    */
 
                     foreach (string s in a.Parsed.StringArray())
                     {
@@ -2481,7 +2717,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     }
                     catch (Exception e)
                     {
-                        t.ColorWrite("$c{0}.", e.Message);
+                        return Error(e);
                     }
                     return null;
                 },
@@ -2654,7 +2890,8 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         object o = e.Evaluate();
                         t.ColorWrite("$a{0}", o);
                         return o;
-                    } catch(Exception ex)
+                    }
+                    catch (Exception ex)
                     {
                         t.ColorWrite("$c{0}", ex.Message);
                     }
@@ -2691,7 +2928,8 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         {
                             Size += d.GetFiles().Select(f => f.Length).Sum();
                             foreach (DirectoryInfo di in d.GetDirectories()) Calc.Invoke(di);
-                        } catch(Exception)
+                        }
+                        catch (Exception)
                         {
                             Err += 1;
                         }
@@ -2736,8 +2974,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     }
                     catch (Exception)
                     {
-                        t.ColorWrite("$cInvalid file");
-                        return null;
+                        return Error("Invalid file");
                     }
                     try
                     {
@@ -2761,59 +2998,6 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     return null;
                 },
             }.Save(C, new string[] { "lnk" }, __debug__);
-            #endregion
-            #region RM Command ( Remove Metadata )
-            new Command
-            {
-                Help = new CommandHelp
-                {
-                    Description = "Removes file metadata",
-                    Usage = Util.Array("{NAME} [file...]"),
-                },
-                Main = (Argumenter a) =>
-                {
-                    string[] args = a.VarArgs();
-                    foreach (string s in args)
-                    {
-                        FileInfo f = null;
-                        FileInfo tf = Funcs.TempFile();
-                        Stream st = null;
-                        Stream nf = null;
-                        try
-                        {
-                            f = new FileInfo(Path.Combine(Environment.CurrentDirectory, s));
-                            f.CopyTo(tf.FullName);
-                            f.Attributes = 0;
-                            f.Delete();
-                            st = tf.OpenRead();
-                            byte[] buffer = new byte[1024];
-                            int r = 1024;
-                            int o = 0;
-                            nf = f.Create();
-                            while (r != 0)
-                            {
-                                try
-                                {
-                                    r = st.Read(buffer, 0, buffer.Length);
-                                    nf.Write(buffer, 0, buffer.Length);
-                                }
-                                catch (Exception)
-                                {
-                                    r = st.Read(buffer, 0, (int)(st.Length - o));
-                                    nf.Write(buffer, 0, buffer.Length);
-                                }
-                                o += r;
-                            }
-                            t.ColorWrite("$aRemoved metadata from: $f{0}", f.Name);
-                        }
-                        catch (Exception) { }
-                        if (st != null) st.Close();
-                        if (nf != null) nf.Close();
-                        if (tf.Exists) tf.Delete();
-                    }
-                    return null;
-                },
-            }.Save(C, new string[] { "rm" }, __debug__);
             #endregion
             #region Emergency Command
             new Command
@@ -2933,11 +3117,10 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         }
                         catch (Exception)
                         {
-                            t.ColorWrite("$cInvalid process id.");
-                            return null;
+                            return Error("Invalid process id.");
                         }
-                            //t.ColorWrite("$eKilling {0}...", p.ProcessName);
-                            string st = string.Format("$aKilled {0}", p.ProcessName);
+                        //t.ColorWrite("$eKilling {0}...", p.ProcessName);
+                        string st = string.Format("$aKilled {0}", p.ProcessName);
 
                         try { p.Kill(); }
                         catch (UnauthorizedAccessException) { st = "$cAccess Denied"; }
@@ -3084,7 +3267,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                             UseShellExecute = false
                         });
                     }
-                    catch (Exception ex) { t.ColorWrite("$c{0}", ex.Message); }
+                    catch (Exception ex) { return Error(ex); }
                     return null;
                 },
             }.Save(C, new string[] { "start" });
@@ -3117,7 +3300,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                             Verb = "runas",
                         });
                     }
-                    catch (Exception ex) { t.ColorWrite("$c{0}", ex.Message); }
+                    catch (Exception ex) { return Error(ex); }
                     return null;
                 },
             }.Save(C, new string[] { "runas" });
@@ -3208,12 +3391,12 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                             }
                             catch (Exception ex)
                             {
-                                t.ColorWrite("$c{0}", ex.Message);
+                                Error(ex);
                             }
                         }
                         else if (dot && !equ)
                         {
-                            t.ColorWrite("$cInvalid arguments.");
+                            Error("Invalid arguments.");
                         }
 
                         string rg = "^" + Regex.Escape("." + arg).Replace(@"\*", ".*").Replace(@"\?", ".") + "$";
@@ -3229,7 +3412,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                                 try
                                 {
 #endif
-                                b = r.OpenSubKey(s).GetValue("").ToString();
+                            b = r.OpenSubKey(s).GetValue("").ToString();
                             RegistryKey o = null;
                             if (r.OpenSubKey(b) == null) { r.CreateSubKey(b); }
                             if (r.OpenSubKey(b + "\\shell") == null) { r.CreateSubKey(b + "\\shell"); }
@@ -3315,7 +3498,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                                     }
                                 }
 #endif
-                            }
+                        }
                     }
 
                     return null;
@@ -3352,8 +3535,8 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     foreach (Process p in Process.GetProcesses())
                     {
                         int dr = 0; // Detection rate
-                            List<string> rs = new List<string>(); // Reasons
-                            ProcessModule pm = null;
+                        List<string> rs = new List<string>(); // Reasons
+                        ProcessModule pm = null;
                         string fl = "";
                         try
                         {
@@ -3365,11 +3548,11 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         FileInfo fil = new FileInfo(fl);
 
                         int cm = 0;
-                            //List<string> ab = new List<string>();
-                            foreach (Regex r in rg)
+                        //List<string> ab = new List<string>();
+                        foreach (Regex r in rg)
                         {
-                                //ab.Add(string.Format( "({0})", string.Join( "; ", mt.Groups.Cast<Group>().Select(t=>t.Value).ToArray())) );
-                                foreach (Match mt in r.Matches(fil.Name))
+                            //ab.Add(string.Format( "({0})", string.Join( "; ", mt.Groups.Cast<Group>().Select(t=>t.Value).ToArray())) );
+                            foreach (Match mt in r.Matches(fil.Name))
                             {
                                 cm++;
                             }
@@ -3505,16 +3688,38 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
                 Main = (Argumenter a) =>
                 {
-                    if (Process.GetCurrentProcess().ProcessName.ToLower().Contains(".vshost."))
-                    {
-                        t.ColorWrite("$cRunning on VSHOST.");
-                        return null;
+                    FileInfo temp = Funcs.TempFile();
+                    FileInfo script = Funcs.TempFile("bat");
+                    FileInfo self = new FileInfo(m.FileName);
+#if (DEBUG)
+                    string st = "Debug";
+#else
+                    string st = "Release";
+#endif
+                    string uri = string.Format( "https://raw.githubusercontent.com/Falofa/Vulner/master/Vulner/bin/{0}/Vulner.exe", st );
+
+                    m.RunCommand(string.Format("wget '{0}' '{1}'", uri, temp.FullName));
+                    
+                    if (script.Exists) {
+                        script.Attributes = 0;
+                        script.Delete();
                     }
-                    string self = m.FileName;
-                    string tmp = Environment.ExpandEnvironmentVariables(string.Format("%temp%/{0}.exe", Funcs.RandomString(10, 20)));
-                    System.IO.File.Copy(self, tmp);
-                    Process.Start(tmp, string.Format("update \"{0}\"", self));
-                    Process.GetCurrentProcess().Kill();
+                    TextWriter w = new StreamWriter( script.Create() );
+                    //w.WriteLine("@echo off");
+                    w.WriteLine("title \"Upgrading Vulner!\"");
+                    w.WriteLine("taskkill /im \"{0}\"", self.Name);
+                    w.WriteLine("del \"{0}\"", self.FullName);
+                    w.WriteLine("copy \"{0}\" \"{1}\"", temp.FullName, self.FullName);
+                    w.WriteLine("del \"{0}\"", temp.FullName);
+                    w.WriteLine("explorer.exe \"{0}\"", self.FullName);
+                    w.WriteLine("del \"%0\"");
+                    w.WriteLine("exit");
+                    w.Flush();
+                    w.Close();
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = script.FullName,
+                    }).WaitForExit();
                     return null;
                 },
             }.Save(C, new string[] { "update" });
@@ -4111,7 +4316,8 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     if (sc == 0)
                     {
                         t.ColorWrite("$eEthernet is down!");
-                    } else
+                    }
+                    else
                     {
                         t.ColorWrite("$eEthernet is up!");
                         return null;
@@ -4230,7 +4436,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 Help = new CommandHelp
                 {
                     Description = "Scans local network to find machines and does a port check",
-                    Usage = Util.Array( "{NAME}" )
+                    Usage = Util.Array("{NAME}")
                 },
                 Main = (Argumenter a) =>
                 {
@@ -4309,7 +4515,8 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                                     {
                                         t.WriteLine("{0} {1}", s, ih.HostName);
                                     }
-                                } catch(Exception)
+                                }
+                                catch (Exception)
                                 {
                                     t.WriteLine("{0}", s);
                                 }
@@ -4754,13 +4961,13 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                                 resp += ASCIIEncoding.Unicode.GetString(bt.Take(r).ToArray());
                             }
                             catch (SocketException) { } // Socket was closed
-                    }
+                        }
                     });
                     sock.Send(ASCIIEncoding.Unicode.GetBytes(Funcs.Signature(sock.RemoteEndPoint.ToString(), sock.LocalEndPoint.ToString()) + "\n")); // Greetings
-                int start = Environment.TickCount;
+                    int start = Environment.TickCount;
                     bool Accepted = false;
                     while (Environment.TickCount - start < 5000) //Timeout
-                {
+                    {
                         byte[] bt = new byte[1024];
                         int i = sock.Receive(bt);
                         if (i != 0)
@@ -4939,9 +5146,9 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     int Count = a.Int(2, 30);
                     byte[] Data = Encoding.ASCII.GetBytes("EMAIL=" + Mail);
                     string[] Rndm = Urls.OrderBy(o => Funcs.Rnd()).ToArray();
-                    for ( int i = 0; i < Count; i++ )
+                    for (int i = 0; i < Count; i++)
                     {
-                            string url = Rndm[i % Rndm.Length];
+                        string url = Rndm[i % Rndm.Length];
                         try
                         {
                             WebRequest w = WebRequest.Create(url);
@@ -4975,40 +5182,12 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
             #region Netstat Command
             string[] iplist = new string[]
             {
-                "209.244.0.3",
-                "64.6.64.6",
-                "8.8.8.8",
-                "84.200.69.80",
-                "8.26.56.26",
-                "208.67.222.222",
-                "199.85.126.10",
-                "81.218.119.11",
-                "195.46.39.39",
-                "192.95.54.3",
-                "208.76.50.50",
-                "216.146.35.35",
-                "37.235.1.174",
-                "198.101.242.72",
-                "77.88.8.8",
-                "91.239.100.100",
-                "74.82.42.42",
-                "109.69.8.51",
-                "209.244.0.4",
-                "64.6.65.6",
-                "8.8.4.4",
-                "84.200.70.40",
-                "8.20.247.20",
-                "208.67.220.220",
-                "199.85.127.10",
-                "209.88.198.133",
-                "195.46.39.40",
-                "192.95.54.1",
-                "208.76.51.51",
-                "216.146.36.36",
-                "37.235.1.177",
-                "23.253.163.53",
-                "77.88.8.1",
-                "89.233.43.71"
+                "google-public-dns-a.google.com",
+                "a.resolvers.Level3.net",
+                "google.com",
+                "gmail.com",
+                "youtube.com",
+                "bbc.co.uk"
             };
             new Command
             {
@@ -5019,6 +5198,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
                 Main = (Argumenter a) =>
                 {
+                    Funcs.FlushDns();
                     int TimeOut = a.Int(1, 2000);
                     Ping p = new Ping();
                     int succ = 0; // success
@@ -5027,7 +5207,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     bool cancel = false;
                     int streak = 0;
                     int sent = 0;
-                    foreach ( string s in iplist )
+                    foreach (string s in iplist)
                     {
                         if (streak > 5)
                         {
@@ -5040,7 +5220,8 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                             t.ColorWrite("$a{0}: {1}ms", s, r.RoundtripTime);
                             pings.Add((int)r.RoundtripTime);
                             succ++; streak = 0;
-                        } else
+                        }
+                        else
                         {
                             t.ColorWrite("$c{0}", s, r.RoundtripTime);
                             sipp++; streak++;
@@ -5049,10 +5230,573 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     t.NL();
                     if (cancel) t.ColorWrite("$cCanceled prematurely!");
                     t.ColorWrite("$fSuccess rate: $a{0:0}%", (double)((double)succ / (double)(sent)) * 100);
-                    t.ColorWrite("$fAverage ping: $a{0:0.00}ms", Math.Round( pings.Average(), 1 ));
+                    t.ColorWrite("$fAverage ping: $a{0:0.00}ms", Math.Round(pings.Average(), 1));
                     return null;
                 },
             }.Save(C, new string[] { "netstat" }, __debug__);
+            #endregion
+            #region WSC Command (Web SCan)
+            Thread[] wsc_ths = null;
+            Thread wsc_portscan = null;
+            new Command
+            {
+                Parameters = Util.Array("t"),
+                Switches = Util.Array("w", "l", "c"),
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string format = a.Get(1).Trim();
+                    int[] replace = new int[] { -1, -1, -1, -1 };
+                    if (Regex.IsMatch(format, "^([0-9]{1,3}|x)\\.([0-9]{1,3}|x)\\.([0-9]{1,3}|x)\\.([0-9]{1,3}|x)$", RegexOptions.IgnoreCase))
+                    {
+                        t.WriteLine(format);
+                        string[] s = format.ToLower().Split('.');
+                        for (int i = 0; i < 4; i++)
+                        {
+                            string r = s[i];
+                            if (!r.Contains("x"))
+                            {
+                                replace[i] = Math.Min(int.Parse(r), 255);
+                            }
+                        }
+                    }
+                    Console.CursorVisible = false;
+                    Queue<string> ips = new Queue<string>();
+                    int quit = 0;
+                    int scan = 0;
+                    int found = 0;
+                    bool W = a.GetSw("w");
+                    HashSet<string> expand = new HashSet<string>();
+                    Action<bool> doping = (e) =>
+                    {
+                        try
+                        {
+                            Ping p = new Ping();
+                            WebClient wc = new WebClient();
+                            while (true)
+                            {
+                                byte[] b = Funcs.RandomBytes(4);
+                                if (replace.Sum() != -4)
+                                {
+                                    if (replace[0] != -1) b[0] = (byte)replace[0];
+                                    if (replace[1] != -1) b[1] = (byte)replace[1];
+                                    if (replace[2] != -1) b[2] = (byte)replace[2];
+                                    if (replace[3] != -1) b[3] = (byte)replace[3];
+                                }
+                                else if (e && expand.Count > 0)
+                                {
+                                    string f = Funcs.PickRnd(expand.ToArray());
+                                    //t.WriteLine(f);
+                                    int[] rp = new int[] { -1, -1, -1, -1 };
+                                    if (Regex.IsMatch(f, "^([0-9]{1,3}|x)\\.([0-9]{1,3}|x)\\.([0-9]{1,3}|x)\\.([0-9]{1,3}|x)$", RegexOptions.IgnoreCase))
+                                    {
+                                        string[] s = f.ToLower().Split('.');
+                                        for (int i = 0; i < 4; i++)
+                                        {
+                                            string rs = s[i];
+                                            if (!rs.Contains("x"))
+                                            {
+                                                rp[i] = Math.Min(int.Parse(rs), 255);
+                                            }
+                                        }
+                                    }
+                                    if (rp[0] != -1) b[0] = (byte)rp[0];
+                                    if (rp[1] != -1) b[1] = (byte)rp[1];
+                                    if (rp[2] != -1) b[2] = (byte)rp[2];
+                                    if (rp[3] != -1) b[3] = (byte)rp[3];
+                                }
+                                string ip = string.Format("{0}.{1}.{2}.{3}", b[0], b[1], b[2], b[3]);
+                                if (ip.StartsWith("127")) { continue; }
+                                PingReply r = p.Send(ip, 200);
+                                scan++;
+                                if (r.Status == IPStatus.Success)
+                                {
+                                    found++;
+                                    try
+                                    {
+                                        string oip = ip;
+                                        ip = Dns.GetHostEntry(ip).HostName;
+                                        /*
+                                        TcpClient tcp = new TcpClient();
+                                        tcp.ReceiveTimeout = 200;
+                                        tcp.SendTimeout = 200;
+                                        tcp.Connect(ip, 80);
+                                        tcp.Close();
+                                        */
+                                        if (W)
+                                        {
+                                            string ident = wc.DownloadString("http://" + ip + "/").ToLower();
+                                            if (a.GetSw("l"))
+                                            {
+                                                if (ident.Contains("password") || ident.Contains("login") || ident.Contains("user"))
+                                                {
+                                                    ips.Enqueue(ip);
+                                                }
+                                            }
+                                            else if (a.GetSw("c"))
+                                            {
+                                                if (ident.Contains("password") || ident.Contains("login") || ident.Contains("user"))
+                                                {
+                                                    if (ident.Contains("hikvision") || ident.Contains("jvc") || ident.Contains("vhdr") || ident.Contains("sony"))
+                                                    {
+                                                        ips.Enqueue(ip);
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                ips.Enqueue(ip);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            ips.Enqueue(ip);
+                                        }
+                                        if (!e)
+                                        {
+                                            //t.WriteLine(string.Format("{0}.{1}.x.x", oip.Split('.')[0], oip.Split('.')[1]));
+                                            expand.Add(string.Format("{0}.{1}.x.x", oip.Split('.')[0], oip.Split('.')[1]));
+                                        }
+                                    }
+                                    catch (Exception) { }
+                                }
+                                Thread.Sleep(5);
+                            }
+                        }
+                        catch (Exception) { }
+                        quit++;
+                    };
+                    string th = a.GetPr("t", "60");
+                    int thn = 60;
+                    try { thn = int.Parse(th); } catch (Exception) { }
+                    wsc_ths = new Thread[thn];
+                    for (int i = 0; i < thn; i++)
+                    {
+                        wsc_ths[i] = new Thread(() => doping(i < thn * 0.75));
+                        wsc_ths[i].Start();
+                    }
+                    int count = 0;
+                    wsc_portscan = new Thread(() =>
+                    {
+                        Writable w = t.QuickWritable("Scanned: ", 25, 'a', 'e');
+                        Writable f = t.QuickWritable("Found: ", 25, 'a', 'e');
+                        while (quit != thn)
+                        {
+                            while (ips.Count > 0)
+                            {
+                                string ip = ips.Dequeue();
+                                try
+                                {
+                                    t.ColorWrite("$e{0}", ip);
+                                    count++;
+                                }
+                                catch (Exception) { }
+                            }
+                            w.Write(scan);
+                            f.Write(found);
+                            Thread.Sleep(20);
+                            if (count > 60)
+                            {
+                                break;
+                            }
+                        }
+                    });
+                    wsc_portscan.Start();
+                    wsc_portscan.Join();
+                    //foreach( Thread tr in wsc_ths ) { tr.Abort(); }
+                    return null;
+                },
+                Exit = () =>
+                {
+                    if (wsc_portscan != null)
+                    {
+                        wsc_portscan.Abort();
+                    }
+                    if (wsc_ths != null)
+                    {
+                        foreach (Thread tr in wsc_ths)
+                        {
+                            if (tr != null)
+                            {
+                                tr.Abort();
+                            }
+                        }
+                    }
+                }
+            }.Save(C, new string[] { "wsc" }, __debug__);
+            #endregion
+            #region Crawl Command
+            Thread[] crawl_th = null;
+            new Command
+            {
+                Switches = Util.Array("d"),
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    RegexOptions rgop = RegexOptions.IgnoreCase | RegexOptions.IgnorePatternWhitespace | RegexOptions.Multiline;
+                    Regex[] rgs = new Regex[]
+                    {
+                        new Regex("\'(http[s]?://[^\']+)\'", rgop),
+                        new Regex("\"(http[s]?://[^\"]+)\"", rgop),
+                        new Regex("window\\.location=\'(.+)\'", rgop),
+                        new Regex("window\\.location=\"(.+)\"", rgop),
+                        new Regex("content=\"[0-9]+; URL =\'([^\']+)\'\"", rgop),
+                        new Regex("href=\"([^\"]+)\"", rgop),
+                        new Regex("src=\"([^\"]+)\"", rgop),
+                        new Regex("url\\(([^\\)]+)\\);", rgop),
+                    };
+                    string[] ignore = new string[]
+                    {
+                        ".png", ".gif", ".jpg", ".jpe", ".jpeg", ".tif", ".raw", ".bmp", ".psd",
+                        ".exe", ".dll", ".mp3", ".wav", ".mp4", ".avi", ".swf", ".ico"
+                    };
+                    char[] trims = new char[]
+                    {
+                        ' ', '\t', '"', '\'', '\n'
+                    };
+                    string url = a.Get(1);
+                    if (!url.StartsWith("http"))
+                    {
+                        url = "http://" + url;
+                    }
+                    HashSet<string> Loop = new HashSet<string>();
+                    List<string> crawled = new List<string>();
+                    Queue<string> crawlprint = new Queue<string>();
+                    Queue<string> tocrawl = new Queue<string>();
+                    try
+                    {
+                        tocrawl.Enqueue(Funcs.JoinUrl(url, "/"));
+                        crawled.Add(Funcs.JoinUrl(url, "/"));
+                    }
+                    catch (Exception)
+                    {
+                        t.ColorWrite("$cInvalid url");
+                        return null;
+                    }
+                    bool docrawl = true;
+                    int working = 0;
+                    string starturl = Funcs.JoinUrl(url, "/");
+                    Action crawl = () =>
+                    {
+                        WebClient wc = new WebClient();
+                        while (docrawl)
+                        {
+                            if (tocrawl.Count > 0)
+                            {
+                                working++;
+                                string u = "";
+                                try
+                                {
+                                    u = tocrawl.Dequeue();
+                                    crawlprint.Enqueue(u);
+                                }
+                                catch (Exception) { continue; }
+                                try
+                                {
+                                    byte[] data = wc.DownloadData(u);
+                                    string r = System.Text.Encoding.ASCII.GetString(data);
+                                    if (a.GetSw("d"))
+                                    {
+                                        Uri tu = new Uri(u);
+                                        string p = Path.Combine(Environment.CurrentDirectory, "." + tu.LocalPath);
+                                        FileInfo fp = new FileInfo(p);
+                                        System.IO.Directory.CreateDirectory(fp.Directory.FullName);
+                                        if (fp.Name == string.Empty)
+                                        {
+                                            System.IO.Directory.CreateDirectory(fp.FullName);
+                                            fp = new FileInfo(Path.Combine(fp.FullName, "index.html"));
+                                        }
+                                        try
+                                        {
+                                            System.IO.File.WriteAllBytes(fp.FullName, data);
+                                        }
+                                        catch (Exception) { }
+                                    }
+                                    bool ignore_ = false;
+                                    string noget = u.Split('?')[0].Split('#')[0];
+                                    foreach (string sg in ignore)
+                                    {
+                                        if (noget.EndsWith(sg))
+                                        {
+                                            ignore_ = true; break;
+                                        }
+                                    }
+                                    if (!ignore_)
+                                    {
+                                        foreach (Regex rg in rgs)
+                                        {
+                                            Match mt = rg.Match(r);
+                                            while (mt != null)
+                                            {
+                                                if (!mt.Success) break;
+                                                int i = -1;
+                                                foreach (Group g in mt.Groups)
+                                                {
+                                                    i++;
+                                                    if (i == 0) { continue; }
+                                                    string newurl = g.Value.Trim(trims);
+                                                    if (Loop.Contains(newurl)) continue;
+                                                    Loop.Add(newurl);
+                                                    if (!newurl.StartsWith("http"))
+                                                    {
+                                                        newurl = Funcs.JoinUrl(u, newurl);
+                                                    }
+                                                    else if (newurl.StartsWith("//"))
+                                                    {
+                                                        newurl = "http:" + newurl;
+                                                    }
+                                                    newurl = new Uri(newurl).ToString();
+                                                    if (newurl.Length == 0) { continue; }
+                                                    if (!newurl.ToLower().Contains(starturl.ToLower())) { continue; }
+                                                    if (!crawled.Contains(newurl))
+                                                    {
+                                                        if (newurl.Length == 0) { continue; }
+                                                        crawled.Add(newurl);
+                                                        tocrawl.Enqueue(newurl);
+                                                    }
+                                                }
+                                                mt = mt.NextMatch();
+                                            }
+                                        }
+                                    }
+                                }
+                                catch (Exception) { }
+                                Thread.Sleep(50);
+                                working--;
+                            }
+                            Thread.Sleep(100);
+                        }
+                    };
+                    int c = 10;
+                    crawl_th = new Thread[c];
+                    for (int i = 0; i < c; i++)
+                    {
+                        crawl_th[i] = new Thread(() => crawl());
+                        crawl_th[i].Start();
+                        Thread.Sleep(10);
+                    }
+                    //Thread.Sleep(500);
+                    int delay = 0;
+                    while (delay < 3)
+                    {
+                        if (working == 0 && tocrawl.Count == 0 && crawlprint.Count == 0)
+                        {
+                            delay++;
+                        }
+                        else
+                        {
+                            delay = 0;
+                        }
+                        if (crawlprint.Count > 0)
+                        {
+                            t.ColorWrite("$a{0}", crawlprint.Dequeue());
+                        }
+                        //t.WriteLine(working);
+                        Thread.Sleep(100);
+                    }
+                    docrawl = false;
+                    return null;
+                },
+                Exit = () =>
+                {
+                    if (crawl_th != null)
+                        foreach (Thread th in crawl_th)
+                        {
+                            if (th != null) th.Abort();
+                        }
+                }
+            }.Save(C, new string[] { "crawl" }, __debug__);
+            #endregion
+            #region NetWatch Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    Ping p = new Ping();
+                    t.ColorWrite("$eWaiting for internet connection");
+                    while( true )
+                    {
+                        if (p.Send("8.8.8.8").Status == IPStatus.Success) break;
+                        Thread.Sleep(200);
+                    }
+                    t.ColorWrite("$aInternet is up!");
+                    Funcs.QuickThread(() => MessageBox.Show("Internet is up!", m.Name, MessageBoxButtons.OK, MessageBoxIcon.Information));
+                    return null;
+                },
+            }.Save(C, new string[] { "netwatch" }, __debug__);
+            #endregion
+            #region Head Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    foreach (string s in a.VarArgs())
+                    {
+                        string url = s;
+                        if ( !s.StartsWith("http") )
+                        {
+                            url = "http://" + s.TrimStart(new char[] { '/', '\\', ':' });
+                        }
+                        Uri u = new Uri(url);
+                        HttpWebRequest w = (HttpWebRequest)HttpWebRequest.Create(u);
+                        w.Method = "HEAD";
+                        w.Headers["UserAgent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.113 Safari/537.36";
+                        WebResponse r = w.GetResponse();
+                        t.ColorWrite("$e{0}\n", u);
+                        int l = r.Headers.AllKeys.OrderBy(o => o.Length).Last().Length;
+                        foreach (string k in r.Headers.AllKeys)
+                        {
+                            string v = r.Headers[k];
+                            t.ColorWrite("$a{0} $f{1}\n", k.PadRight(l+2), v);
+                        }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "head" }, __debug__);
+            #endregion
+            #region CBF Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    List<string> pws = new List<string>()
+                    {
+                        "admin:admin",
+                        "admin:12345",
+                    };
+                    List<string> methods = new List<string>()
+                    {
+                        "/ISAPI/Security/userCheck",
+                        "/goform/webLogin"
+                    };
+                    Uri u = Funcs.ArgToUrl(a.Get(1));
+                    int i = -1;
+                    foreach (string str in methods)
+                    {
+                        i++;
+                        string turl = Funcs.JoinUrl(u.ToString(), str);
+                        HttpWebRequest test = (HttpWebRequest)HttpWebRequest.Create(turl);
+                        try
+                        {
+                            WebResponse r = test.GetResponse();
+                        }
+                        catch (System.Net.WebException)
+                        {
+                            continue;
+                        }
+                        t.ColorWrite("$aMethod found: $f{0}", str);
+                        foreach (string p in pws)
+                        {
+                            HttpWebRequest w = (HttpWebRequest)HttpWebRequest.Create(turl);
+                            w.AllowAutoRedirect = false;
+
+                            bool success = false;
+                            try
+                            {
+                                if (i == 0)
+                                {
+                                    Regex rg = new Regex(">200<");
+
+                                    string b64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(p));
+
+                                    w.Headers[HttpRequestHeader.Authorization] = string.Format("Basic {0}", b64);
+                                    w.Headers["X-Requested-With"] = "XMLHttpRequest";
+                                    WebResponse r = w.GetResponse();
+                                    string st = "";
+                                    using (StreamReader sr = new StreamReader(r.GetResponseStream()))
+                                    {
+                                        st = sr.ReadToEnd();
+                                    }
+                                    //t.WriteLine(st);
+                                    if (rg.IsMatch(st))
+                                    {
+                                        success = true;
+                                    }
+                                }
+                                if(i == 1)
+                                {
+                                    Regex rg = new Regex("\\/menu\\.asp");
+                                    w.Method = "POST";
+                                    using (StreamWriter sw = new StreamWriter(w.GetRequestStream()))
+                                    {
+                                        sw.WriteLine("User={0}&Passwd={1}&submit=Login", p.Split(':')[0], p.Split(':')[1]);
+                                        sw.Flush();
+                                    }
+                                    WebResponse r = w.GetResponse();
+                                    string st = "";
+                                    using (StreamReader sr = new StreamReader(r.GetResponseStream()))
+                                    {
+                                        st = sr.ReadToEnd();
+                                    }
+                                    if (rg.IsMatch(st))
+                                    {
+                                        success = true;
+                                    }
+                                }
+                                if (success)
+                                {
+                                    t.ColorWrite("$aLogin found: $e{0}", p);
+                                    return null;
+                                }
+                            } catch(Exception) { }
+                        }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "cbf" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    // http://187.19.14.178/
+                    Regex FormRegex = new Regex("<form([^>]*)>([^\0]+?)</form>", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                    Regex InputRegex = new Regex("<input([^>]*)\\/?>", RegexOptions.Multiline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
+                    Uri u = Funcs.ArgToUrl(a.Get(1));
+                    HttpWebRequest w = (HttpWebRequest)HttpWebRequest.Create(u);
+                    WebResponse r = Funcs.SafeFetch(w);
+                    string s = "";
+                    if ( r != null )
+                    {
+                        s = Funcs.SafeRead(r);
+                    }
+                    List<string> forms = new List<string>();
+                    foreach( Match f in FormRegex.Matches(s) )
+                    {
+                        string Tag = f.Groups[1].Value;
+                        string Inside = f.Groups[2].Value;
+                        foreach ( Match i in InputRegex.Matches(s))
+                        {
+                            t.WriteLine("{0}", i.Value);
+                            Funcs.MatchHTMLTag(i.Groups[1].Value);
+                        }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "vsc" }, __debug__);
             #endregion
             #endregion
 
@@ -5321,9 +6065,115 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
             }.Save(C, new string[] { "runclear" }, __debug__);
             #endregion
+            #region AR Command ( Auto Run )
+            List<RegAutorun> arl = new List<RegAutorun>();
+            RegDef[] regs = new RegDef[]
+            {
+                new RegDef { Reg = Registry.CurrentUser, Path = @"Software\Microsoft\Windows\CurrentVersion\Run", Letters = "CR" },
+                new RegDef { Reg = Registry.CurrentUser, Path = @"Software\Microsoft\Windows\CurrentVersion\RunOnce", Letters = "CO" },
+                new RegDef { Reg = Registry.LocalMachine, Path = @"Software\Microsoft\Windows\CurrentVersion\Run", Letters = "MR" },
+                new RegDef { Reg = Registry.LocalMachine, Path = @"Software\Microsoft\Windows\CurrentVersion\RunOnce", Letters = "MO" },
+            };
+            new Command
+            {
+                Switches = Util.Array("u"),
+                Help = new CommandHelp
+                {
+                    Description = "Modifies autorun command lines from the registry",
+                    LongDesc = "Paths: \n" + "\n".Join(regs.Select(o => (string.Format( "$a{0}: $f{1}\\{2}", o.Letters, o.Reg.ToString(), o.Path))).ToArray()),
+                    Usage = Util.Array(
+                        "{NAME} id=value $8--SET",
+                        "{NAME} id= $8--REMOVE",
+                        "{NAME} +path/name=value $8--NEW"
+                    ),
+                    Switches = new Dictionary<string, string>()
+                    {
+                        { "u", "Force update" }
+                    }
+                },
+                Main = (Argumenter a) =>
+                {
+                    bool update = a.GetSw("u") || arl.Count == 0;
+                    string s = a.RawString();
+                    if (s.Contains('='))
+                    {
+                        string[] st = Funcs.Equal(s);
+                        if (st != null)
+                        {
+                            string k = st[0];
+                            string v = st[1];
+                            if (k.StartsWith("+"))
+                            {
+                                string[] y = k.Substring(1).Split('/');
+                                if (y.Length != 2)
+                                {
+                                    return Error("Syntax: \"+CR,Name=Value\"");
+                                }
+                                RegDef[] mt = regs.Where(o => o.Letters.ToLower() == y[0].ToLower()).ToArray();
+                                if (mt.Length!=1)
+                                {
+                                    return Error(string.Format("List of values: {0}", ", ".Join(regs.Select(o => o.Letters).ToArray())));
+                                }
+                                RegDef rg = mt.First();
+                                try
+                                {
+                                    rg.Reg.OpenSubKey(rg.Path, true).SetValue(y[1], v);
+                                    update = true;
+
+                                } catch(Exception)
+                                {
+                                    return Error("Error while creating registry key");
+                                }
+                            } else
+                            {
+                                int id = Funcs.GetInt(k, -1);
+                                if (id >= 0 & id < arl.Count)
+                                {
+                                    RegAutorun r = arl[id];
+                                    try
+                                    {
+                                        bool success = false;
+                                        if (v.Trim() == "")
+                                        {
+                                            success = r.Remove();
+                                        }
+                                        else
+                                        {
+                                            success = r.Modify(v);
+                                        }
+                                        if (!success) { throw new Exception(); }
+                                        update = true;
+                                    }
+                                    catch (Exception)
+                                    {
+                                        return Error("Error while modifying registry key");
+                                    }
+                                } else
+                                {
+                                    return Error("Invalid id");
+                                }
+                            }
+                        }
+                    }
+                    if (update)
+                    {
+                        arl = new List<RegAutorun>();
+                        foreach (RegDef r in regs) {
+                            arl = arl.Concat(AutorunFetch.Fetch(r)).ToList();
+                        }
+                    }
+                    int i = 0;
+                    foreach ( RegAutorun str in arl )
+                    {
+                        t.ColorWrite("$f[$2{0}$f] $a{1} $f- $e{2} $f=\n$8{3}", i++, str.Lt, str.Key, str.Data);
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "ar" }, __debug__);
+            #endregion
             #endregion
 
-            foreach( KeyValuePair<string, Command> cmd in C )
+            foreach (KeyValuePair<string, Command> cmd in C)
             {
                 cmd.Value.Think();
             }

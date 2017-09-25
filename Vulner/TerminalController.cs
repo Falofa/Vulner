@@ -329,6 +329,7 @@ namespace Vulner
             Console.CursorTop = Y;
             if (!t.hide) Console.Write("{0}", wrt);
             Console.CursorLeft = temp[0];
+            Console.CursorTop = temp[1] + 1;
             Console.CursorTop = temp[1];
             if (t.buffer)
             {

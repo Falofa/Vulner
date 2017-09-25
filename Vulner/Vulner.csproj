@@ -62,6 +62,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Argumenter.cs" />
+    <Compile Include="Autorun.cs" />
     <Compile Include="Command.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="Funcs.cs" />

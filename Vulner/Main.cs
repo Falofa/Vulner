@@ -22,6 +22,7 @@ namespace Vulner
         public Dictionary<string, Command> Cmds = new Dictionary<string,Command>();
         public TerminalController t = null;
         public Int32 tid = 0;
+        public String Version = "1.0";
         public static Boolean Hide = false;
         public static Boolean killthread = false;
         int FirstKey = 0;
@@ -254,7 +255,7 @@ namespace Vulner
                 {
                     if (a.Parse(c.ParseSW, c.ParsePR))
                     {
-                        t.SetForeColor('8');
+                        t.SetForeColor('f');
                         
                         if ( a.OutType != Argumenter.OutputType.None )
                         {
@@ -290,17 +291,15 @@ namespace Vulner
                     }
                 }
             });
+            ct.SetApartmentState(ApartmentState.STA);
             ct.Start();
             while(ct.IsAlive)
             {
                 Thread.Sleep(100);
                 if (killthread)
                 {
-                    for (int i = 0; i < 500; i++)
-                    {
-                        ct.Abort();
-                        if (!ct.IsAlive) { break; }
-                    }
+                    ct.Abort();
+                    ct.Interrupt();
                     if (!Equals(cmd.Exit, null))
                     {
                         cmd.Exit.Invoke();

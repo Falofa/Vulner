@@ -9,4 +9,3 @@ C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Debug\In
 C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Debug\Interop.IWshRuntimeLibrary.dll
 C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\obj\Debug\Vulner.csproj.ResolveComReference.cache
 C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Debug\WMPLib.dll
-C:\Users\Falofa\documents\visual studio 2015\Projects\Vulner\Vulner\bin\Debug\NCalc.dll

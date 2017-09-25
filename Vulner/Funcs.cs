@@ -254,9 +254,9 @@ namespace Vulner
             
             return String.Format("{0:0.##} {1}", len, sizes[order]);
         }
-        public static FileInfo TempFile()
+        public static FileInfo TempFile(string ext = ".tmp")
         {
-            string p = Path.Combine(Environment.GetEnvironmentVariable("temp"), RandomString(8, 12) + ".tmp");
+            string p = Path.Combine(Environment.GetEnvironmentVariable("temp"), RandomString(8, 12) + "." + ext);
             return new FileInfo(p);
         }
         public static string GetRelativePath(string filespec, string folder)
@@ -800,6 +800,43 @@ namespace Vulner
         {
             return P.Substring(0, 1).ToUpper() + P.Substring(1);
         }
+        public static Uri ArgToUrl( string s )
+        {
+            string url = s;
+            if (!s.StartsWith("http"))
+            {
+                url = "http://" + s.TrimStart(new char[] { '/', '\\', ':' });
+            }
+            return new Uri(url);
+        }
+        public static WebResponse SafeFetch(HttpWebRequest wr)
+        {
+            try
+            {
+                return wr.GetResponse();
+            } catch(Exception) { }
+            return null;
+        }
+        public static string SafeRead( WebResponse wr )
+        {
+            string r = "";
+            using (StreamReader sr = new StreamReader(wr.GetResponseStream()))
+            {
+                r += sr.ReadToEnd();
+            }
+            return r;
+        }
+        public static Dictionary<string,string> MatchHTMLTag(string s)
+        {
+            Dictionary<string, string> tag = new Dictionary<string, string>();
+            foreach ( Match r in Regex.Matches( s, "([^\\s]+)\\s*=\\s*\\?\"([^\"]+)\\?\"") )
+            {
+                string Key = r.Groups[1].Value;
+                string Val = r.Groups[2].Value;
+                tag[Key] = Val;
+            }
+            return tag;
+        }
 
         [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
         public static extern SafeFileHandle CreateFile(
@@ -923,6 +960,109 @@ namespace Vulner
             m.RunCommand("rule cmd=1 regedit=1 taskmgr=1 run=1 /s", false, true);
             m.RunCommand("start taskmgr", false, true);
             m.RunCommand("netfix", false, true);
+        }
+        public static void FlushDns()
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "ipconfig",
+                Arguments = "/flushdns",
+                WindowStyle = ProcessWindowStyle.Hidden,
+                CreateNoWindow = true
+            }).WaitForExit();
+        }
+        public static string JoinUrl(string u, string p)
+        {
+            Uri myUri = new Uri(new Uri(u), p);
+            return myUri.ToString();
+        }
+        public static void QuickThread( ThreadStart a )
+        {
+            Thread t = new Thread(a);
+            t.Start();
+        }
+        public static string[] Equal( string s )
+        {
+            Match m = Regex.Match(s, "([^=]*)\\s*=\\s*([^=]*)");
+            if (!m.Success)
+            {
+                return null;
+            }
+            string k = m.Groups[1].Value.Trim();
+            string v = m.Groups[2].Value.Trim();
+            return new string[] { k, v };
+        }
+        public static int GetInt(string s, int d)
+        {
+            try
+            {
+                return int.Parse(s);
+            }
+            catch (Exception) { }
+            return d;
+        }
+    }
+    public static class HumanFriendlyInteger
+    {
+        static string[] ones = new string[] { "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine" };
+        static string[] teens = new string[] { "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen" };
+        static string[] tens = new string[] { "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety" };
+        static string[] thousandsGroups = { "", " Thousand", " Million", " Billion" };
+
+        private static string FriendlyInteger(int n, string leftDigits, int thousands)
+        {
+            if (n == 0)
+            {
+                return leftDigits;
+            }
+
+            string friendlyInt = leftDigits;
+
+            if (friendlyInt.Length > 0)
+            {
+                friendlyInt += " ";
+            }
+
+            if (n < 10)
+            {
+                friendlyInt += ones[n];
+            }
+            else if (n < 20)
+            {
+                friendlyInt += teens[n - 10];
+            }
+            else if (n < 100)
+            {
+                friendlyInt += FriendlyInteger(n % 10, tens[n / 10 - 2], 0);
+            }
+            else if (n < 1000)
+            {
+                friendlyInt += FriendlyInteger(n % 100, (ones[n / 100] + " Hundred"), 0);
+            }
+            else
+            {
+                friendlyInt += FriendlyInteger(n % 1000, FriendlyInteger(n / 1000, "", thousands + 1), 0);
+                if (n % 1000 == 0)
+                {
+                    return friendlyInt;
+                }
+            }
+
+            return friendlyInt + thousandsGroups[thousands];
+        }
+
+        public static string IntegerToWritten(int n)
+        {
+            if (n == 0)
+            {
+                return "Zero";
+            }
+            else if (n < 0)
+            {
+                return "Negative " + IntegerToWritten(-n);
+            }
+
+            return FriendlyInteger(n, "", 0);
         }
     }
 }
