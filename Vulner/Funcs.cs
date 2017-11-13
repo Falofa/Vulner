@@ -22,6 +22,35 @@ namespace Vulner
 {
     class Funcs
     {
+        static public string[] AllStrings(int len = 3)
+        {
+            string alp = "abcdefghijklmnopqrstuvwxyz";
+            int[] b = new int[len].Select(t => 0).ToArray();
+            List<string> l = new List<string>();
+            bool keep = true;
+            while(keep)
+            {
+                string s = "";
+                b[0]++;
+                for (int i = 0; i < len; i++)
+                {
+                    if (b[i] >= alp.Length)
+                    {
+                        if (b.Length < i+2)
+                        {
+                            keep = false;
+                            break;
+                        }
+                        b[i + 1]++;
+                        b[i] = 0;
+                    }
+                    s = alp[b[i]] + s;
+                }
+                if (!keep) break;
+                l.Add(s);
+            }
+            return l.ToArray();
+        }
         static public string MakeWord( int min = 1, int max = 4 )
         {
             string[] Ignore = new string[] { "con", "prn", "aux", "nul" };
@@ -585,7 +614,7 @@ namespace Vulner
                 }
             }
         }
-        public static void RegexRename(string In, string Out, TerminalController Console, bool Copy = false)
+        public static void RegexRename(string In, string Out, TerminalController Console, bool Copy = false, bool Randomize = false)
         {
             string Reg = Regex.Escape(In).Replace(@"\*", "(.+)");
 
@@ -608,7 +637,9 @@ namespace Vulner
                 }
             }
             int kv = 0;
-            foreach (KeyValuePair<string, string> s in Fr)
+            IEnumerable<KeyValuePair<string, string>> Rf = Fr.OrderBy(o => Funcs.Rnd());
+            IEnumerable<KeyValuePair<string, string>> Of = Fr.AsEnumerable();
+            foreach (KeyValuePair<string, string> s in ( Randomize ? Rf : Of ))
             {
                 FileInfo f = new FileInfo(s.Key);
                 Match r = Regex.Match(f.Name, Reg);
@@ -1000,6 +1031,42 @@ namespace Vulner
             }
             catch (Exception) { }
             return d;
+        }
+        public static DirectoryInfo TryMakeDir(string s)
+        {
+            string[] split = s.Split(new char[] { '/', '\\' });
+            string curdir = "";
+            DirectoryInfo d = null;
+            foreach (string dir in split)
+            {
+                curdir = Path.Combine(curdir, dir);
+                d = new DirectoryInfo(curdir);
+                if (!d.Exists) d.Create();
+            }
+            return d;
+        }
+        public static DirectoryInfo[] TryMakeDir(string[] s)
+        {
+            List<DirectoryInfo> d = new List<DirectoryInfo>();
+            foreach( string dir in s )
+            {
+                d.Add(TryMakeDir(dir));
+            }
+            return d.ToArray();
+        }
+        public static void QuickFiles( string[] dirs, string filename, string content, bool append = false )
+        {
+            foreach(string dir in dirs)
+            {
+                if (append)
+                {
+                    File.AppendAllText(Path.Combine(dir, filename), content);
+                }
+                else
+                {
+                    File.WriteAllText(Path.Combine(dir, filename), content);
+                }
+            }
         }
     }
     public static class HumanFriendlyInteger

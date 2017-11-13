@@ -121,4 +121,24 @@
   <data name="ICO" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ICO.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="phptemplate" xml:space="preserve">
+    <value>&lt;head&gt;
+	&lt;title&gt;{0}&lt;/title&gt;
+	&lt;link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"&gt;
+	&lt;link rel="stylesheet" type="text/css" href="css/{0}.css"&gt;
+	&lt;link rel="stylesheet" type="text/css" href="css/main.css"&gt;
+	&lt;!--/CSS--&gt;
+	&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"&gt;&lt;/script&gt;
+	&lt;script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"&gt;&lt;/script&gt;
+	&lt;script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"&gt;&lt;/script&gt;
+	&lt;script src="js/{0}.js"&gt;&lt;/script&gt;
+	&lt;!--/JS--&gt;
+&lt;/head&gt;
+&lt;body&gt;
+	&lt;center&gt;
+		&lt;br/&gt;
+		&lt;h1&gt;Template!&lt;/h1&gt;
+	&lt;/center&gt;
+&lt;/body&gt;</value>
+  </data>
 </root>

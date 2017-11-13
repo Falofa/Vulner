@@ -21,7 +21,7 @@ using Microsoft.Win32.SafeHandles;
 using IWshRuntimeLibrary;
 using System.Media;
 using System.Data;
-using NCalc;
+//using NCalc;
 
 namespace Vulner
 {
@@ -966,10 +966,120 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
             }.Save(C, new string[] { "bl" }, __debug__);
             #endregion
+            CommandGroup testgr = new CommandGroup("sub", m);
+            #region Group Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    t.WriteLine(a.RawString());
+                    foreach (string s in a.VarArgs())
+                        t.WriteLine(s);
+                    return null;
+                },
+            }.Save(testgr.C, new string[] { "cmd", "lol" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    bool cur = false;
+                    bool first = true;
+                    int interval = 0;
+                    while (!a.Quit)
+                    {
+                        bool net = NetworkInterface.GetIsNetworkAvailable();
+                        interval++;
+                        if (interval % 5 == 0 || cur == false)
+                        {
+                            try
+                            {
+                                Dns.GetHostAddresses("google.com");
+                                net = true;
+                            }
+                            catch (Exception) { net = false; }
+                            interval = 1;
+                        }
+                        if (net != cur || first == true)
+                        {
+                            cur = net;
+                            if (cur == true)
+                            {
+                                t.ColorWrite("$aNetwork up ({0})", DateTime.Now.ToShortTimeString());
+                            } else
+                            {
+                                t.ColorWrite("$cNetwork down ({0})", DateTime.Now.ToShortTimeString());
+                            }
+                        }
+                        first = false;
+                        Thread.Sleep(500);
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "netrec" }, __debug__);
+            #endregion
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    string[] q = Funcs.AllStrings(3).OrderBy(o => Funcs.Rnd()).ToArray();
+                    
+                    foreach(string s in q)
+                    {
+                        try
+                        {
+                            string u = string.Format("{0}.com.br", s);
+                            //t.WriteLine(u);
+                            Dns.GetHostAddresses(u);
+                            t.WriteLine("OK: " + u);
+                        } catch(SocketException e) { }
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "pq" }, __debug__);
+            #endregion
             __debug__ = false;
 #endif
 
             #region Vulner Commands
+            #region Example Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    for (int k = 0; k < 5; k++)
+                    {
+                        int time = Environment.TickCount;
+                        int i = 0;
+                        while (true)
+                        {
+                            i++;
+                            if (Environment.TickCount > time + 1000) break;
+                        }
+                        t.WriteLine("{0}", i / 1000);
+                    }
+                    return null;
+                },
+            }.Save(C, new string[] { "bm" }, __debug__);
+            #endregion
             #region Ver Command
             new Command
             {
@@ -1255,23 +1365,39 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 {
                     a.CaseSensitive = false;
                     string comma = a.GetRaw(1);
+                    string group = "";
                     if (a.Get(1) == string.Empty)
                     {
                         t.WriteLine("Commands:");
-                        foreach (KeyValuePair<string, Command> c in m.Cmds)
+                        Action<bool, Dictionary<string, Command>> sub = (ind, cmds) =>
                         {
-                            t.SetForeColor('f');
-                            if (c.Key == string.Empty) { continue; }
-                            if (c.Value.Help.Description != string.Empty && (c.Value.Alias == c.Key || c.Value.Alias == string.Empty) && c.Key != string.Empty)
+                            string pad = "";
+                            if (ind)
                             {
-                                string[] al = m.Cmds.Where(b => b.Key != "" && b.Value.Alias == c.Key).Select(b => b.Key).ToArray();
-                                t.ColorWrite("$7{0} - $8{1}", string.Join(", ", al).ToUpper().ToUpper(), c.Value.Help.Description);
+                                pad = " ";
+                                t.ColorWrite("$e{0}", group.ToUpper());
                             }
-                            else if (c.Value.Alias == c.Key || c.Value.Alias == string.Empty)
+                            foreach (KeyValuePair<string, Command> c in cmds)
                             {
-                                string[] al = m.Cmds.Where(b => b.Key != "" && b.Value.Alias == c.Key).Select(b => b.Key).ToArray();
-                                t.ColorWrite("$7{0}", string.Join(", ", al).ToUpper().ToUpper());
+                                t.SetForeColor('f');
+                                if (c.Key == string.Empty) { continue; }
+                                if (c.Value.Help.Description != string.Empty && (c.Value.Alias == c.Key || c.Value.Alias == string.Empty) && c.Key != string.Empty)
+                                {
+                                    string[] al = cmds.Where(b => b.Key != "" && b.Value.Alias == c.Key).Select(b => b.Key).ToArray();
+                                    t.ColorWrite(pad + "$7{0} - $8{1}", string.Join(", ", al).ToUpper().ToUpper(), c.Value.Help.Description);
+                                }
+                                else if (c.Value.Alias == c.Key || c.Value.Alias == string.Empty)
+                                {
+                                    string[] al = cmds.Where(b => b.Key != "" && b.Value.Alias == c.Key).Select(b => b.Key).ToArray();
+                                    t.ColorWrite(pad + "$7{0}", string.Join(", ", al).ToUpper().ToUpper());
+                                }
                             }
+                        };
+                        sub(false, m.Cmds);
+                        foreach(KeyValuePair<string, CommandGroup> c in m.Groups )
+                        {
+                            group = c.Key;
+                            sub(true, c.Value.C);
                         }
                     }
                     else
@@ -1350,7 +1476,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
                 Main = (Argumenter a) =>
                 {
-                    foreach (string c in a.Parsed.Skip(1).StringArray())
+                    foreach (string c in a.VarArgs())
                     {
                         t.hide = true;
                         m.RunCommand(c);
@@ -1582,7 +1708,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
                 Main = (Argumenter a) =>
                 {
-                    foreach (string b in a.Parsed.Skip(1).StringArray())
+                    foreach (string b in a.VarArgs())
                     {
                         try
                         {
@@ -2022,6 +2148,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
             #region Mv Command ( MoVe )
             new Command
             {
+                Switches = Util.Array("r"),
                 Help = new CommandHelp
                 {
                     Description = "Moves files",
@@ -2040,7 +2167,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 {
                     if (a.Get(1).Length > 0 && a.Get(2).Length > 0)
                     {
-                        Funcs.RegexRename(a.Get(1), a.Get(2), t);
+                        Funcs.RegexRename(a.Get(1), a.Get(2), t, false, a.GetSw("r"));
                     }
                     else
                     {
@@ -2053,6 +2180,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
             #region Copy Command
             new Command
             {
+                Switches = Util.Array("r"),
                 Help = new CommandHelp
                 {
                     Description = "Moves files",
@@ -2071,7 +2199,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 {
                     if (a.Get(1).Length > 0 && a.Get(2).Length > 0)
                     {
-                        Funcs.RegexRename(a.Get(1), a.Get(2), t, true);
+                        Funcs.RegexRename(a.Get(1), a.Get(2), t, true, a.GetSw("r"));
                     }
                     else
                     {
@@ -2874,6 +3002,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
             }.Save(C, new string[] { "find" }, __debug__);
             #endregion
             #region Calc Command
+            /*
             new Command
             {
                 Help = new CommandHelp
@@ -2898,6 +3027,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     return null;
                 },
             }.Save(C, new string[] { "calc" }, __debug__);
+            */
             #endregion
             #region DSize Command
             new Command
@@ -3014,6 +3144,138 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
             }.Save(C, new string[] { "em" }, __debug__);
             #endregion
+            CommandGroup phpgr = new CommandGroup("php", m);
+            #region Php Make Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Creates basic files for a php page",
+                    Usage = Util.Array("{NAME} [filename...]")
+                },
+                Main = (Argumenter a) =>
+                {
+
+                    return null;
+                },
+            }.Save(phpgr.C, new string[] { "script" }, __debug__);
+            #endregion
+            #region Php Make Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Creates basic files for a php page",
+                    Usage = Util.Array("{NAME} [filename...]")
+                },
+                Main = (Argumenter a) =>
+                {
+                    DirectoryInfo jsd = new DirectoryInfo("js");
+                    DirectoryInfo cssd = new DirectoryInfo("js");
+                    if (!jsd.Exists) jsd.Create();
+                    if (!cssd.Exists) cssd.Create();
+                    foreach ( string s in a.VarArgs() )
+                    {
+                        string str = s.ToLower();
+
+                        FileInfo tphp = new FileInfo(string.Format("template.php", str));
+                        FileInfo tjs = new FileInfo(string.Format("js/template.js", str));
+                        FileInfo tcss = new FileInfo(string.Format("css/template.css", str));
+
+                        FileInfo php = new FileInfo(string.Format("{0}.php", str));
+                        FileInfo js = new FileInfo(string.Format("js/{0}.js", str));
+                        FileInfo css = new FileInfo(string.Format("css/{0}.css", str));
+
+                        string sphp = "";
+                        string sjs = "";
+                        string scss = "";
+                        if (tphp.Exists) sphp = System.IO.File.ReadAllText(tphp.FullName);
+                        if (tjs.Exists) sjs = System.IO.File.ReadAllText(tjs.FullName);
+                        if (tcss.Exists) scss = System.IO.File.ReadAllText(tcss.FullName);
+
+                        System.IO.File.WriteAllText(php.FullName, string.Format(sphp, str));
+                        System.IO.File.WriteAllText(js.FullName, string.Format(sjs, str));
+                        System.IO.File.WriteAllText(css.FullName, string.Format(scss, str));
+
+                        t.ColorWrite("$aCreated base for {0}.php", str);
+                    }
+                    return null;
+                },
+            }.Save(phpgr.C, new string[] { "make" }, __debug__);
+            #endregion
+            #region Php Ajax/Sys Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Creates empty php files in the desired folder",
+                    Usage = Util.Array("{NAME} [filename...]")
+                },
+                Main = (Argumenter a) =>
+                {
+                    DirectoryInfo ajax = new DirectoryInfo(a.Get(0));
+                    if (!ajax.Exists) ajax.Create();
+                    foreach (string s in a.VarArgs())
+                    {
+                        System.IO.File.AppendAllText(Path.Combine(a.Get(0), s.ToLower()), "");
+                        t.ColorWrite("$aCreated $f{0}/{1}", a.Get(0), s.ToLower());
+                    }
+                    return null;
+                },
+            }.Save(phpgr.C, new string[] { "ajax", "sys" }, __debug__);
+            #endregion
+            #region Php Setup Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+                    Description = "Sets up php environment",
+                    Usage = Util.Array("{NAME}")
+                },
+                Main = (Argumenter a) =>
+                {
+                    t.ColorWrite("$aSetting up php environment...");
+                    string Deny = "Deny From All";
+                    string NoList = "Options -Indexes";
+                    string PhpTemplate = Properties.Resources.phptemplate;
+                    string[] Directories = new string[]
+                    {
+                        "ajax", "js", "css", "img", "sys"
+                    };
+                    string[] EmptyFiles = new string[] {
+                        //"index.php",
+                        "template.php",
+                        "js/template.js",
+                        "css/template.css",
+                        "css/main.css"
+                    };
+                    foreach (string Name in Directories)
+                    {
+                        if (!System.IO.Directory.Exists(Name))
+                        {
+                            t.ColorWrite("$aCreating directory: {0}", Name);
+                        }
+                        System.IO.Directory.CreateDirectory(Name);
+                    }
+                    foreach (string Name in EmptyFiles)
+                    {
+                        if (!System.IO.File.Exists(Name))
+                        {
+                            t.ColorWrite("$aCreating file: {0}", Name);
+                        }
+                        System.IO.File.AppendAllText(Name, "");
+                    }
+                    t.ColorWrite("$aCreating file: {0}", ".htaccess");
+                    System.IO.File.WriteAllText(".htaccess", NoList);
+                    t.ColorWrite("$aCreating file: {0}", "sys/.htaccess");
+                    System.IO.File.WriteAllText("sys/.htaccess", Deny);
+                    t.ColorWrite("$aWriting template.php file");
+                    System.IO.File.WriteAllText("template.php", PhpTemplate);
+                    t.ColorWrite("$aDone!");
+                    return null;
+                },
+            }.Save(phpgr.C, new string[] { "setup" }, __debug__);
+            #endregion
             #endregion
 
             #region Process Commands
@@ -3036,7 +3298,8 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
             }.Save(C, new string[] { "ni" }, __debug__);
             #endregion
-            #region LP Command ( Process List )
+            CommandGroup ProcessCmd = new CommandGroup("p", m);
+            #region PL Command ( Process List )
             new Command
             {
                 Switches = new string[] { "d" },
@@ -3089,7 +3352,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     t.ColorWrite("$eEnd");
                     return null;
                 },
-            }.Save(C, new string[] { "pl" });
+            }.Save(ProcessCmd.C, new string[] { "l", "list" });
             #endregion
             #region KPID Command ( Kill Process ID )
             new Command
@@ -3108,7 +3371,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 },
                 Main = (Argumenter a) =>
                 {
-                    foreach (string ar in a.Parsed.Skip(1).StringArray())
+                    foreach (string ar in a.VarArgs())
                     {
                         Process p = null;
                         try
@@ -3129,7 +3392,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     }
                     return null;
                 },
-            }.Save(C, new string[] { "kpid" });
+            }.Save(ProcessCmd.C, new string[] { "kid", "killid" });
             #endregion
             #region PK Command ( Process Kill )
             new Command
@@ -3150,7 +3413,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 Main = (Argumenter a) =>
                 {
                     bool suicide = false;
-                    foreach (string ar in a.Parsed.Skip(1).StringArray())
+                    foreach (string ar in a.VarArgs())
                     {
                         string r = Regex.Escape(ar).Replace(@"\*", ".*").Replace(@"\?", ".");
                         foreach (Process prc in Process.GetProcesses())
@@ -3159,7 +3422,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                             {
                                 if (prc.Id == Process.GetCurrentProcess().Id)
                                 {
-                                    t.ColorWrite("$f{0}", prc.ProcessName);
+                                    t.ColorWrite("$f[{1}] {0}", prc.ProcessName, prc.Id);
                                     suicide = true;
                                     continue;
                                 }
@@ -3169,15 +3432,14 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                                 catch (UnauthorizedAccessException) { st = "$cAccess Denied"; }
                                 catch (Exception) { st = "$cError"; }
 
-                                t.ColorWrite("$f{0} - " + st, prc.ProcessName);
+                                t.ColorWrite("$f[{1}] {0} - " + st, prc.ProcessName, prc.Id);
                             }
                         }
-                        t.WriteLine();
                     }
                     if (suicide) { Process.GetCurrentProcess().Kill(); }
                     return null;
                 },
-            }.Save(C, new string[] { "pk" });
+            }.Save(ProcessCmd.C, new string[] { "k", "kill" });
             #endregion
             #region PI Command 
             new Command
@@ -3238,8 +3500,38 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     }
                     return null;
                 },
-            }.Save(C, new string[] { "pi" }, __debug__);
+            }.Save(ProcessCmd.C, new string[] { "i", "info" }, __debug__);
             #endregion
+            #region PS Command
+            new Command
+            {
+                Help = new CommandHelp
+                {
+
+                },
+                Main = (Argumenter a) =>
+                {
+                    bool sudo = false;
+                    if (a.Get(0) == "sudo") sudo = true;
+                    Argumenter prargs = new Argumenter(a.RawString());
+                    prargs.Parse(false, false);
+                    a.Offset = 0;
+                    string path = prargs.Get(0);
+                    string args = prargs.RawString();
+                    ProcessStartInfo p = new ProcessStartInfo()
+                    {
+                        FileName = path,
+                        Arguments = args,
+                        WorkingDirectory = Environment.CurrentDirectory,
+                        UseShellExecute = false,
+                        Verb = ( sudo ? "runas" : "" )
+                    };
+                    Process prc = Process.Start(p);
+                    return null;
+                },
+            }.Save(ProcessCmd.C, new string[] { "s", "start", "sudo" }, __debug__);
+            #endregion
+
             #region Start Command
             new Command
             {
@@ -3359,7 +3651,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     {
                         r = Registry.ClassesRoot;
                     }
-                    foreach (string ar in a.Parsed.Skip(1).StringArray())
+                    foreach (string ar in a.VarArgs())
                     {
                         string arg = ar;
                         string action = "list";
@@ -3769,7 +4061,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 Main = (Argumenter a) =>
                 {
                     char[] ch = "​|‌|‍|‎|‏|‪|‬|‭|⁡|⁢|⁣|⁪|⁫|⁬|⁮|⁯".Split('|').Select(b => b[0]).ToArray();
-                    foreach (string s in a.Parsed.Skip(1).StringArray())
+                    foreach (string s in a.VarArgs())
                     {
                         string r = "";
                         foreach (char c in s)
@@ -3795,7 +4087,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 Main = (Argumenter a) =>
                 {
                     char[] ch = new char[] { (char)0x030D, (char)0x030E, (char)0x0304, (char)0x0305, (char)0x033F, (char)0x0311, (char)0x0306, (char)0x0310, (char)0x0352, (char)0x0357, (char)0x0351, (char)0x0307, (char)0x0308, (char)0x030A, (char)0x0342, (char)0x0343, (char)0x0344, (char)0x034A, (char)0x034B, (char)0x034C, (char)0x0303, (char)0x0302, (char)0x030C, (char)0x0350, (char)0x0300, (char)0x0301, (char)0x030B, (char)0x030F, (char)0x0312, (char)0x0313, (char)0x0314, (char)0x033D, (char)0x0309, (char)0x0363, (char)0x0364, (char)0x0365, (char)0x0366, (char)0x0367, (char)0x0368, (char)0x0369, (char)0x036A, (char)0x036B, (char)0x036C, (char)0x036D, (char)0x036E, (char)0x036F, (char)0x033E, (char)0x035B, (char)0x0346, (char)0x031A, (char)0x0315, (char)0x031B, (char)0x0340, (char)0x0341, (char)0x0358, (char)0x0321, (char)0x0322, (char)0x0327, (char)0x0328, (char)0x0334, (char)0x0335, (char)0x0336, (char)0x034F, (char)0x035C, (char)0x035D, (char)0x035E, (char)0x035F, (char)0x0360, (char)0x0362, (char)0x0338, (char)0x0337, (char)0x0361, (char)0x0489, (char)0x0316, (char)0x0317, (char)0x0318, (char)0x0319, (char)0x031C, (char)0x031D, (char)0x031E, (char)0x031F, (char)0x0320, (char)0x0324, (char)0x0325, (char)0x0326, (char)0x0329, (char)0x032A, (char)0x032B, (char)0x032C, (char)0x032D, (char)0x032E, (char)0x032F, (char)0x0330, (char)0x0331, (char)0x0332, (char)0x0333, (char)0x0339, (char)0x033A, (char)0x033B, (char)0x033C, (char)0x0345, (char)0x0347, (char)0x0348, (char)0x0349, (char)0x034D, (char)0x034E, (char)0x0353, (char)0x0354, (char)0x0355, (char)0x0356, (char)0x0359, (char)0x035A, (char)0x0323 };
-                    foreach (string s in a.Parsed.Skip(1).StringArray())
+                    foreach (string s in a.VarArgs())
                     {
                         string r = "";
                         foreach (char c in s)
@@ -3861,7 +4153,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                 {
                     string[] sep = new string[] { a.Get(1) };
                     List<string> re = new List<string>();
-                    foreach (string b in a.Parsed.Skip(1).StringArray())
+                    foreach (string b in a.VarArgs())
                     {
                         re.Concat(b.Split(sep, StringSplitOptions.None));
                     }
@@ -4063,7 +4355,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     Dictionary<string, string> n = new Dictionary<string, string>();
                     if (write)
                     {
-                        foreach (string st in a.Parsed.Skip(1).StringArray())
+                        foreach (string st in a.VarArgs())
                         {
                             string[] b = null;
                             if ((b = st.Split('=')).Length != 2) continue;
@@ -5988,7 +6280,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     }
                     else
                     {
-                        foreach (string rs in a.Parsed.Skip(1).StringArray())
+                        foreach (string rs in a.VarArgs())
                         {
                             bool invert = false;
                             if (rs.Split('=').Length != 2) { continue; }

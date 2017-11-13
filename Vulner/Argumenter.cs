@@ -25,6 +25,7 @@ namespace Vulner
         public UserVar[] Parsed = null;
         public String RawCmd;
         public String Cmd;
+        public int Offset = 0;
         public bool CaseSensitive = true;
         public bool ExpectsOutput = false;
         public bool AllSP = false;
@@ -53,6 +54,9 @@ namespace Vulner
         public UserVar[] InputVars = null;
 
         public void SetM(Main M) { m = M; }
+
+        public void SetOffset(int o) { Offset = o; }
+        public void AddOffset(int i = 1) { Offset += i; }
 
         public Argumenter( string s, bool commands = false )
         {
@@ -373,9 +377,9 @@ namespace Vulner
         {
             try
             {
-                string s = Parsed[i].Get<string>();
+                string s = Parsed[i+Offset].Get<string>();
                 if (CaseSensitive) return Equals( s, null ) ? "" : s;
-                return Equals(Parsed[i], null) ? "" : s;
+                return Equals(Parsed[i+Offset], null) ? "" : s;
             } catch(Exception)
             {
                 return "";
@@ -383,22 +387,26 @@ namespace Vulner
         }
         public string[] VarArgs()
         {
-            if ( this.Parsed.Length > 1 )
+            if ( this.Parsed.Length > 1 + Offset)
             {
-                if (this.Parsed[1].Type() == typeof(string[]))
-                    return this.Parsed[1].Get<string[]>();
+                if (this.Parsed[1 + Offset].Type() == typeof(string[]))
+                    return this.Parsed[1 + Offset].Get<string[]>();
             }
-            return this.Parsed.Skip(1).StringArray();
+            return this.Parsed.Skip(1+Offset).StringArray();
         }
         public T Get<T>(int i)
         {
-            return Funcs.ToType<T>(Parsed[i]);
+            try
+            {
+                return Funcs.ToType<T>(Parsed[i + Offset]);
+            } catch(Exception) { }
+            return default(T);
         }
         public Type GetType(int i)
         {
             try
             {
-                object o = Parsed[i];
+                object o = Parsed[i + Offset];
                 return o.GetType();
             } catch(Exception) { }
             return new Null().GetType();
@@ -407,8 +415,8 @@ namespace Vulner
         {
             try
             {
-                if ( CaseSensitive ) return Full[i];
-                return Full[i].ToLower();
+                if ( CaseSensitive ) return Full[i + Offset];
+                return Full[i + Offset].ToLower();
             }
             catch (Exception)
             {
@@ -477,7 +485,15 @@ namespace Vulner
          */
         public static string RawString(this Argumenter a, bool lower = false )
         {
-            string s = a.Cmd.Substring(a.Get(0).Length).Trim();
+            if (a.FormatStr.Count < a.Offset + 1) return "";
+            string s = a.Cmd;
+            for (int i = 0; i < a.Offset + 1; i++)
+            {
+                try
+                {
+                    s = s.Substring(a.FormatStr[i][1].Length + 1).Trim();
+                } catch(Exception) { }
+            }
             if (lower) return s.ToLower();
             return s;
         }

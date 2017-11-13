@@ -11,7 +11,7 @@ namespace Vulner
     {
         static void Main(string[] args)
         {
-            Funcs.HideConsole();
+            //Funcs.HideConsole();
             Funcs.EnableRightClick();
             Console.BufferHeight = 500;
             Console.Title = "Vulner";

@@ -25,6 +25,7 @@ namespace Vulner
         public String Version = "1.0";
         public static Boolean Hide = false;
         public static Boolean killthread = false;
+        public Dictionary<string, CommandGroup> Groups = null;
         int FirstKey = 0;
         int LastKey = 0;
         public void HideOutput()
@@ -88,6 +89,7 @@ namespace Vulner
             }
 
             t = te;
+            Groups = new Dictionary<string, CommandGroup>();
             Cmds = new Commands().Get(this, t);
             Cmds[""] = new Command();
 
@@ -164,6 +166,11 @@ namespace Vulner
             }
         }
 
+        public void AddGroup(CommandGroup g, string Name)
+        {
+            Groups[Name] = g;
+        }
+
         public void Error(string s)
         {
             if (!t.hide)
@@ -233,20 +240,32 @@ namespace Vulner
                 }
                 a.SetM(this);
                 Command c = null;
-                try
+                Action<Command> PickThis = (c_) =>
                 {
-                    c = Cmds[a.GetRaw(0).ToLower()];
                     a.Switches = c.Switches;
                     a.Params = c.Parameters;
                     a.AllSP = c.AllSP;
-                    if (!c.Valid())
-                    {
-                        t.ColorWrite("$cInvalid command.");
-                        return;
-                    }
                     cmd = c;
+                };
+                try
+                {
+                    c = Cmds[a.GetRaw(0).ToLower()];
+                    PickThis(c);
                 }
                 catch (Exception)
+                {
+                    try
+                    {
+                        if (c == null)
+                        {
+                            CommandGroup g = Groups[a.GetRaw(0).ToLower()];
+                            c = g.C[a.GetRaw(1).ToLower()];
+                            PickThis(c);
+                            if (c != null) a.AddOffset();
+                        }
+                    } catch (Exception) { }
+                }
+                if (c == null)
                 {
                     t.ColorWrite("$cInvalid command.");
                     return;

@@ -69,5 +69,22 @@ namespace Vulner.Properties {
                 return ((System.Drawing.Icon)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;head&gt;
+        ///	&lt;title&gt;{0}&lt;/title&gt;
+        ///	&lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css&quot;&gt;
+        ///	&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;css/{0}.css&quot;&gt;
+        ///	&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;css/main.css&quot;&gt;
+        ///	&lt;!--/CSS--&gt;
+        ///	&lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js&quot;&gt;&lt;/script&gt;
+        ///	&lt;script src=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js&quot;&gt;&lt;/script&gt;
+        ///	&lt;script src=&quot;https://code.jquery.com/ui/1.12.1/jquery-ui [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string phptemplate {
+            get {
+                return ResourceManager.GetString("phptemplate", resourceCulture);
+            }
+        }
     }
 }
