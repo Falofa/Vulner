@@ -61,6 +61,29 @@ namespace Vulner.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;?php
+        ///	$name = &quot;{0}&quot;;
+        ///	include &apos;sys/header.php&apos;;
+        ///?&gt;
+        ///		&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;css/{0}.css&quot;&gt;
+        ///		&lt;!--/CSS--&gt;
+        ///		&lt;script src=&quot;js/{0}.js&quot;&gt;&lt;/script&gt;
+        ///		&lt;!--/JS--&gt;
+        ///	&lt;/head&gt;
+        ///	&lt;body&gt;
+        ///		&lt;div class=&quot;container&quot;&gt;
+        ///			Template
+        ///		&lt;/div&gt;
+        ///	&lt;/body&gt;
+        ///&lt;/html&gt;.
+        /// </summary>
+        internal static string headertemplate {
+            get {
+                return ResourceManager.GetString("headertemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
         internal static System.Drawing.Icon ICO {
@@ -71,15 +94,17 @@ namespace Vulner.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;head&gt;
-        ///	&lt;title&gt;{0}&lt;/title&gt;
-        ///	&lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css&quot;&gt;
-        ///	&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;css/{0}.css&quot;&gt;
-        ///	&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;css/main.css&quot;&gt;
-        ///	&lt;!--/CSS--&gt;
-        ///	&lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js&quot;&gt;&lt;/script&gt;
-        ///	&lt;script src=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js&quot;&gt;&lt;/script&gt;
-        ///	&lt;script src=&quot;https://code.jquery.com/ui/1.12.1/jquery-ui [rest of string was truncated]&quot;;.
+        ///   Looks up a localized string similar to &lt;?php
+        ///	if (!isset($title)) $title = &apos;&apos;;
+        ///?&gt;
+        ///&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD XHTML 1.0 Transitional//EN&quot; &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&quot;&gt;
+        ///&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot;&gt;
+        ///	&lt;head&gt;
+        ///		&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=utf-8&quot; /&gt;
+        ///		&lt;title&gt;&lt;?php echo $title; ?&gt;&lt;/title&gt;
+        ///		&lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css&quot;&gt;
+        ///		&lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;css/main.css&quot;&gt;
+        ///		&lt;!--/CS [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string phptemplate {
             get {

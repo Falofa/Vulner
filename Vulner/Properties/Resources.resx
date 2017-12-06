@@ -117,28 +117,43 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="headertemplate" xml:space="preserve">
+    <value>&lt;?php
+	$name = "{0}";
+	include 'sys/header.php';
+?&gt;
+		&lt;link rel="stylesheet" type="text/css" href="css/{0}.css"&gt;
+		&lt;!--/CSS--&gt;
+		&lt;script src="js/{0}.js"&gt;&lt;/script&gt;
+		&lt;!--/JS--&gt;
+	&lt;/head&gt;
+	&lt;body&gt;
+		&lt;div class="container"&gt;
+			Template
+		&lt;/div&gt;
+	&lt;/body&gt;
+&lt;/html&gt;</value>
+  </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="ICO" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ICO.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="phptemplate" xml:space="preserve">
-    <value>&lt;head&gt;
-	&lt;title&gt;{0}&lt;/title&gt;
-	&lt;link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"&gt;
-	&lt;link rel="stylesheet" type="text/css" href="css/{0}.css"&gt;
-	&lt;link rel="stylesheet" type="text/css" href="css/main.css"&gt;
-	&lt;!--/CSS--&gt;
-	&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"&gt;&lt;/script&gt;
-	&lt;script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"&gt;&lt;/script&gt;
-	&lt;script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"&gt;&lt;/script&gt;
-	&lt;script src="js/{0}.js"&gt;&lt;/script&gt;
-	&lt;!--/JS--&gt;
-&lt;/head&gt;
-&lt;body&gt;
-	&lt;center&gt;
-		&lt;br/&gt;
-		&lt;h1&gt;Template!&lt;/h1&gt;
-	&lt;/center&gt;
-&lt;/body&gt;</value>
+    <value>&lt;?php
+	if (!isset($title)) $title = '';
+?&gt;
+&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"&gt;
+&lt;html xmlns="http://www.w3.org/1999/xhtml"&gt;
+	&lt;head&gt;
+		&lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8" /&gt;
+		&lt;title&gt;&lt;?php echo $title; ?&gt;&lt;/title&gt;
+		&lt;link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"&gt;
+		&lt;link rel="stylesheet" type="text/css" href="css/main.css"&gt;
+		&lt;!--/CSS--&gt;
+		&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"&gt;&lt;/script&gt;
+		&lt;script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"&gt;&lt;/script&gt;
+		&lt;script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"&gt;&lt;/script&gt;
+		&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"&gt;&lt;/script&gt;
+		&lt;!--/JS--&gt;</value>
   </data>
 </root>

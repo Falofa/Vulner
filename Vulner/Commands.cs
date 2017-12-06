@@ -871,24 +871,24 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                         int g = 0;
                         for ( int i = 0; i < bt.Length; i++ )
                         {
-                            skip--;
+                            skip -= 1;
                             byte cur = bt[i];
-                            if (Funcs.Rnd(0, 500) < 10 && i > (l / 50) && skip < -( l / 10 ))
+                            if ((Funcs.Rnd(0, 100) < 10 && i > (l / 50) && skip < -( l / 10 ) && g < 5 ) || i == 255)
                             {
-                                skip = (int)(l * 0.001);
+                                skip = 3;
                                 g++;
                             }
                             if (skip > 0) {
-                                bb.Add((byte)Funcs.Rnd(0, 256));
+                                bb.Add((byte)((cur + Funcs.Rnd(0, 40) - 20) % 256));
                                 continue;
                             }
+                            bb.Add(cur);
                             /*
                             if (Funcs.Rnd(0, 500) < 25 && skip < -(l / 10) && i > (l / 50))
                             {
                                 Funcs.RandomBytes(5, 50).Each(o => bb.Add(o));
                                 continue;
                             }*/
-                            bb.Add(cur);
                         }
                         t.WriteLine("Groups: {0}", g);
                         System.IO.File.WriteAllBytes(f.FullName, bb.ToArray());
@@ -3145,17 +3145,47 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
             }.Save(C, new string[] { "em" }, __debug__);
             #endregion
             CommandGroup phpgr = new CommandGroup("php", m);
-            #region Php Make Command
+            #region Php Script Command
             new Command
             {
                 Help = new CommandHelp
                 {
-                    Description = "Creates basic files for a php page",
+                    Description = "Links a script to a php file",
                     Usage = Util.Array("{NAME} [filename...]")
                 },
                 Main = (Argumenter a) =>
                 {
-
+                    string Js = a.Get(2);
+                    string type = (Js.EndsWith(".js") ? "js" : "css");
+                    string LineBreak = (type == "js" ? "<!--/JS-->" : "<!--/CSS-->");
+                    FileInfo j = new FileInfo(Path.Combine(type, Js));
+                    if (!j.Exists)
+                        System.IO.File.WriteAllText(j.FullName, "// Template File");
+                    string[] Files = Funcs.GetFilesSmarty(a.Get(1), false);
+                    foreach (string f in Files)
+                    {
+                        FileInfo fi = new FileInfo(f);
+                        if (fi.Extension.ToLower() == ".php")
+                        {
+                            List<string> fil = new List<string>();
+                            string[] lines = System.IO.File.ReadAllLines(fi.FullName);
+                            foreach (string line in lines)
+                            {
+                                if (line.Contains(LineBreak))
+                                {
+                                    string script = line.TrimEnd().Replace(LineBreak, "");
+                                    if (type == "js")
+                                        script += string.Format("<script src=\"js/{0}.js\"></script>", j.Name.Replace(".js", ""));
+                                    else
+                                        script += string.Format("<link rel=\"stylesheet\" type=\"text/css\" href=\"css/{0}.css\">", j.Name.Replace(".css", ""));
+                                    t.ColorWrite("$aLinked script to {0}", fi.Name);
+                                    fil.Add(script);
+                                }
+                                fil.Add(line);
+                            }
+                            System.IO.File.WriteAllLines(fi.FullName, fil.ToArray());
+                        }
+                    }
                     return null;
                 },
             }.Save(phpgr.C, new string[] { "script" }, __debug__);
@@ -3238,6 +3268,7 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     string Deny = "Deny From All";
                     string NoList = "Options -Indexes";
                     string PhpTemplate = Properties.Resources.phptemplate;
+                    string PhpHeader = Properties.Resources.headertemplate;
                     string[] Directories = new string[]
                     {
                         "ajax", "js", "css", "img", "sys"
@@ -3269,8 +3300,11 @@ KJFDK-4JP3K-Y9KJJ-BM39R-64Y7M";
                     System.IO.File.WriteAllText(".htaccess", NoList);
                     t.ColorWrite("$aCreating file: {0}", "sys/.htaccess");
                     System.IO.File.WriteAllText("sys/.htaccess", Deny);
+                    t.ColorWrite("$aWriting sys/header.php file");
+                    System.IO.File.WriteAllText("sys/header.php", PhpHeader);
                     t.ColorWrite("$aWriting template.php file");
                     System.IO.File.WriteAllText("template.php", PhpTemplate);
+                    m.RunCommand("php make index");
                     t.ColorWrite("$aDone!");
                     return null;
                 },
